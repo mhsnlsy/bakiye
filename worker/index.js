@@ -27,6 +27,46 @@ async function quotes(env){
  let v={...old,source:"Midas Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:MIDAS,fxSourceUrl:FX,asOf:new Date().toISOString().slice(0,10),lastRefresh:new Date().toISOString(),quotes:q,fx:f,missing};
  await put(env,"quotes.json",v);return v;
 }
+async function snapshot(env){
+ let old=await read(env,"history.json","/data/history.json")||{version:1,frequency:"daily",startDate:"2026-11-16",retentionDays:365,snapshots:[]};
+ let balance=await read(env,"balance.json","/data/balance.json")||{accounts:{}};
+ let positions=await read(env,"positions.json","/data/positions.json")||[];
+ let quotes=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
+ let t={stocks:0,funds:0,try:0,cashFx:0,bankFx:0,gold:0,receivable:0};
+ for(const p of positions){
+   const v=Number(quotes.quotes?.[p.symbol]??p.snapshotPrice??0)*Number(p.qty||0);
+   if(p.type==="fund")t.funds+=v;else t.stocks+=v;
+ }
+ const a=balance.accounts||{};
+ for(const x of Object.values(a)){
+   const v=Number(x.value)||0;
+   if(x.category==="try")t.try+=v;
+   else if(x.category==="gold")t.gold+=v;
+   else if(x.category==="receivable")t.receivable+=v;
+   else if(x.category==="fx"){
+     const isCash=x===a.doviz;
+     const rates=quotes.fx||{};
+     for(const [code,qty] of Object.entries(x.currencies||{})){
+       const rate=Number(rates[code+"TRY"]||0);
+       if(rate)(isCash?t.cashFx:t.bankFx)+=Number(qty||0)*rate;
+     }
+   }
+ }
+ const total=t.stocks+t.funds+t.try+t.cashFx+t.bankFx+t.gold+t.receivable;
+ const now=new Date(),date=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(now);
+ const row={date,total,...t};
+ const rows=(old.snapshots||[]).filter(x=>x.date!==date);
+ rows.push(row);
+ const cutoff=new Date(now.getTime()-365*86400000);
+ const cutoffDate=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(cutoff);
+ const kept=rows.filter(x=>{
+   const d=new Date(x.date+"T12:00:00Z");
+   const weekday=d.getUTCDay();
+   return weekday===0 || x.date>=cutoffDate;
+ }).sort((a,b)=>a.date.localeCompare(b.date));
+ const v={...old,version:1,frequency:"daily",startDate:old.startDate||date,retentionDays:365,updatedAt:now.toISOString(),snapshots:kept};
+ await put(env,"history.json",v);return v;
+}
 async function tlref(env){
  let old=await read(env,"tlref.json","/data/tlref.json")||{historical:[],stopaj:.175,startDate:"2025-08-24"};
  let fresh=tl(await get(TLREF));if(!fresh.length)throw Error("TLREF ayrıştırılamadı");
@@ -40,8 +80,12 @@ export default{
  async fetch(req,env){let u=new URL(req.url);
   if(u.pathname==="/api/quotes"){let v=await read(env,"quotes.json","/data/quotes.json");return v?out(v):out({error:"quotes_not_ready"},503)}
   if(u.pathname==="/api/tlref"){let v=await read(env,"tlref.json","/data/tlref.json");return v?out(v):out({error:"tlref_not_ready"},503)}
+  if(u.pathname==="/api/history"){let v=await read(env,"history.json","/data/history.json");return v?out(v):out({error:"history_not_ready"},503)}
   if(u.pathname==="/api/health")return out({ok:true,service:"bakiye",time:new Date().toISOString()});
   return env.ASSETS.fetch(req);
  },
- async scheduled(e,env,ctx){if(e.cron==="30 15 * * *")ctx.waitUntil(tlref(env));else if(e.cron==="*/5 * * * *")ctx.waitUntil(quotes(env))}
+ async scheduled(e,env,ctx){
+   if(e.cron==="30 15 * * *")ctx.waitUntil((async()=>{await quotes(env);await tlref(env);await snapshot(env)})());
+   else if(e.cron==="*/5 * * * *")ctx.waitUntil(quotes(env))
+ }
 };
