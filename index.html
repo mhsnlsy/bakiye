@@ -355,7 +355,7 @@ function render(){
  document.getElementById("portfolioPnL").title="Nominal K/Z: "+fmt(nominalPnl)+" · Mevduat referansına göre reel K/Z: "+fmt(realPnl);
  const reelCell=document.getElementById("portfolioRealPnL");
  if(reelCell)reelCell.textContent=fmt(realPnl);
- const realPctTotal=realCostTotal?realPnl/realCostTotal*100:0;
+ const realPctTotal=pc?realPnl/pc*100:0;
  const realPctEl=document.getElementById("portfolioRealPnLPct"); if(realPctEl){realPctEl.textContent=nfmt(realPctTotal)+"%";realPctEl.className=realPctTotal>=0?"good":"bad";}
  const cats={try:"TL / Banka",fx:"Döviz",gold:"Altın",receivable:"Alacak",brokerage_placeholder:"Midas (portföy alt kırılımı)"};
  document.getElementById("accountsBody").innerHTML=Object.values(a).map(x=>{
