@@ -140,6 +140,7 @@ export default{
   if(u.pathname==="/api/balance"){const v=await read(env,"balance.json","/data/balance.json");return v?out(v):out({error:"balance_not_ready"},503)}
   if(u.pathname==="/api/positions"){const v=await read(env,"positions.json","/data/positions.json");return v?out(v):out({error:"positions_not_ready"},503)}
   if(u.pathname==="/api/history"){const v=await read(env,"history.json","/data/history.json");return v?out(v):out({error:"history_not_ready"},503)}
+  if(u.pathname==="/api/closing-history"){const v=await read(env,"history/stock-closing.json","/data/history/stock-closing.json");return v?out(v):out({error:"closing_history_not_ready"},503)}
   if(u.pathname==="/api/health")return out({ok:true,service:"bakiye",time:new Date().toISOString()});
   // Allow the app to be mounted privately under /bakiye on istanbulunhavasi.com.
   // The browser keeps relative asset URLs under /bakiye/, so strip the mount prefix
