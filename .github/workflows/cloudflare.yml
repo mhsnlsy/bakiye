@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths: ["index.html","data/**","worker/**","wrangler.jsonc",".github/workflows/cloudflare.yml","scripts/**"]
   workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
 
 concurrency:
   group: bakiye-cloudflare
@@ -37,6 +39,8 @@ jobs:
         run: npx wrangler@latest deploy
 
   refresh-quotes:
+    needs: deploy
+    if: always() && (github.event_name == 'schedule' || needs.deploy.result == 'success')
     runs-on: ubuntu-latest
     permissions: {contents: read}
     steps:
@@ -70,5 +74,25 @@ jobs:
           print("R2 quotes:", q.get("quotes"))
           print("R2 errors:", q.get("errors"))
           assert not q.get("errors"), q.get("errors")
-          assert all(k in q.get("quotes", {}) for k in ["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"])
+          assert all(isinstance(q.get("quotes", {}).get(k), (int, float)) and q["quotes"][k] > 0 for k in ["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"])
+          from datetime import datetime, timezone, timedelta
+          refreshed=datetime.fromisoformat(q["lastRefresh"].replace("Z","+00:00"))
+          assert datetime.now(timezone.utc)-refreshed < timedelta(minutes=3), "R2 quote data is not fresh"
+          PY
+      - name: Verify public Worker quote API
+        run: |
+          python3 - <<'PY'
+          import json, time, urllib.request
+          with open("/tmp/verify-quotes.json", encoding="utf-8") as f:
+              expected=json.load(f)
+          url="https://bakiye.muhsin-ulusoy.workers.dev/api/quotes?verify="+str(time.time_ns())
+          req=urllib.request.Request(url, headers={"Cache-Control":"no-cache","Pragma":"no-cache","User-Agent":"Bakiye-Quote-Verification/1.0"})
+          with urllib.request.urlopen(req, timeout=20) as response:
+              actual=json.load(response)
+          assert actual.get("lastRefresh")==expected.get("lastRefresh"), (actual.get("lastRefresh"),expected.get("lastRefresh"))
+          for symbol, value in expected["quotes"].items():
+              assert float(actual["quotes"][symbol])==float(value), (symbol,actual["quotes"].get(symbol),value)
+          print("Worker API lastRefresh:", actual["lastRefresh"])
+          print("Worker API quotes:", actual["quotes"])
+          print("Worker API and R2 match: OK")
           PY
