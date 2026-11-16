@@ -136,20 +136,23 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 function fmt(n){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
 function nfmt(n){return new Intl.NumberFormat("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
 function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-let balanceData={},quoteData={},positions=[],historyData={},tlrefData={};
+let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closingHistoryData={};
 window.pnlMode="nominal";
 async function api(path){const r=await fetch(path+"?v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}});if(!r.ok)throw Error(path+" HTTP "+r.status);return r.json()}
 async function loadData(){
- const [b,q,p,h,t]=await Promise.all([api("/api/balance"),api("/api/quotes"),api("/api/positions"),api("/api/history"),api("/api/tlref")]);
- balanceData=b;quoteData=q;positions=Array.isArray(p)?p:[];historyData=h||{};tlrefData=t||{};
+ const [b,q,p,h,t,c]=await Promise.all([api("/api/balance"),api("/api/quotes"),api("/api/positions"),api("/api/history"),api("/api/tlref"),api("/api/closing-history")]);
+ balanceData=b;quoteData=q;positions=Array.isArray(p)?p:[];historyData=h||{};tlrefData=t||{};closingHistoryData=c||{};
 }
 function calc(){
  const rates=quoteData.fx||{}, q=quoteData.quotes||{};
+ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[];
+ const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date());
+ const prev=entries.filter(e=>e.date && e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1);
  let stocks=0,realPnl=0,nominalPnl=0,dailyPnl=0,positionCount=0,tlrefAdded=0;
  const rows=positions.map(p=>{
   const qty=Number(p.qty)||0, avg=Number(p.avgCost)||0, real=Number(p.realCost)||avg, price=Number(q[p.symbol]||p.snapshotPrice||0);
   const market=price*qty,cost=avg*qty,rp=market-real*qty,np=market-cost;
-  const dailyPct=Number((q.dailyPct||{})[p.symbol])||0; const dailyBase=100+dailyPct; const dp=dailyBase?market*dailyPct/dailyBase:0; stocks+=market;realPnl+=rp;nominalPnl+=np;dailyPnl+=dp;positionCount+=qty;tlrefAdded+=(Number(p.tlrefCostAdded)||0)*qty;
+  const prevClose=Number(prev?.prices?.[p.symbol]||0); const dailyPct=prevClose?((price-prevClose)/prevClose*100):null; const dp=prevClose?(price-prevClose)*qty:null; stocks+=market;realPnl+=rp;nominalPnl+=np;dailyPnl+=Number(dp)||0;positionCount+=qty;tlrefAdded+=(Number(p.tlrefCostAdded)||0)*qty;
   return {p,qty,avg,real,price,market,rp,np,dp,dailyPct,nominalPct:cost?np/cost*100:0,dailyPnlPct:dailyPct,realPct:cost?rp/cost*100:0};
  });
  const a=balanceData.accounts||{};
@@ -161,6 +164,7 @@ function calc(){
  const obligations=(Number(a.monthlyObligations?.rent?.value)||0)+(Number(a.monthlyObligations?.creditCard?.value)||0);
  return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal,cashFx,bankFx,gold,receivable,total,obligations,net:total-obligations,rates};
 }
+function prevClosingBase(x){ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[]; const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()); const prev=entries.filter(e=>e.date&&e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1); return prev?x.rows.reduce((s,r)=>s+(Number(prev.prices?.[r.p.symbol])||0)*r.qty,0):0; }
 function render(){
  const x=calc();
  document.getElementById("grandTotal").textContent=fmt(x.total);
@@ -184,8 +188,8 @@ function render(){
  document.getElementById("pnlPctHeader").textContent=window.pnlMode==="daily"?"Günlük %":"Nominal %";
  document.getElementById("nominalModeBtn").textContent=window.pnlMode==="daily"?"Nominal":"Günlük";
  document.getElementById("portfolioPnL").textContent=fmt(window.pnlMode==="daily"?x.dailyPnl:x.nominalPnl);
- document.getElementById("portfolioPnLPct").textContent=nfmt(window.pnlMode==="daily"?(x.stocks?x.dailyPnl/x.stocks*100:0):(originalCost?x.nominalPnl/originalCost*100:0))+"%";
- document.getElementById("positionsBody").innerHTML=x.rows.map(r=>'<tr><td><span class="ticker">'+safe(r.p.symbol)+'</span><span class="subline">'+safe(r.p.name)+' · Hisse</span></td><td>'+nfmt(r.qty)+'</td><td>'+fmt(r.avg)+'</td><td>'+fmt(r.real)+'</td><td>'+fmt(r.price)+'</td><td>'+fmt(r.market)+'</td><td class="'+((window.pnlMode==="daily"?r.dp:r.np)>=0?"good":"bad")+'">'+fmt(window.pnlMode==="daily"?r.dp:r.np)+'</td><td class="'+((window.pnlMode==="daily"?r.dailyPnlPct:r.nominalPct)>=0?"good":"bad")+'">'+nfmt(window.pnlMode==="daily"?r.dailyPnlPct:r.nominalPct)+'%</td><td class="'+(r.rp>=0?"good":"bad")+'">'+fmt(r.rp)+'</td><td class="'+(r.realPct>=0?"good":"bad")+'">'+nfmt(r.realPct)+'%</td></tr>').join("");
+ document.getElementById("portfolioPnLPct").textContent=nfmt(window.pnlMode==="daily"?(prevClosingBase(x)?x.dailyPnl/prevClosingBase(x)*100:0):(originalCost?x.nominalPnl/originalCost*100:0))+"%";
+ document.getElementById("positionsBody").innerHTML=x.rows.map(r=>'<tr><td><span class="ticker">'+safe(r.p.symbol)+'</span><span class="subline">'+safe(r.p.name)+' · Hisse</span></td><td>'+nfmt(r.qty)+'</td><td>'+fmt(r.avg)+'</td><td>'+fmt(r.real)+'</td><td>'+fmt(r.price)+'</td><td>'+fmt(r.market)+'</td><td class="'+((window.pnlMode==="daily"?r.dp:r.np)>=0?"good":"bad")+'">'+fmt(window.pnlMode==="daily"?r.dp:r.np)+'</td><td class="'+((window.pnlMode==="daily"?(r.dailyPnlPct??0):r.nominalPct)>=0?"good":"bad")+'">'+window.pnlMode==="daily"?(r.dailyPnlPct==null?"—":nfmt(r.dailyPnlPct)):nfmt(r.nominalPct)+'%</td><td class="'+(r.rp>=0?"good":"bad")+'">'+fmt(r.rp)+'</td><td class="'+(r.realPct>=0?"good":"bad")+'">'+nfmt(r.realPct)+'%</td></tr>').join("");
  const fx=x.rates;
  document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
  document.getElementById("liveFxSub").textContent="Döviz.com · "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—");
