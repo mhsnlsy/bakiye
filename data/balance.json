@@ -78,9 +78,10 @@
   "fxUnitsNote": "Döviz hesapları para birimi miktarı olarak tutulur; TL karşılığı güncel kurlarla hesaplanır.",
   "depositBenchmark": {
     "startDate": "2025-08-24",
-    "annualRate": 0.4247,
+    "annualRate": null,
     "stopaj": 0.175,
-    "source": "TCMB 3 aya kadar TL mevduat ağırlıklı ortalama; 06.11.2026 son mevcut oran",
-    "method": "Net yıllık mevduat getirisiyle bileşik fırsat maliyeti"
+    "source": "Borsa İstanbul TLREF",
+    "sourceUrl": "https://www.borsaistanbul.com/endeksler/tlref",
+    "method": "Günlük net TLREF fırsat maliyeti; brüt TLREF oranından %17,5 stopaj düşülür ve günlük bileşik uygulanır. Güncel oran data/tlref.json üzerinden alınır."
   }
 }
