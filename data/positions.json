@@ -5,10 +5,8 @@
     "type": "stock",
     "qty": 14,
     "avgCost": 246.52,
-    "realCost": 246.52,
-    "realCostBaseDate": "2026-11-16",
-    "purchaseDate": "2026-11-16",
-    "tlrefCostAdded": 0,
+    "realCost": 322.62,
+    "tlrefCostAdded": 76.1,
     "realCostUpdatedAt": "2026-11-16"
   },
   {
@@ -17,10 +15,8 @@
     "type": "stock",
     "qty": 888,
     "avgCost": 8.74,
-    "realCost": 8.74,
-    "realCostBaseDate": "2026-11-16",
-    "purchaseDate": "2026-11-16",
-    "tlrefCostAdded": 0,
+    "realCost": 9.22,
+    "tlrefCostAdded": 0.48,
     "realCostUpdatedAt": "2026-11-16"
   },
   {
@@ -29,10 +25,8 @@
     "type": "stock",
     "qty": 65,
     "avgCost": 285.04,
-    "realCost": 285.04,
-    "realCostBaseDate": "2026-11-16",
-    "purchaseDate": "2026-11-16",
-    "tlrefCostAdded": 0,
+    "realCost": 344.39,
+    "tlrefCostAdded": 59.35,
     "realCostUpdatedAt": "2026-11-16"
   },
   {
@@ -41,10 +35,8 @@
     "type": "stock",
     "qty": 668,
     "avgCost": 26.85,
-    "realCost": 26.85,
-    "realCostBaseDate": "2026-11-16",
-    "purchaseDate": "2026-11-16",
-    "tlrefCostAdded": 0,
+    "realCost": 31.01,
+    "tlrefCostAdded": 4.16,
     "realCostUpdatedAt": "2026-11-16"
   },
   {
@@ -53,10 +45,8 @@
     "type": "stock",
     "qty": 168,
     "avgCost": 39.94,
-    "realCost": 39.94,
-    "realCostBaseDate": "2026-11-16",
-    "purchaseDate": "2026-11-16",
-    "tlrefCostAdded": 0,
+    "realCost": 42.97,
+    "tlrefCostAdded": 3.03,
     "realCostUpdatedAt": "2026-11-16"
   },
   {
@@ -65,10 +55,8 @@
     "type": "stock",
     "qty": 83,
     "avgCost": 177.92,
-    "realCost": 177.92,
-    "realCostBaseDate": "2026-11-16",
-    "purchaseDate": "2026-11-16",
-    "tlrefCostAdded": 0,
+    "realCost": 201.9,
+    "tlrefCostAdded": 23.98,
     "realCostUpdatedAt": "2026-11-16"
   }
 ]
