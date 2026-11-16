@@ -1,14 +1,14 @@
 {
-  "source": "Midas Canlı Borsa (15 dk gecikmeli) + Döviz.com serbest piyasa",
+  "source": "Kullanıcının güncel benchmark tablosu (14 Kasım fiyatları) + Döviz.com serbest piyasa",
   "sourceUrl": "https://www.getmidas.com/canli-borsa/tum-hisseler",
-  "asOf": "2026-11-16",
+  "asOf": "2026-11-14",
   "currency": "TRY",
   "quotes": {
     "TAVHL": 302.25,
     "KARSN": 7.66,
-    "THYAO": 321,
-    "CGCAM": 18.84,
-    "SISE": 35.48,
+    "THYAO": 320.25,
+    "CGCAM": 18.2,
+    "SISE": 35.86,
     "ZPLIB.F": 200.55
   },
   "fxSourceUrl": "https://www.doviz.com/",
