@@ -136,7 +136,7 @@ let balanceData=null,quoteData=null,positions=[],tlrefData=null,historyData=null
 let quoteOverrides={};
 let quoteLoadError=null;
 const REQUIRED_QUOTES=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
-function validQuotePayload(q){return !!q?.quotes&&String(q.source||"").includes("Uzmanpara")&&!!q.lastRefresh&&REQUIRED_QUOTES.every(k=>Number.isFinite(Number(q.quotes[k]))&&Number(q.quotes[k])>0)}
+function validQuotePayload(q){return !!q?.quotes&&!!q?.fx&&String(q.source||"").includes("Uzmanpara")&&String(q.fxSourceUrl||"").includes("doviz.com")&&!!q.lastRefresh&&REQUIRED_QUOTES.every(k=>Number.isFinite(Number(q.quotes[k]))&&Number(q.quotes[k])>0)&&["USDTRY","EURTRY","GBPTRY"].every(k=>Number.isFinite(Number(q.fx[k]))&&Number(q.fx[k])>0)}
 async function fetchLiveQuotes(){const r=await fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});if(!r.ok)throw Error("Fiyat API HTTP "+r.status);const q=await r.json();if(!validQuotePayload(q))throw Error("Canlı fiyat verisi eksik veya kaynak doğrulanamadı");return q}
 const safe=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function readTRNumber(v){
@@ -443,20 +443,27 @@ async function boot(){
   document.getElementById("syncState").textContent="Veriler yükleniyor…";
   render();
   balanceData=await load(DATA_URL,"balance.json",fallbackBalance);
-  try{quoteData=await fetchLiveQuotes();quoteLoadError=null;}catch(e){quoteData=fallbackQuotes;quoteLoadError=String(e?.message||e);}
+  try{
+    const r=await fetch(QUOTES_URL+"?refresh=1&v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});
+    const q=await r.json();
+    if(!r.ok||!validQuotePayload(q))throw Error("Canlı hisse/döviz verisi eksik");
+    quoteData=q;quoteLoadError=null;
+  }catch(e){
+    try{quoteData=await fetchLiveQuotes();quoteLoadError=null;}
+    catch(_){quoteData=fallbackQuotes;quoteLoadError="Canlı piyasa verisi alınamadı";}
+  }
   // Prices are refreshed centrally by GitHub Actions and read from the canonical Worker API.
   const p=await load(POSITIONS_URL,"positions.json",fallbackPositions);
   positions=Array.isArray(p)?p:(p.positions||[]);
-  tlrefData=await load(TLREF_URL+"?v="+Date.now(),"tlref.json",fallbackTlref);
-  if(!tlrefData?.asOf||tlrefData.asOf!==localToday()){
-    try{
-      const rr=await fetch(TLREF_URL+"?refresh=1&v="+Date.now(),{cache:"no-store"});
-      if(rr.ok)tlrefData=await rr.json();
-    }catch(_){}
-  }
+  try{
+    const rr=await fetch(TLREF_URL+"?refresh=1&v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});
+    const liveTl=rr.ok?await rr.json():null;
+    tlrefData=liveTl?.asOf?liveTl:await load(TLREF_URL+"?v="+Date.now(),"tlref.json",fallbackTlref);
+  }catch(_){tlrefData=await load(TLREF_URL+"?v="+Date.now(),"tlref.json",fallbackTlref)}
   historyData=await load(HISTORY_URL,"history.json",historyData);
   document.getElementById("syncState").textContent=quoteLoadError?"Hisse fiyatı bağlantı uyarısı":"Veriler yüklendi";
   render();
+  renderLiveMarketStatus();
   renderRealCostMetrics();
   renderHistory();
   initHistorySeries();
