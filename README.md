@@ -3,7 +3,7 @@
 Tek ana sayfada toplam varlık, hisse portföyü, fonlar, banka bakiyeleri, döviz, altın ve aylık yükümlülükleri gösteren GitHub Pages paneli.
 
 ## Canlı sayfa
-https://mhsnlsy.github.io/bakiye/
+https://bakiye.muhsin-ulusoy.workers.dev/
 
 ## Veri modeli
 - `data/balance.json`: Google Sheets'ten gelen hesap bakiyeleri ve aylık ödemeler için başlangıç verisi.
