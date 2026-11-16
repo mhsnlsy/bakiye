@@ -377,6 +377,7 @@ async function boot(){
   render();
   renderRealCostMetrics();
   renderHistory();
+  initHistorySeries();
 }
 // Manual balance data only. Google Sheets synchronization has been removed.
 document.getElementById("refreshBtn").onclick=async()=>{document.getElementById("syncState").textContent="Veriler yenileniyor…";await boot()};
