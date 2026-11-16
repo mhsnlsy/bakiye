@@ -113,10 +113,10 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 </section>
 
 <section class="section">
- <div class="sectionhead"><div><h2>Varlık geçmişi</h2><div class="note">16 Kasım 2026'dan itibaren her gün saat 18:40 Türkiye saati kapanış snapshotı tutulur. Pazar snapshotları kalıcı arşivlenir.</div></div><select class="historySelect" id="historyRange"><option value="30">30 gün</option><option value="90">90 gün</option><option value="365" selected>1 yıl</option></select></div>
+ <div class="sectionhead"><div><h2>Varlık geçmişi</h2><div class="note">16 Kasım 2026'dan itibaren her gün saat 18:40 Türkiye saati snapshotı tutulur. Son 700 günlük snapshot arşivi korunur.</div></div><select class="historySelect" id="historyRange"><option value="30" selected>30 gün</option><option value="90">90 gün</option><option value="365">1 yıl</option><option value="700">700 gün</option></select></div>
  <div class="chartLegend" id="historyLegend"><a href="#history-total" data-series="total" onclick="setHistorySeries('total');return false">Toplam Varlık</a><a href="#history-stocks" data-series="stocks" onclick="setHistorySeries('stocks');return false">Hisseler</a><a href="#history-try" data-series="try" onclick="setHistorySeries('try');return false">Banka TL</a><a href="#history-cashFx" data-series="cashFx" onclick="setHistorySeries('cashFx');return false">Nakit Döviz</a><a href="#history-bankFx" data-series="bankFx" onclick="setHistorySeries('bankFx');return false">Banka Döviz</a></div>
  <div class="historyChart" id="historyChart"><div class="chartEmpty">Geçmiş veri biriktikçe grafik oluşacak.</div></div>
- <div class="chartMeta"><span>18:30 snapshot değişimi: <strong id="historyDailyPct">İlk snapshot</strong></span><span id="historyStart">Başlangıç: 16.11.2026</span><span id="historyEnd">Son kayıt: 16.11.2026</span><span id="weeklyArchiveMeta">Pazar arşivi: kalıcı</span></div>
+ <div class="chartMeta"><span>18:40 snapshot değişimi: <strong id="historyDailyPct">İlk snapshot</strong></span><span id="historyStart">Başlangıç: 16.11.2026</span><span id="historyEnd">Son kayıt: 16.11.2026</span><span id="weeklyArchiveMeta">Arşiv: 700 gün</span></div>
 </section>
 <section class="section">
  <div class="sectionhead"><div><h2>Aylık yükümlülükler</h2><div class="note">Toplam varlıktan ayrı gösterilir; net bakiye hesabında düşülür.</div></div></div>
@@ -215,7 +215,7 @@ function setHistorySeries(series){
 }
 function renderHistory(){
  const el=document.getElementById("historyChart"), snaps=Array.isArray(historyData.snapshots)?historyData.snapshots.slice():[];
- const days=Number(document.getElementById("historyRange").value)||365;
+ const days=Number(document.getElementById("historyRange").value)||30;
  const filtered=snaps.sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-days);
  if(!filtered.length){el.innerHTML='<div class="chartEmpty">Geçmiş veri biriktikçe grafik oluşacak.</div>';return}
  const W=1100,H=300,L=48,R=20,T=18,B=34,iw=W-L-R,ih=H-T-B;
