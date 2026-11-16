@@ -1,7 +1,7 @@
 {
-  "source": "Kullanıcının güncel benchmark tablosu (14 Kasım fiyatları) + Döviz.com serbest piyasa",
+  "source": "Midas Canlı Borsa",
   "sourceUrl": "https://www.getmidas.com/canli-borsa/tum-hisseler",
-  "asOf": "2026-11-14",
+  "asOf": "2026-11-16",
   "currency": "TRY",
   "quotes": {
     "TAVHL": 302.25,
