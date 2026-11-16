@@ -75,5 +75,12 @@
   "sheetReportedTotal": 462639,
   "note": "Midas hesabındaki 65.000 TL, aşağıda tek tek gösterilen Midas pozisyonlarının yerine geçer; toplamda ikinci kez sayılmaz.",
   "fxSource": "Döviz.com serbest piyasa",
-  "fxUnitsNote": "Döviz hesapları para birimi miktarı olarak tutulur; TL karşılığı güncel kurlarla hesaplanır."
+  "fxUnitsNote": "Döviz hesapları para birimi miktarı olarak tutulur; TL karşılığı güncel kurlarla hesaplanır.",
+  "depositBenchmark": {
+    "startDate": "2025-08-24",
+    "annualRate": 0.4247,
+    "stopaj": 0.175,
+    "source": "TCMB 3 aya kadar TL mevduat ağırlıklı ortalama; 06.11.2026 son mevcut oran",
+    "method": "Net yıllık mevduat getirisiyle bileşik fırsat maliyeti"
+  }
 }
