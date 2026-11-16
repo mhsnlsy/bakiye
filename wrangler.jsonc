@@ -1,9 +1,34 @@
 {
-  "$schema":"./node_modules/wrangler/config-schema.json",
-  "name":"bakiye",
-  "main":"./worker/index.js",
-  "compatibility_date":"2026-11-15",
-  "assets":{"directory":".","binding":"ASSETS","run_worker_first":["/api/*"]},
-  "r2_buckets":[{"binding":"BAKIYE_DATA","bucket_name":"bakiye-data"}],
-  "triggers":{"crons":["30 15 * * *"]}
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "bakiye",
+  "main": "./worker/index.js",
+  "compatibility_date": "2026-11-15",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "r2_buckets": [
+    {
+      "binding": "BAKIYE_DATA",
+      "bucket_name": "bakiye-data"
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "30 15 * * *"
+    ]
+  },
+  "routes": [
+    {
+      "pattern": "istanbulunhavasi.com/bakiye",
+      "zone_name": "istanbulunhavasi.com"
+    },
+    {
+      "pattern": "istanbulunhavasi.com/bakiye/*",
+      "zone_name": "istanbulunhavasi.com"
+    }
+  ]
 }
