@@ -87,9 +87,9 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 </div>
 
 <section class="section">
- <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez.</div></div><div class="controls"><span class="sourceLink">Midas Canlı Borsa</span></div></div>
- <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th></tr></thead><tbody id="positionsBody"></tbody><tfoot><tr><td colspan="4">Portföy toplamı</td><td id="portfolioTotal">—</td><td id="portfolioPnL">—</td></tr></tfoot></table></div>
- <div class="sourceRow"><span class="state" id="quoteState">Fiyat kaynağı doğrulanıyor…</span></div>
+ <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez. Reel K/Z, mevduat referansına göre fırsat maliyetini düşer.</div></div><div class="controls"><span class="sourceLink">Midas Canlı Borsa</span></div></div>
+ <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th><th>Reel K/Z</th></tr></thead><tbody id="positionsBody"></tbody><tfoot><tr><td colspan="4">Portföy toplamı</td><td id="portfolioTotal">—</td><td id="portfolioPnL">—</td><td id="portfolioRealPnL">—</td></tr></tfoot></table></div>
+ <div class="sourceRow"><span class="state" id="quoteState">Fiyat kaynağı doğrulanıyor…</span><span class="small">Reel K/Z: mevduat referansı, stopaj sonrası</span></div>
  <div class="notice" id="priceNotice">Hisse fiyatları Midas Canlı Borsa sayfasından 5 dakikalık yenileme döngüsüyle alınır; Midas'ın web verisi 15 dakika gecikmelidir. Döviz kurları Döviz.com serbest piyasa verisinden yenilenir.</div>
 </section>
 
@@ -118,7 +118,7 @@ const POSITIONS_URL="./data/positions.json";
 const fmt=n=>new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:2}).format(Number(n)||0);
 const nfmt=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(n)||0);
 let balanceData=null,quoteData=null,positions=[],sheetLastSync=null;
-let quoteOverrides=JSON.parse(localStorage.getItem("bakiye-fintables-quotes")||"{}");
+let quoteOverrides={};
 const safe=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function readTRNumber(v){
  if(v==null)return 0;let s=String(v).replace(/TRY|TL|₺/gi,"").replace(/\s/g,"").trim();if(!s)return 0;
@@ -137,7 +137,7 @@ function csvRows(text){
  if(cell.length||row.length){row.push(cell);out.push(row)}return out;
 }
 function calc(){
- const quotes={...(quoteData?.quotes||{}),...quoteOverrides};
+ const quotes={...(quoteData?.quotes||{})};
  let totals={stocks:0,funds:0,try:0,fx:0,gold:0,receivable:0};
  positions.forEach(p=>{const price=Number(quotes[p.symbol]??p.snapshotPrice??0);const value=price*Number(p.qty||0);if(p.type==="fund")totals.funds+=value;else totals.stocks+=value});
  const a=balanceData.accounts;
@@ -166,18 +166,34 @@ function render(){
  document.getElementById("goldValue").textContent=fmt(c.totals.gold);
  const grams=balanceData.gold?.grams,gramPrice=balanceData.gold?.gramPriceSnapshot;
  document.getElementById("goldSub").textContent=grams? nfmt(grams)+" gr · referans "+fmt(gramPrice)+"/gr":"N Kolay Altın";
- document.getElementById("receivableValue").textContent=fmt(c.totals.receivable);
+ document.getElementById("receivableValue").textContent=fmt(c.totals.receivable);\n document.getElementById("assetCards").querySelectorAll(".card").forEach(card=>{if(card.querySelector("#receivableValue"))card.style.display=c.totals.receivable===0?"none":""});
  const asOf=quoteData?.asOf||balanceData.asOf;
  document.getElementById("asOfLabel").textContent="Değerleme "+(asOf||"—");
  const posRows=positions.map(p=>{
   const price=Number(c.quotes[p.symbol]??p.snapshotPrice??0),market=price*p.qty,cost=p.avgCost*p.qty,pnl=market-cost;
-  return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+(p.type==="fund"?" · Fon":" · Hisse")+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(price)+'</td><td>'+fmt(market)+'</td><td class="'+(pnl>=0?"good":"bad")+'">'+fmt(pnl)+'</td></tr>';
+  const benchmark=balanceData.depositBenchmark||{startDate:"2025-08-24",annualRate:0.4247,stopaj:0.175};
+  const start=new Date(benchmark.startDate+"T00:00:00+03:00"),now=new Date(),days=Math.max(0,(now-start)/86400000);
+  const netAnnualRate=Number(benchmark.annualRate||0)*(1-Number(benchmark.stopaj||0));
+  const depositGain=cost*(Math.pow(1+netAnnualRate,days/365)-1);
+  const realPnl=pnl-depositGain;
+  return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+(p.type==="fund"?" · Fon":" · Hisse")+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(price)+'</td><td>'+fmt(market)+'</td><td class="'+(pnl>=0?"good":"bad")+'">'+fmt(pnl)+'</td><td class="'+(realPnl>=0?"good":"bad")+'">'+fmt(realPnl)+'</td></tr>';
  }).join("");
  document.getElementById("positionsBody").innerHTML=posRows;
  const pf=positions.reduce((s,p)=>s+p.qty*Number(c.quotes[p.symbol]??p.snapshotPrice??0),0);
  const pc=positions.reduce((s,p)=>s+p.qty*p.avgCost,0);
  document.getElementById("portfolioTotal").textContent=fmt(pf);
- document.getElementById("portfolioPnL").textContent=fmt(pf-pc);
+ const nominalPnl=pf-pc;
+ const benchmark=balanceData.depositBenchmark||{startDate:"2025-08-24",annualRate:0.4247,stopaj:0.175};
+ const start=new Date(benchmark.startDate+"T00:00:00+03:00"),now=new Date();
+ const days=Math.max(0,(now-start)/86400000);
+ const netAnnualRate=Number(benchmark.annualRate||0)*(1-Number(benchmark.stopaj||0));
+ const depositFactor=Math.pow(1+netAnnualRate,days/365);
+ const depositGain=pc*(depositFactor-1);
+ const realPnl=nominalPnl-depositGain;
+ document.getElementById("portfolioPnL").textContent=fmt(nominalPnl);
+ document.getElementById("portfolioPnL").title="Nominal K/Z: "+fmt(nominalPnl)+" · Mevduat referansına göre reel K/Z: "+fmt(realPnl);
+ const reelCell=document.getElementById("portfolioRealPnL");
+ if(reelCell)reelCell.textContent=fmt(realPnl);
  const cats={try:"TL / Banka",fx:"Döviz",gold:"Altın",receivable:"Alacak",brokerage_placeholder:"Midas (portföy alt kırılımı)"};
  document.getElementById("accountsBody").innerHTML=Object.values(a).map(x=>{
   const category=x.category, included=category!=="brokerage_placeholder",v=Number(x.value)||0;
@@ -189,7 +205,7 @@ function render(){
  document.getElementById("rentValue").textContent=fmt(m.rent.value);
  document.getElementById("cardValue").textContent=fmt(m.creditCard.value);
  document.getElementById("monthlyTotal").textContent=fmt(c.obligations);
- document.getElementById("quoteState").textContent=quoteOverrides && Object.keys(quoteOverrides).length?"Fintables CSV fiyatları bu tarayıcıya uygulandı. Son kaynak: "+(quoteData?.asOf||"yüklenen dosya"):"Otomatik kaynak: Midas + Döviz.com · "+(quoteData?.lastRefresh||quoteData?.asOf||"—");
+ document.getElementById("quoteState").textContent="Otomatik kaynak: Midas + Döviz.com · "+(quoteData?.lastRefresh||quoteData?.asOf||"—");
  document.getElementById("footerUpdate").textContent="Son hesaplama: "+new Date().toLocaleString("tr-TR");
 }
 function applySheetRows(rows){
