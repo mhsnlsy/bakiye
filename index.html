@@ -215,7 +215,7 @@ function render(){
  const pc=positions.reduce((s,p)=>s+p.qty*p.avgCost,0);
  document.getElementById("portfolioTotal").textContent=fmt(pf);
  const nominalPnl=pf-pc;
- const realCostTotal=positions.reduce((s,p)=>s+p.qty*Number(p.realCost||p.avgCost),0);
+ const realCostTotal=positions.reduce((s,p)=>s+p.qty*realCostPerUnitForPosition(p),0);
  const realPnl=pf-realCostTotal;
  document.getElementById("portfolioPnL").textContent=fmt(nominalPnl);
  document.getElementById("portfolioPnL").title="Nominal K/Z: "+fmt(nominalPnl)+" · Mevduat referansına göre reel K/Z: "+fmt(realPnl);
@@ -252,11 +252,12 @@ function applySheetRows(rows){
  render();return true;
 }
 async function boot(){
+ const load=async(url,label)=>{const r=await fetch(url+"?v="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error(label+" HTTP "+r.status);return r.json()};
  const [b,q,p,t]=await Promise.all([
-  fetch("./data/balance.json?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("balance.json HTTP "+r.status);return r.json()}),
-  fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("quotes.json HTTP "+r.status);return r.json()}),
-  fetch(POSITIONS_URL+"?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("positions.json HTTP "+r.status);return r.json()}),
-  fetch(TLREF_URL+"?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("tlref.json HTTP "+r.status);return r.json()})
+  load("./data/balance.json","balance.json"),
+  load(QUOTES_URL,"quotes.json"),
+  load(POSITIONS_URL,"positions.json"),
+  load(TLREF_URL,"tlref.json")
  ]);
  balanceData=b;quoteData=q;positions=Array.isArray(p)?p:(p.positions||[]);tlrefData=t;
  document.getElementById("syncState").textContent="Veriler yüklendi";
