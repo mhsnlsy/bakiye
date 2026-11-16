@@ -2,7 +2,7 @@ name: Record Daily Balance History
 
 on:
   schedule:
-    - cron: "20 13 * * *"
+    - cron: "0 15 * * *"
   workflow_dispatch:
 
 permissions:
