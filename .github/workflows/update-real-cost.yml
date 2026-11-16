@@ -1,5 +1,9 @@
 name: Update Real Cost
 
+concurrency:
+  group: bakiye-real-cost
+  cancel-in-progress: false
+
 on:
   schedule:
     - cron: "45 16 * * 1-5"
