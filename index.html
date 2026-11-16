@@ -107,7 +107,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 
 <section class="section">
  <div class="sectionhead"><div><h2>Varlık geçmişi</h2><div class="note">16 Kasım 2026'dan itibaren her gün saat 18:30 Türkiye saati snapshot tutulur. Pazar snapshotları kalıcı arşivlenir.</div></div><select class="historySelect" id="historyRange"><option value="30">30 gün</option><option value="90">90 gün</option><option value="365" selected>1 yıl</option></select></div>
- <div class="chartLegend" id="historyLegend"><a href="#history-total" data-series="total">Toplam Varlık</a><a href="#history-stocks" data-series="stocks">Hisseler</a><a href="#history-try" data-series="try">Banka TL</a><a href="#history-cashFx" data-series="cashFx">Nakit Döviz</a><a href="#history-bankFx" data-series="bankFx">Banka Döviz</a></div>
+ <div class="chartLegend" id="historyLegend"><a href="#history-total" data-series="total" onclick="setHistorySeries('total');return false">Toplam Varlık</a><a href="#history-stocks" data-series="stocks" onclick="setHistorySeries('stocks');return false">Hisseler</a><a href="#history-try" data-series="try" onclick="setHistorySeries('try');return false">Banka TL</a><a href="#history-cashFx" data-series="cashFx" onclick="setHistorySeries('cashFx');return false">Nakit Döviz</a><a href="#history-bankFx" data-series="bankFx" onclick="setHistorySeries('bankFx');return false">Banka Döviz</a></div>
  <div class="historyChart" id="historyChart"><div class="chartEmpty">Geçmiş veri biriktikçe grafik oluşacak.</div></div>
  <div class="chartMeta"><span>18:30 snapshot değişimi: <strong id="historyDailyPct">İlk snapshot</strong></span><span id="historyStart">Başlangıç: 16.11.2026</span><span id="historyEnd">Son kayıt: 16.11.2026</span><span id="weeklyArchiveMeta">Pazar arşivi: kalıcı</span></div>
 </section>
@@ -199,12 +199,20 @@ function renderRealCostMetrics(){
 }
 function setHistorySeries(series){
  const legend=document.getElementById("historyLegend");
- if(!legend)return;
+ if(!legend)return false;
  legend.dataset.activeSeries=series;
- legend.querySelectorAll("a[data-series]").forEach(b=>b.classList.toggle("active",b.dataset.series===series));
+ legend.querySelectorAll("a[data-series]").forEach(b=>{
+   const active=b.dataset.series===series;
+   b.classList.toggle("active",active);
+   b.style.backgroundColor=active?"#2f6ea5":"#13243a";
+   b.style.borderColor=active?"#8fc7ff":"#2c4664";
+   b.style.color=active?"#ffffff":"var(--text)";
+   b.style.fontWeight=active?"700":"400";
+ });
  const status=document.getElementById("historyDailyPct");
  if(status) status.textContent="Seçim: "+(legend.querySelector('a[data-series="'+series+'"]')?.textContent||series);
  renderHistory();
+ return false;
 }
 function initHistorySeries(){
  const hash=location.hash.replace("#history-","");
