@@ -58,7 +58,7 @@ tr:last-child td{border-bottom:0}
 footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.wrap{padding:19px 12px 34px}.top{display:block}h1{font-size:27px}.topright{margin-top:12px}.hero{padding:18px}.heroTotal{font-size:34px}.grid{gap:8px}.card{padding:13px}.cardvalue{font-size:20px}.section{padding:13px}.liability{grid-template-columns:1fr 1fr}.liability>div:last-child{grid-column:1/-1}table{min-width:650px}}
-.historyChart{height:310px;position:relative;overflow:hidden}.historyChart svg{width:100%;height:100%;display:block}.chartGrid{stroke:#263b55;stroke-width:1}.chartAxis{fill:#8fa3bb;font-size:10px}.chartLine{fill:none;stroke-width:2.5;vector-effect:non-scaling-stroke}.chartDot{stroke:#101e30;stroke-width:2}.chartLegend{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px}.chartLegend button{padding:6px 9px;font-size:10px;background:#13243a;border-color:#2c4664}.chartLegend button.active{background:#1d3b5d;border-color:#6d99c7}.chartMeta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:8px}.chartEmpty{height:100%;display:grid;place-items:center;color:var(--muted);font-size:12px}.historySelect{border:1px solid #365577;background:#1b3654;color:var(--text);border-radius:8px;padding:7px 9px;font:inherit;font-size:11px}@media(max-width:560px){.historyChart{height:260px}}.benchmarkGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:11px}.metricCard{background:#13243a;border:1px solid var(--line);border-radius:11px;padding:12px}.metricCard span{display:block;color:var(--muted);font-size:10px}.metricCard strong{display:block;font-size:18px;margin-top:3px}.metricCard small{display:block;color:var(--muted);font-size:9px;margin-top:2px}@media(max-width:560px){.benchmarkGrid{grid-template-columns:1fr}}</style>
+.historyChart{height:310px;position:relative;overflow:hidden}.historyChart svg{width:100%;height:100%;display:block}.chartGrid{stroke:#263b55;stroke-width:1}.chartAxis{fill:#8fa3bb;font-size:10px}.chartLine{fill:none;stroke-width:2.5;vector-effect:non-scaling-stroke}.chartDot{stroke:#101e30;stroke-width:2}.chartLegend{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px;position:relative;z-index:10}.chartLegend button{position:relative;z-index:11;pointer-events:auto;cursor:pointer;padding:6px 9px;font-size:10px;background:#13243a;border-color:#2c4664}.chartLegend button.active{background:#1d3b5d;border-color:#6d99c7}.chartMeta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:8px}.chartEmpty{height:100%;display:grid;place-items:center;color:var(--muted);font-size:12px}.historySelect{border:1px solid #365577;background:#1b3654;color:var(--text);border-radius:8px;padding:7px 9px;font:inherit;font-size:11px}@media(max-width:560px){.historyChart{height:260px}}.benchmarkGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:11px}.metricCard{background:#13243a;border:1px solid var(--line);border-radius:11px;padding:12px}.metricCard span{display:block;color:var(--muted);font-size:10px}.metricCard strong{display:block;font-size:18px;margin-top:3px}.metricCard small{display:block;color:var(--muted);font-size:9px;margin-top:2px}@media(max-width:560px){.benchmarkGrid{grid-template-columns:1fr}}</style>
 </head>
 <body>
 <main class="wrap">
@@ -197,6 +197,7 @@ function renderRealCostMetrics(){
  const ds=document.getElementById("dailyRealCostSub");
  if(ds)ds.textContent=previous?"Önceki güne göre net TLREF etkisi":"İlk gün: referans oluşturuldu";
 }
+function historyLegendClick(e){const b=e.target.closest?.("#historyLegend button[data-series]");if(!b)return;const legend=document.getElementById("historyLegend");if(!legend)return;e.preventDefault();legend.dataset.activeSeries=b.dataset.series;renderHistory()}
 function renderHistory(){
  const el=document.getElementById("historyChart"),legend=document.getElementById("historyLegend");
  if(!el||!historyData)return;
@@ -241,7 +242,9 @@ function renderHistory(){
  const latest=rows.at(-1),previous=rows.length>1?rows.at(-2):null;
  const dailyPct=previous&&Number(previous.total)?((Number(latest.total)-Number(previous.total))/Number(previous.total))*100:0;
  const pctEl=document.getElementById("historyDailyPct");if(pctEl)pctEl.textContent=previous?((dailyPct>=0?"+":"")+dailyPct.toFixed(2)+"%"):"İlk snapshot";
- legend.onclick=(e)=>{const b=e.target.closest("button[data-series]");if(!b)return;legend.dataset.activeSeries=b.dataset.series;renderHistory()};
+ // Global delegated handler: survives every legend re-render and does not depend on a replaced button node.
+ document.removeEventListener("click",historyLegendClick);
+ document.addEventListener("click",historyLegendClick);
 }\nfunction render(){
  const c=calc(),a=balanceData.accounts,allPositions=positions.reduce((s,p)=>s+p.qty,0);
  document.getElementById("grandTotal").textContent=fmt(c.total);
