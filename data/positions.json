@@ -36,8 +36,8 @@
   },
   {
     "symbol": "ZPLIB.F",
-    "name": "Ziraat Portföy",
-    "type": "fund",
+    "name": "Ziraat Portföy ZPLIB",
+    "type": "stock",
     "qty": 83,
     "avgCost": 177.92
   }
