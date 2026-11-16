@@ -17,12 +17,20 @@
     "doviz": {
       "label": "Döviz",
       "value": 110000,
-      "category": "fx"
+      "category": "fx",
+      "currencies": {
+        "USD": 1427,
+        "EUR": 495,
+        "GBP": 80
+      }
     },
     "bankaDoviz": {
       "label": "Banka döviz",
       "value": 139000,
-      "category": "fx"
+      "category": "fx",
+      "currencies": {
+        "EUR": 2460
+      }
     },
     "midas": {
       "label": "Midas",
@@ -65,5 +73,7 @@
     "grams": 1.7
   },
   "sheetReportedTotal": 462639,
-  "note": "Midas hesabındaki 65.000 TL, aşağıda tek tek gösterilen Midas pozisyonlarının yerine geçer; toplamda ikinci kez sayılmaz."
+  "note": "Midas hesabındaki 65.000 TL, aşağıda tek tek gösterilen Midas pozisyonlarının yerine geçer; toplamda ikinci kez sayılmaz.",
+  "fxSource": "Döviz.com serbest piyasa",
+  "fxUnitsNote": "Döviz hesapları para birimi miktarı olarak tutulur; TL karşılığı güncel kurlarla hesaplanır."
 }
