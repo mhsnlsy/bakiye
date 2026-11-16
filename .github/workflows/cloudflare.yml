@@ -42,7 +42,9 @@ jobs:
     needs: deploy
     if: always() && (github.event_name == 'schedule' || needs.deploy.result == 'success')
     runs-on: ubuntu-latest
-    permissions: {contents: read}
+    permissions:
+      contents: read
+      statuses: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -96,3 +98,15 @@ jobs:
           print("Worker API quotes:", actual["quotes"])
           print("Worker API and R2 match: OK")
           PY
+      - name: Publish quote pipeline status
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ "$JOB_STATUS" = "success" ]; then STATE=success; else STATE=failure; fi
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state="$STATE" \
+            -f context="Bakiye / live quotes" \
+            -f description="R2 + public Worker API verification: $JOB_STATUS" \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/workflows/cloudflare.yml"
