@@ -2,7 +2,7 @@ name: Archive daily closing stock prices
 
 on:
   schedule:
-    - cron: "40 15 * * 1-5"
+    - cron: "40 15 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -32,7 +32,7 @@ jobs:
           npx wrangler@latest r2 object get bakiye-data/balance.json --file=/tmp/balance.json --remote
           npx wrangler@latest r2 object get bakiye-data/positions.json --file=/tmp/positions.json --remote
           npx wrangler@latest r2 object get bakiye-data/tlref.json --file=/tmp/tlref.json --remote
-          npx wrangler@latest r2 object get bakiye-data/history.json --file=/tmp/history.json --remote || echo '{"version":1,"frequency":"daily","startDate":null,"retentionDays":365,"updatedAt":null,"snapshots":[]}' > /tmp/history.json
+          npx wrangler@latest r2 object get bakiye-data/history.json --file=/tmp/history.json --remote || echo '{"version":1,"frequency":"daily","startDate":null,"retentionDays":700,"updatedAt":null,"snapshots":[]}' > /tmp/history.json
       - name: Build 18:40 asset snapshot
         run: python3 scripts/snapshot_history.py
       - name: Publish 18:40 asset snapshot
