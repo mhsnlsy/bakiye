@@ -6,11 +6,13 @@ from pathlib import Path
 BAL = Path("data/balance.json")
 QUOTES = Path("data/quotes.json")
 POSITIONS = Path("data/positions.json")
+TLREF = Path("data/tlref.json")
 HISTORY = Path("data/history.json")
 
 balance=json.loads(BAL.read_text(encoding="utf-8"))
 quotes=json.loads(QUOTES.read_text(encoding="utf-8"))
 positions=json.loads(POSITIONS.read_text(encoding="utf-8"))
+tlref=json.loads(TLREF.read_text(encoding="utf-8"))
 
 q=quotes.get("quotes",{})
 fx=quotes.get("fx",{})
@@ -33,6 +35,17 @@ receivable=sum(float(x.get("value",0)) for x in a.values() if x.get("category")=
 total=stocks+funds+tl+cash_fx+bank_fx+gold+receivable
 
 today=date.today().isoformat()
+net_annual=float(tlref.get("netAnnualRate",0))
+real_cost_total=0.0
+for p in positions:
+    base=float(p.get("avgCost",0))
+    start=date.fromisoformat(p.get("realCostBaseDate",today))
+    days=max(0,(date.today()-start).days)
+    real_unit=base*((1+net_annual/365)**days)
+    real_cost_total += real_unit*float(p.get("qty",0))
+real_cost_total=round(real_cost_total,2)
+nominal_cost_total=round(sum(float(p.get("avgCost",0))*float(p.get("qty",0)) for p in positions),2)
+tlref_cost_added=round(real_cost_total-nominal_cost_total,2)
 try:
     h=json.loads(HISTORY.read_text(encoding="utf-8"))
 except Exception:
@@ -40,7 +53,7 @@ except Exception:
 
 snap={"date":today,"total":round(total,2),"stocks":round(stocks,2),"funds":round(funds,2),
       "try":round(tl,2),"cashFx":round(cash_fx,2),"bankFx":round(bank_fx,2),
-      "gold":round(gold,2),"receivable":round(receivable,2)}
+      "gold":round(gold,2),"receivable":round(receivable,2),"realCostTotal":real_cost_total,"nominalCostTotal":nominal_cost_total,"tlrefCostAdded":tlref_cost_added,"netTlrefAnnualRate":net_annual}
 
 rows=[x for x in h.get("snapshots",[]) if x.get("date")!=today]
 rows.append(snap)
