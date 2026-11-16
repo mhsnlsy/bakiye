@@ -92,7 +92,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
  <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez.</div></div><div class="controls"><a class="sourceLink" href="https://fintables.com/radar/hisse-senetleri" target="_blank" rel="noopener">Fintables Radar ↗</a></div></div>
  <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th></tr></thead><tbody id="positionsBody"></tbody><tfoot><tr><td colspan="4">Portföy toplamı</td><td id="portfolioTotal">—</td><td id="portfolioPnL">—</td></tr></tfoot></table></div>
  <div class="sourceRow"><span class="state" id="quoteState">Fiyat kaynağı doğrulanıyor…</span><div class="quoteImport"><label class="small" for="quoteCsv">Fintables dışa aktarma CSV</label><input id="quoteCsv" type="file" accept=".csv,text/csv"><button id="importQuotes">Fiyatları içe aktar</button></div></div>
- <div class="notice" id="priceNotice">Fintables Radar bağlantısı fiyat kaynağı olarak tanımlandı. Fintables'ın BIST Radar tablosu herkese açık, belgelenmiş bir fiyat API'si sunmadığından Pages uygulaması henüz otomatik fiyat uç noktasına bağlanmış değildir. Son güvenilir fiyatlar Midas ekstresinin 14.11.2026 kapanışından gelir; Fintables CSV dışa aktarımı ile güncellenebilir. Eski fiyatlar canlı fiyatmış gibi gösterilmez.</div>
+ <div class="notice" id="priceNotice">Hisse fiyatları Midas Canlı Borsa sayfasından 5 dakikalık yenileme döngüsüyle alınır; Midas'ın web verisi 15 dakika gecikmelidir. Döviz kurları Döviz.com serbest piyasa verisinden yenilenir.</div>
 </section>
 
 <section class="section">
