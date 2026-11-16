@@ -311,9 +311,9 @@ function renderLiveMarketStatus(){
  const rate=Number(tl.grossAnnualRate||0);
  const net=Number(tl.netAnnualRate||0);
  const tlEl=document.getElementById("liveTlrefRate"), tlSub=document.getElementById("liveTlrefSub");
- if(tlEl)tlEl.textContent=rate?("Brüt "+nfmt(rate*100)+"% · Net "+nfmt(net*100)+"%"):"—";
+ if(tlEl)tlEl.textContent=rate?("Brüt "+nfmt(rate*100)+"% · Net "+nfmt(net*100)+"%"):"Veri yok";
  if(tlSub){
-   if(asOf===today)tlSub.textContent="Borsa İstanbul · bugün alındı · "+(tl.updatedAt?new Intl.DateTimeFormat("tr-TR",{timeZone:"Europe/Istanbul",hour:"2-digit",minute:"2-digit"}).format(new Date(tl.updatedAt))+" TSİ":"");
+   if(asOf===today)tlSub.textContent=(tl.sourceUsed&&tl.sourceUsed.includes("doviz.com")?"Borsa İstanbul doğrulaması · ":"Borsa İstanbul · bugün alındı · ")+(tl.updatedAt?new Intl.DateTimeFormat("tr-TR",{timeZone:"Europe/Istanbul",hour:"2-digit",minute:"2-digit"}).format(new Date(tl.updatedAt))+" TSİ":"");
    else tlSub.textContent="Borsa İstanbul · bugün henüz yayımlanmadı · son: "+(asOf||"—");
  }
 }
