@@ -232,7 +232,8 @@ function initHistorySeries(){
  const allowed=["total","stocks","try","cashFx","bankFx"];
  setHistorySeries(allowed.includes(hash)?hash:"total");
 }
-window.addEventListener("hashchange",initHistorySeries);\nbindHistorySeries();
+window.addEventListener("hashchange",initHistorySeries);
+bindHistorySeries();
 
 function renderHistory(){
  const el=document.getElementById("historyChart"),legend=document.getElementById("historyLegend");
