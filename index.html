@@ -88,7 +88,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 
 <section class="section">
  <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez. Reel K/Z, mevduat referansına göre fırsat maliyetini düşer.</div></div><div class="controls"><span class="sourceLink">Midas Canlı Borsa</span></div></div>
- <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th><th>Reel K/Z</th></tr></thead><tbody id="positionsBody"></tbody><tfoot><tr><td colspan="4">Portföy toplamı</td><td id="portfolioTotal">—</td><td id="portfolioPnL">—</td><td id="portfolioRealPnL">—</td></tr></tfoot></table></div>
+ <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Reel maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th><th>Reel K/Z</th></tr></thead><tbody id="positionsBody"></tbody><tfoot><tr><td colspan="5">Portföy toplamı</td><td id="portfolioTotal">—</td><td id="portfolioPnL">—</td><td id="portfolioRealPnL">—</td></tr></tfoot></table></div>
  <div class="sourceRow"><span class="state" id="quoteState">Fiyat kaynağı doğrulanıyor…</span><span class="small">Reel K/Z: mevduat referansı, stopaj sonrası</span></div>
  <div class="notice" id="priceNotice">Hisse fiyatları Midas Canlı Borsa sayfasından 5 dakikalık yenileme döngüsüyle alınır; Midas'ın web verisi 15 dakika gecikmelidir. Döviz kurları Döviz.com serbest piyasa verisinden yenilenir.</div>
 </section>
@@ -177,7 +177,8 @@ function render(){
   const netAnnualRate=Number(benchmark.annualRate||0)*(1-Number(benchmark.stopaj||0));
   const depositGain=cost*(Math.pow(1+netAnnualRate,days/365)-1);
   const realPnl=pnl-depositGain;
-  return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+(p.type==="fund"?" · Fon":" · Hisse")+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(price)+'</td><td>'+fmt(market)+'</td><td class="'+(pnl>=0?"good":"bad")+'">'+fmt(pnl)+'</td><td class="'+(realPnl>=0?"good":"bad")+'">'+fmt(realPnl)+'</td></tr>';
+  const realCostPerUnit=p.avgCost*Math.pow(1+netAnnualRate,days/365);
+  return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+(p.type==="fund"?" · Fon":" · Hisse")+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(realCostPerUnit)+'</td><td>'+fmt(price)+'</td><td>'+fmt(market)+'</td><td class="'+(pnl>=0?"good":"bad")+'">'+fmt(pnl)+'</td><td class="'+(realPnl>=0?"good":"bad")+'">'+fmt(realPnl)+'</td></tr>';
  }).join("");
  document.getElementById("positionsBody").innerHTML=posRows;
  const pf=positions.reduce((s,p)=>s+p.qty*Number(c.quotes[p.symbol]??p.snapshotPrice??0),0);
