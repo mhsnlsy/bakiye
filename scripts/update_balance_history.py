@@ -57,7 +57,7 @@ tlref_cost_added=round(real_cost_total-nominal_cost_total,2)
 try:
     h=json.loads(HISTORY.read_text(encoding="utf-8"))
 except Exception:
-    h={"version":1,"frequency":"daily","startDate":today,"retentionDays":365,"snapshots":[],"weeklySnapshots":[]}
+    h={"version":1,"frequency":"daily","startDate":today,"retentionDays":700,"snapshots":[],"weeklySnapshots":[]}
 
 snap={"date":today,"total":round(total,2),"stocks":round(stocks,2),"funds":round(funds,2),
       "try":round(tl,2),"cashFx":round(cash_fx,2),"bankFx":round(bank_fx,2),
@@ -73,7 +73,7 @@ if date.today().weekday() == 6:
     weekly.sort(key=lambda x:x["date"])
     h["weeklySnapshots"]=weekly
 rows.sort(key=lambda x:x["date"])
-cutoff=date.today()-timedelta(days=int(h.get("retentionDays",365))-1)
+cutoff=date.today()-timedelta(days=int(h.get("retentionDays",700))-1)
 rows=[x for x in rows if date.fromisoformat(x["date"])>=cutoff]
 
 h["startDate"]=rows[0]["date"] if rows else today
