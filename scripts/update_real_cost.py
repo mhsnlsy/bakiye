@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import json
-import math
 from datetime import date, datetime
 from pathlib import Path
 
@@ -19,13 +18,16 @@ net_annual = latest_rate * (1 - STOPAJ)
 for p in positions:
     base_date = p.get("realCostBaseDate")
     if not base_date:
-        base_date = today.isoformat()
+        base_date = p.get("purchaseDate") or today.isoformat()
+        p["purchaseDate"] = base_date
         p["realCostBaseDate"] = base_date
 
     start = date.fromisoformat(base_date)
     days = max(0, (today - start).days)
     factor = (1 + net_annual / DAYS_PER_YEAR) ** days
     p["realCost"] = round(float(p["avgCost"]) * factor, 4)
+    p["tlrefCostAdded"] = round(p["realCost"] - float(p["avgCost"]), 4)
+    p["realCostUpdatedAt"] = today.isoformat()
 
 POSITIONS.write_text(json.dumps(positions, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
