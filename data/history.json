@@ -1,20 +1,39 @@
 {
   "version": 1,
   "frequency": "daily",
-  "startDate": "2026-11-16",
+  "startDate": "2026-11-15",
   "retentionDays": 365,
-  "updatedAt": "2026-11-16T15:27:00+03:00",
+  "updatedAt": "2026-11-16T19:00:00+03:00",
   "snapshots": [
     {
-      "date": "2026-11-16",
+      "date": "2026-11-15",
       "total": 456606.74,
-      "stocks": 66677.56,
-      "funds": 16645.65,
+      "stocks": 68080.69,
+      "funds": 0,
       "try": 138000,
       "cashFx": 104712.95,
       "bankFx": 136577.23,
       "gold": 10639,
-      "receivable": 0
+      "receivable": 0,
+      "tlrefCostAdded": 0,
+      "tlrefAsOf": "2026-11-13",
+      "tlrefGrossAnnualRate": 0.356334,
+      "tlrefNetAnnualRate": 0.29367555
+    },
+    {
+      "date": "2026-11-16",
+      "total": 457941.36,
+      "stocks": 68080.69,
+      "funds": 0,
+      "try": 138000,
+      "cashFx": 104712.95,
+      "bankFx": 136577.23,
+      "gold": 10639,
+      "receivable": 0,
+      "tlrefCostAdded": 64.6133,
+      "tlrefAsOf": "2026-11-16",
+      "tlrefGrossAnnualRate": 0.358313,
+      "tlrefNetAnnualRate": 0.295608225
     }
   ]
 }
