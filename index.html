@@ -172,12 +172,8 @@ function render(){
  document.getElementById("asOfLabel").textContent="Değerleme "+(asOf||"—");
  const posRows=positions.map(p=>{
   const price=Number(c.quotes[p.symbol]??p.snapshotPrice??0),market=price*p.qty,cost=p.avgCost*p.qty,pnl=market-cost;
-  const benchmark=balanceData.depositBenchmark||{startDate:"2025-08-24",annualRate:0.4247,stopaj:0.175};
-  const start=new Date(benchmark.startDate+"T00:00:00+03:00"),now=new Date(),days=Math.max(0,(now-start)/86400000);
-  const netAnnualRate=Number(benchmark.annualRate||0)*(1-Number(benchmark.stopaj||0));
-  const depositGain=cost*(Math.pow(1+netAnnualRate,days/365)-1);
-  const realPnl=pnl-depositGain;
-  const realCostPerUnit=p.avgCost*Math.pow(1+netAnnualRate,days/365);
+  const realCostPerUnit=Number(p.realCost||p.avgCost);
+  const realPnl=market-(realCostPerUnit*p.qty);
   return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+(p.type==="fund"?" · Fon":" · Hisse")+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(realCostPerUnit)+'</td><td>'+fmt(price)+'</td><td>'+fmt(market)+'</td><td class="'+(pnl>=0?"good":"bad")+'">'+fmt(pnl)+'</td><td class="'+(realPnl>=0?"good":"bad")+'">'+fmt(realPnl)+'</td></tr>';
  }).join("");
  document.getElementById("positionsBody").innerHTML=posRows;
@@ -185,13 +181,8 @@ function render(){
  const pc=positions.reduce((s,p)=>s+p.qty*p.avgCost,0);
  document.getElementById("portfolioTotal").textContent=fmt(pf);
  const nominalPnl=pf-pc;
- const benchmark=balanceData.depositBenchmark||{startDate:"2025-08-24",annualRate:0.4247,stopaj:0.175};
- const start=new Date(benchmark.startDate+"T00:00:00+03:00"),now=new Date();
- const days=Math.max(0,(now-start)/86400000);
- const netAnnualRate=Number(benchmark.annualRate||0)*(1-Number(benchmark.stopaj||0));
- const depositFactor=Math.pow(1+netAnnualRate,days/365);
- const depositGain=pc*(depositFactor-1);
- const realPnl=nominalPnl-depositGain;
+ const realCostTotal=positions.reduce((s,p)=>s+p.qty*Number(p.realCost||p.avgCost),0);
+ const realPnl=pf-realCostTotal;
  document.getElementById("portfolioPnL").textContent=fmt(nominalPnl);
  document.getElementById("portfolioPnL").title="Nominal K/Z: "+fmt(nominalPnl)+" · Mevduat referansına göre reel K/Z: "+fmt(realPnl);
  const reelCell=document.getElementById("portfolioRealPnL");
