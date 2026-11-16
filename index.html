@@ -166,7 +166,8 @@ function render(){
  document.getElementById("goldValue").textContent=fmt(c.totals.gold);
  const grams=balanceData.gold?.grams,gramPrice=balanceData.gold?.gramPriceSnapshot;
  document.getElementById("goldSub").textContent=grams? nfmt(grams)+" gr · referans "+fmt(gramPrice)+"/gr":"N Kolay Altın";
- document.getElementById("receivableValue").textContent=fmt(c.totals.receivable);\n document.getElementById("assetCards").querySelectorAll(".card").forEach(card=>{if(card.querySelector("#receivableValue"))card.style.display=c.totals.receivable===0?"none":""});
+ document.getElementById("receivableValue").textContent=fmt(c.totals.receivable);
+ document.getElementById("assetCards").querySelectorAll(".card").forEach(card=>{if(card.querySelector("#receivableValue"))card.style.display=c.totals.receivable===0?"none":""});
  const asOf=quoteData?.asOf||balanceData.asOf;
  document.getElementById("asOfLabel").textContent="Değerleme "+(asOf||"—");
  const posRows=positions.map(p=>{
