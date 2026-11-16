@@ -97,7 +97,6 @@ export default{
   return env.ASSETS.fetch(req);
  },
  async scheduled(e,env,ctx){
-   if(e.cron==="30 15 * * *")ctx.waitUntil((async()=>{await quotes(env);await tlref(env);await snapshot(env)})());
-   else if(e.cron==="*/5 * * * *")ctx.waitUntil(quotes(env));
+   if(e.cron==="30 15 * * *")ctx.waitUntil((async()=>{await tlref(env);await snapshot(env)})());
  }
 };
