@@ -225,6 +225,17 @@ function applySheetRows(rows){
  document.getElementById("syncState").textContent="Sheets eşitlendi";
  render();return true;
 }
+async function boot(){
+ const [b,q,p]=await Promise.all([
+  fetch("./data/balance.json?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("balance.json HTTP "+r.status);return r.json()}),
+  fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("quotes.json HTTP "+r.status);return r.json()}),
+  fetch(POSITIONS_URL+"?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("positions.json HTTP "+r.status);return r.json()})
+ ]);
+ balanceData=b;quoteData=q;positions=Array.isArray(p)?p:(p.positions||[]);
+ document.getElementById("syncState").textContent="Veriler yüklendi";
+ render();
+ await syncSheet();
+}
 async function syncSheet(){
  const url=balanceData.sheetCsvUrl;if(!url)return;
  try{
