@@ -64,53 +64,53 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 <main class="wrap">
 <header class="top">
  <div><div class="eyebrow">PERSONAL BALANCE SHEET</div><h1>Bakiye</h1><div class="sub">Bütün varlıkların tek ekranda. Hisseler ve diğer varlıklar birlikte.</div></div>
- <div class="topright"><span class="pill" id="syncState">Veriler yükleniyor…</span><button id="refreshBtn">↻ Yenile</button></div>
+ <div class="topright"><span class="pill" id="syncState">Veriler hazır</span><button id="refreshBtn">↻ Yenile</button></div>
 </header>
 
 <section class="hero">
- <div class="heroTop"><div class="heroLabel">TOPLAM VARLIK</div><span class="pill" id="asOfLabel">—</span></div>
- <div class="heroTotal" id="grandTotal">—</div>
+ <div class="heroTop"><div class="heroLabel">TOPLAM VARLIK</div><span class="pill" id="asOfLabel">Değerleme 14.11.2026</span></div>
+ <div class="heroTotal" id="grandTotal">₺456.606,74</div>
  <div class="heroBottom">
-  <div>Planlı aylık ödemeler<strong id="obligationHero">—</strong></div>
-  <div>Ödemeler sonrası<strong id="netTotal">—</strong></div>
-  <div>Reel portföy K/Z<strong id="heroRealPnL">—</strong></div>
-  <div>Toplam pozisyon<strong id="positionCount">—</strong></div>
+  <div>Planlı aylık ödemeler<strong id="obligationHero">₺54.000,00</strong></div>
+  <div>Ödemeler sonrası<strong id="netTotal">₺402.606,74</strong></div>
+  <div>Reel portföy K/Z<strong id="heroRealPnL">-₺13.103,17</strong></div>
+  <div>Toplam pozisyon<strong id="positionCount">1.886 lot</strong></div>
  </div>
 </section>
 
 <div class="grid" id="assetCards">
- <article class="card"><div class="cardhead"><span class="cardlabel">Hisseler</span><span class="cardicon">↗</span></div><div class="cardvalue" id="stocksValue">—</div><div class="cardfoot" id="stocksSub">—</div></article>
- <article class="card"><div class="cardhead"><span class="cardlabel">Yatırım fonları</span><span class="cardicon">◈</span></div><div class="cardvalue" id="fundsValue">—</div><div class="cardfoot">Midas portföyündeki fon pozisyonları</div></article>
- <article class="card"><div class="cardhead"><span class="cardlabel">Banka & TL bakiyeleri</span><span class="cardicon">₺</span></div><div class="cardvalue" id="tryValue">—</div><div class="cardfoot">N Kolay · Enpara · BNC · Nakit</div></article>
- <article class="card"><div class="cardhead"><span class="cardlabel">Nakit Döviz</span><span class="cardicon">＄</span></div><div class="cardvalue" id="cashFxValue">—</div><div class="cardfoot" id="cashFxSub">USD · EUR · GBP</div></article><article class="card"><div class="cardhead"><span class="cardlabel">Banka Döviz</span><span class="cardicon">€</span></div><div class="cardvalue" id="bankFxValue">—</div><div class="cardfoot" id="bankFxSub">EUR</div></article>
- <article class="card"><div class="cardhead"><span class="cardlabel">Altın</span><span class="cardicon">◇</span></div><div class="cardvalue goldtext" id="goldValue">—</div><div class="cardfoot" id="goldSub">N Kolay Altın</div></article>
- <article class="card"><div class="cardhead"><span class="cardlabel">Tahmini alacaklar</span><span class="cardicon">＋</span></div><div class="cardvalue" id="receivableValue">—</div><div class="cardfoot">Henüz tahsil edilmemiş tutarlar</div></article>
+ <article class="card"><div class="cardhead"><span class="cardlabel">Hisseler</span><span class="cardicon">↗</span></div><div class="cardvalue" id="stocksValue">₺66.677,56</div><div class="cardfoot" id="stocksSub">5 hisse pozisyonu</div></article>
+ <article class="card"><div class="cardhead"><span class="cardlabel">Yatırım fonları</span><span class="cardicon">◈</span></div><div class="cardvalue" id="fundsValue">₺16.645,65</div><div class="cardfoot">Midas portföyündeki fon pozisyonları</div></article>
+ <article class="card"><div class="cardhead"><span class="cardlabel">Banka & TL bakiyeleri</span><span class="cardicon">₺</span></div><div class="cardvalue" id="tryValue">₺138.000,00</div><div class="cardfoot">N Kolay · Enpara · BNC · Nakit</div></article>
+ <article class="card"><div class="cardhead"><span class="cardlabel">Nakit Döviz</span><span class="cardicon">＄</span></div><div class="cardvalue" id="cashFxValue">₺104.712,95</div><div class="cardfoot" id="cashFxSub">USD · EUR · GBP</div></article><article class="card"><div class="cardhead"><span class="cardlabel">Banka Döviz</span><span class="cardicon">€</span></div><div class="cardvalue" id="bankFxValue">₺136.577,23</div><div class="cardfoot" id="bankFxSub">EUR</div></article>
+ <article class="card"><div class="cardhead"><span class="cardlabel">Altın</span><span class="cardicon">◇</span></div><div class="cardvalue goldtext" id="goldValue">₺10.639,00</div><div class="cardfoot" id="goldSub">N Kolay Altın</div></article>
+ <article class="card"><div class="cardhead"><span class="cardlabel">Tahmini alacaklar</span><span class="cardicon">＋</span></div><div class="cardvalue" id="receivableValue">₺0,00</div><div class="cardfoot">Henüz tahsil edilmemiş tutarlar</div></article>
 </div>
 
 <section class="section">
  <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez. Reel K/Z, mevduat referansına göre fırsat maliyetini düşer.</div></div><div class="controls"><span class="sourceLink">Midas Canlı Borsa</span></div></div>
  <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Reel maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th><th>Reel K/Z</th></tr></thead><tbody id="positionsBody"></tbody><tfoot><tr><td colspan="5">Portföy toplamı</td><td id="portfolioTotal">—</td><td id="portfolioPnL">—</td><td id="portfolioRealPnL">—</td></tr></tfoot></table></div>
- <div class="sourceRow"><span class="state" id="quoteState">Fiyat kaynağı doğrulanıyor…</span><span class="small">Reel K/Z: mevduat referansı, stopaj sonrası · Fiyat güncellendiğinde otomatik yeniden hesaplanır.</span></div>
+ <div class="sourceRow"><span class="state" id="quoteState">Midas + Döviz.com · 14.11.2026</span><span class="small">Reel K/Z: mevduat referansı, stopaj sonrası · Fiyat güncellendiğinde otomatik yeniden hesaplanır.</span></div>
  <div class="notice" id="priceNotice">Hisse fiyatları Midas Canlı Borsa sayfasından 5 dakikalık yenileme döngüsüyle alınır; Midas'ın web verisi 15 dakika gecikmelidir. Döviz kurları Döviz.com serbest piyasa verisinden yenilenir.</div>
 </section>
 
 <section class="section">
  <div class="sectionhead"><div><h2>Banka ve diğer varlıklar</h2><div class="note">Manuel girilen bakiye verileri.</div></div></div>
  <div class="tablewrap"><table><thead><tr><th>Hesap / varlık</th><th>Kategori</th><th>Bakiye</th><th>Toplamda</th></tr></thead><tbody id="accountsBody"></tbody></table></div>
- <div class="sourceRow"><span class="state" id="sheetState">Manuel veri</span></div>
+ <div class="sourceRow"><span class="state" id="sheetState">Manuel veri · 16.11.2026</span></div>
  <div class="notice" id="midasNote">Midas hesabı, yukarıdaki hisse ve fon pozisyonlarının bulunduğu hesap olarak ele alınır. Ekstredeki Midas bakiyesi ayrıca toplam varlığa eklenmez; böylece aynı yatırım iki kez sayılmaz.</div>
 </section>
 
 <section class="section">
  <div class="sectionhead"><div><h2>Aylık yükümlülükler</h2><div class="note">Toplam varlıktan ayrı gösterilir; net bakiye hesabında düşülür.</div></div></div>
  <div class="liability">
-  <div class="liabilityItem"><span>Kira</span><strong id="rentValue">—</strong></div>
-  <div class="liabilityItem"><span>Kredi kartı</span><strong id="cardValue">—</strong></div>
-  <div class="liabilityItem"><span>Aylık toplam</span><strong id="monthlyTotal">—</strong></div>
+  <div class="liabilityItem"><span>Kira</span><strong id="rentValue">₺14.000,00</strong></div>
+  <div class="liabilityItem"><span>Kredi kartı</span><strong id="cardValue">₺40.000,00</strong></div>
+  <div class="liabilityItem"><span>Aylık toplam</span><strong id="monthlyTotal">₺54.000,00</strong></div>
  </div>
 </section>
 
-<footer><span>Bakiye · Veriler güncellendikçe toplam varlık otomatik yeniden hesaplanır.</span><span id="footerUpdate">—</span></footer>
+<footer><span>Bakiye · Veriler güncellendikçe toplam varlık otomatik yeniden hesaplanır.</span><span id="footerUpdate">Son hesaplama: 16.11.2026</span></footer>
 </main>
 <script>
 const DATA_URL="./data/balance.json";
