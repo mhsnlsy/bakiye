@@ -290,9 +290,9 @@ function renderHistory(){
  document.getElementById("netTotal").textContent=fmt(c.net);
  document.getElementById("obligationHero").textContent=fmt(c.obligations);
  document.getElementById("positionCount").textContent=nfmt(allPositions)+" lot";
- const realCostTotal=positions.reduce((s,p)=>s+p.qty*realCostPerUnitForPosition(p),0);
+ const heroRealCostTotal=positions.reduce((s,p)=>s+p.qty*realCostPerUnitForPosition(p),0);
  const pfNow=positions.reduce((s,p)=>s+p.qty*Number(c.quotes[p.symbol]??p.snapshotPrice??0),0);
- const heroRealPnl=pfNow-realCostTotal;
+ const heroRealPnl=pfNow-heroRealCostTotal;
  const heroRealEl=document.getElementById("heroRealPnL");
  heroRealEl.textContent=fmt(heroRealPnl);
  heroRealEl.className=heroRealPnl>=0?"good":"bad";
