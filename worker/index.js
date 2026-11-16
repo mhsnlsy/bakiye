@@ -131,10 +131,11 @@ export default{
     const v=await read(env,"quotes.json","/data/quotes.json");return v?out(v):out({error:"quotes_not_ready"},503)
   }
   if(u.pathname==="/api/tlref"){
-    if(u.searchParams.get("refresh")==="1"){
-      try{return out(await tlref(env))}catch(e){return out({error:String(e?.message||e)},502)}
-    }
-    const v=await read(env,"tlref.json","/data/tlref.json");return v?out(v):out({error:"tlref_not_ready"},503)
+    // TLREF is single-writer data: GitHub Actions publishes the canonical
+    // TradingView snapshot at 18:30 TSİ. The public API must never refresh
+    // or overwrite R2 on a browser request.
+    const v=await read(env,"tlref.json","/data/tlref.json");
+    return v?out(v):out({error:"tlref_not_ready"},503)
   }
   if(u.pathname==="/api/history"){const v=await read(env,"history.json","/data/history.json");return v?out(v):out({error:"history_not_ready"},503)}
   if(u.pathname==="/api/health")return out({ok:true,service:"bakiye",time:new Date().toISOString()});
