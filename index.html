@@ -205,6 +205,8 @@ function renderHistory(){
  const series=[
   ["total","Toplam varlık","var(--blue)"],
   ["portfolio","Yatırım portföyü","var(--green)"],
+  ["stocks","Hisseler","#55d6a1"],
+  ["funds","Fonlar","#b88cff"],
   ["try","Nakit TL","var(--blue)"]
  ];
  legend.innerHTML=series.map((s,i)=>'<button class="'+(i===0?"active":"")+'" data-series="'+s[0]+'">'+s[1]+'</button>').join("");
@@ -213,12 +215,15 @@ function renderHistory(){
  const vals=rows.map(r=>active==="portfolio"?(Number(r.stocks||0)+Number(r.funds||0)):Number(r[active]||0)), max=Math.max(...vals,1), min=Math.min(...vals,0);
  const W=900,H=280,L=54,R=16,T=15,B=34, pw=W-L-R,ph=H-T-B;
  const pts=rows.map((r,i)=>{const x=L+(rows.length===1?pw/2:i*pw/(rows.length-1));const value=active==="portfolio"?(Number(r.stocks||0)+Number(r.funds||0)):Number(r[active]||0); const y=T+(max-value)/(max-min||1)*ph;return [x,y]});
- const path=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+ const path=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" "); const sundayMarks=rows.map((r,i)=>{if(new Date(r.date+"T00:00:00").getDay()!==0)return "";const x=pts[i][0];return `<line class="chartGrid" x1="${x}" x2="${x}" y1="${T}" y2="${T+ph}" stroke-dasharray="3 4"/><text class="chartAxis" x="${x}" y="${T+10}" text-anchor="middle">Pazar</text>`}).join("");
  const grid=[0,.25,.5,.75,1].map(t=>{const y=T+t*ph;const v=max-(max-min)*t;return '<line class="chartGrid" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="chartAxis" x="'+(L-7)+'" y="'+(y+3)+'" text-anchor="end">'+fmt(v).replace("₺","₺")+'</text>'}).join("");
  const start=rows[0].date.slice(5).replace("-",".");const end=rows.at(-1).date.slice(5).replace("-",".");
  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+safe(series.find(s=>s[0]===active)?.[1]||"Varlık")+' zaman grafiği">'+grid+'<path class="chartLine" stroke="'+(series.find(s=>s[0]===active)?.[2]||"var(--blue)")+'" d="'+path+'"/>'+pts.map((p,i)=>'<circle class="chartDot" fill="'+(series.find(s=>s[0]===active)?.[2]||"var(--blue)")+'" cx="'+p[0]+'" cy="'+p[1]+'" r="'+(rows.length>60?2.2:3.2)+'"><title>'+rows[i].date+' · '+fmt(vals[i])+'</title></circle>').join("")+'<text class="chartAxis" x="'+L+'" y="'+(H-8)+'">'+start+'</text><text class="chartAxis" x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end">'+end+'</text></svg>';
  document.getElementById("historyStart").textContent="Başlangıç: "+rows[0].date.split("-").reverse().join(".");
  document.getElementById("historyEnd").textContent="Son kayıt: "+rows.at(-1).date.split("-").reverse().join(".");
+ const latest=rows.at(-1), previous=rows.length>1?rows.at(-2):null;
+ const dailyPct=previous&&Number(previous.total)?((Number(latest.total)-Number(previous.total))/Number(previous.total))*100:0;
+ const pctEl=document.getElementById("historyDailyPct"); if(pctEl)pctEl.textContent=previous?`${dailyPct>=0?"+":""}${dailyPct.toFixed(2)}%`:"İlk snapshot";
  legend.querySelectorAll("button").forEach(b=>b.onclick=()=>{legend.querySelectorAll("button").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderHistory()});
 }
 function render(){
