@@ -58,7 +58,7 @@ tr:last-child td{border-bottom:0}
 footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.wrap{padding:19px 12px 34px}.top{display:block}h1{font-size:27px}.topright{margin-top:12px}.hero{padding:18px}.heroTotal{font-size:34px}.grid{gap:8px}.card{padding:13px}.cardvalue{font-size:20px}.section{padding:13px}.liability{grid-template-columns:1fr 1fr}.liability>div:last-child{grid-column:1/-1}table{min-width:650px}}
-</style>
+.historyChart{height:310px;position:relative;overflow:hidden}.historyChart svg{width:100%;height:100%;display:block}.chartGrid{stroke:#263b55;stroke-width:1}.chartAxis{fill:#8fa3bb;font-size:10px}.chartLine{fill:none;stroke-width:2.5;vector-effect:non-scaling-stroke}.chartDot{stroke:#101e30;stroke-width:2}.chartLegend{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px}.chartLegend button{padding:6px 9px;font-size:10px;background:#13243a;border-color:#2c4664}.chartLegend button.active{background:#1d3b5d;border-color:#6d99c7}.chartMeta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:8px}.chartEmpty{height:100%;display:grid;place-items:center;color:var(--muted);font-size:12px}.historySelect{border:1px solid #365577;background:#1b3654;color:var(--text);border-radius:8px;padding:7px 9px;font:inherit;font-size:11px}@media(max-width:560px){.historyChart{height:260px}}</style>
 </head>
 <body>
 <main class="wrap">
@@ -102,6 +102,12 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 </section>
 
 <section class="section">
+ <div class="sectionhead"><div><h2>Varlık geçmişi</h2><div class="note">16 Kasım 2026'dan itibaren günlük kapanış snapshots tutulur. Grafik 365 güne kadar birikir.</div></div><select class="historySelect" id="historyRange"><option value="30">30 gün</option><option value="90">90 gün</option><option value="365" selected>1 yıl</option></select></div>
+ <div class="chartLegend" id="historyLegend"></div>
+ <div class="historyChart" id="historyChart"><div class="chartEmpty">Geçmiş veri biriktikçe grafik oluşacak.</div></div>
+ <div class="chartMeta"><span id="historyStart">Başlangıç: 16.11.2026</span><span id="historyEnd">Son kayıt: 16.11.2026</span></div>
+</section>
+<section class="section">
  <div class="sectionhead"><div><h2>Aylık yükümlülükler</h2><div class="note">Toplam varlıktan ayrı gösterilir; net bakiye hesabında düşülür.</div></div></div>
  <div class="liability">
   <div class="liabilityItem"><span>Kira</span><strong id="rentValue">₺14.000,00</strong></div>
@@ -117,9 +123,10 @@ const DATA_URL="./data/balance.json";
 const QUOTES_URL="./data/quotes.json";
 const POSITIONS_URL="./data/positions.json";
 const TLREF_URL="./data/tlref.json";
+const HISTORY_URL="./data/history.json";
 const fmt=n=>new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:2}).format(Number(n)||0);
 const nfmt=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(n)||0);
-let balanceData=null,quoteData=null,positions=[],tlrefData=null;
+let balanceData=null,quoteData=null,positions=[],tlrefData=null,historyData=null;
 let quoteOverrides={};
 const safe=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function readTRNumber(v){
@@ -173,6 +180,35 @@ function calc(){
  const total=totals.stocks+totals.funds+totals.try+totals.fx+totals.gold+totals.receivable;
  const obligations=Object.values(balanceData.monthlyObligations).reduce((s,x)=>s+(Number(x.value)||0),0);
  return {totals,total,obligations,net:total-obligations,quotes};
+}
+function renderHistory(){
+ const el=document.getElementById("historyChart"),legend=document.getElementById("historyLegend");
+ if(!el||!historyData)return;
+ const range=Number(document.getElementById("historyRange")?.value||365);
+ const rows=(historyData.snapshots||[]).slice(-range);
+ const series=[
+  ["total","Toplam varlık","var(--blue)"],
+  ["stocks","Hisseler","#55d6a1"],
+  ["funds","Fonlar","#b88cff"],
+  ["try","TL / Banka","#8ab5ff"],
+  ["cashFx","Nakit döviz","#e7bd72"],
+  ["bankFx","Banka döviz","#ff9f7a"],
+  ["gold","Altın","#f0cf75"],
+  ["receivable","Alacak","#9fb0c4"]
+ ];
+ legend.innerHTML=series.map((s,i)=>'<button class="'+(i===0?"active":"")+'" data-series="'+s[0]+'">'+s[1]+'</button>').join("");
+ if(!rows.length){el.innerHTML='<div class="chartEmpty">Henüz geçmiş veri yok.</div>';return}
+ const active=legend.querySelector(".active")?.dataset.series||"total";
+ const vals=rows.map(r=>Number(r[active]||0)), max=Math.max(...vals,1), min=Math.min(...vals,0);
+ const W=900,H=280,L=54,R=16,T=15,B=34, pw=W-L-R,ph=H-T-B;
+ const pts=rows.map((r,i)=>{const x=L+(rows.length===1?pw/2:i*pw/(rows.length-1));const y=T+(max-Number(r[active]||0))/(max-min||1)*ph;return [x,y]});
+ const path=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+ const grid=[0,.25,.5,.75,1].map(t=>{const y=T+t*ph;const v=max-(max-min)*t;return '<line class="chartGrid" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="chartAxis" x="'+(L-7)+'" y="'+(y+3)+'" text-anchor="end">'+fmt(v).replace("₺","₺")+'</text>'}).join("");
+ const start=rows[0].date.slice(5).replace("-",".");const end=rows.at(-1).date.slice(5).replace("-",".");
+ el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+safe(series.find(s=>s[0]===active)?.[1]||"Varlık")+' zaman grafiği">'+grid+'<path class="chartLine" stroke="'+(series.find(s=>s[0]===active)?.[2]||"var(--blue)")+'" d="'+path+'"/>'+pts.map((p,i)=>'<circle class="chartDot" fill="'+(series.find(s=>s[0]===active)?.[2]||"var(--blue)")+'" cx="'+p[0]+'" cy="'+p[1]+'" r="'+(rows.length>60?2.2:3.2)+'"><title>'+rows[i].date+' · '+fmt(vals[i])+'</title></circle>').join("")+'<text class="chartAxis" x="'+L+'" y="'+(H-8)+'">'+start+'</text><text class="chartAxis" x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end">'+end+'</text></svg>';
+ document.getElementById("historyStart").textContent="Başlangıç: "+rows[0].date.split("-").reverse().join(".");
+ document.getElementById("historyEnd").textContent="Son kayıt: "+rows.at(-1).date.split("-").reverse().join(".");
+ legend.querySelectorAll("button").forEach(b=>b.onclick=()=>{legend.querySelectorAll("button").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderHistory()});
 }
 function render(){
  const c=calc(),a=balanceData.accounts,allPositions=positions.reduce((s,p)=>s+p.qty,0);
@@ -279,6 +315,7 @@ async function boot(){
   quoteData=fallbackQuotes;
   positions=fallbackPositions;
   tlrefData=fallbackTlref;
+  historyData={version:1,frequency:"daily",startDate:"2026-11-16",retentionDays:365,snapshots:[{date:"2026-11-16",total:456606.74,stocks:66677.56,funds:16645.65,try:138000,cashFx:104712.95,bankFx:136577.23,gold:10639,receivable:0}]};
   document.getElementById("syncState").textContent="Veriler yükleniyor…";
   render();
   balanceData=await load(DATA_URL,"balance.json",fallbackBalance);
@@ -286,14 +323,17 @@ async function boot(){
   const p=await load(POSITIONS_URL,"positions.json",fallbackPositions);
   positions=Array.isArray(p)?p:(p.positions||[]);
   tlrefData=await load(TLREF_URL,"tlref.json",fallbackTlref);
+  historyData=await load(HISTORY_URL,"history.json",historyData);
   document.getElementById("syncState").textContent="Veriler yüklendi";
   render();
+  renderHistory();
 }
 // Manual balance data only. Google Sheets synchronization has been removed.
 document.getElementById("refreshBtn").onclick=async()=>{document.getElementById("syncState").textContent="Veriler yenileniyor…";await boot()};
 boot().catch(e=>{document.getElementById("syncState").textContent="Veri hatası";document.getElementById("grandTotal").textContent="Yüklenemedi";document.getElementById("sheetState").textContent="Veri yüklenemedi"});
 
 setInterval(async()=>{try{const r=await fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"});if(r.ok){quoteData=await r.json();render()}}catch{}},300000);
+document.getElementById("historyRange").onchange=renderHistory;
 
 // Keep the balance page visible even if the browser blocks one live source.
 window.addEventListener("error",e=>{document.getElementById("syncState").textContent="Canlı veri uyarısı";});
