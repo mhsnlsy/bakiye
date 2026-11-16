@@ -33,7 +33,9 @@
       "tlrefCostAdded": 64.6133,
       "tlrefAsOf": "2026-11-16",
       "tlrefGrossAnnualRate": 0.358313,
-      "tlrefNetAnnualRate": 0.295608225
+      "tlrefNetAnnualRate": 0.295608225,
+      "capturedAt": "2026-11-16T15:40:00Z",
+      "snapshotTime": "18:40 Europe/Istanbul"
     }
   ]
 }
