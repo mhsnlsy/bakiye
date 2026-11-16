@@ -1,0 +1,14 @@
+{
+  "source": "Midas hesap ekstresi kapanış satırları; Fintables Radar primary source requested, automated BIST quote feed pending",
+  "sourceUrl": "https://fintables.com/radar/hisse-senetleri",
+  "asOf": "2026-11-14",
+  "currency": "TRY",
+  "quotes": {
+    "TAVHL": 302.25,
+    "KARSN": 7.66,
+    "THYAO": 320.25,
+    "CGCAM": 18.2,
+    "SISE": 35.86,
+    "ZPLIB.F": 200.55
+  }
+}
