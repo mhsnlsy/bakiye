@@ -403,6 +403,18 @@ async function boot(){
   render();
   balanceData=await load(DATA_URL,"balance.json",fallbackBalance);
   quoteData=await load(QUOTES_URL,"quotes.json",fallbackQuotes);
+  // If R2 data is stale or from an old provider, force one live refresh from the Worker.
+  const quoteAge=quoteData?.lastRefresh ? Date.now()-new Date(quoteData.lastRefresh).getTime() : Infinity;
+  const quoteSource=String(quoteData?.source||"");
+  if(quoteAge>10*60*1000 || !quoteSource.includes("Uzmanpara")){
+    try{
+      const live=await fetch(QUOTES_URL+"?refresh=1&v="+Date.now(),{cache:"no-store"});
+      if(live.ok){
+        const fresh=await live.json();
+        if(fresh?.quotes && !fresh?.errors?.length) quoteData=fresh;
+      }
+    }catch{}
+  }
   const p=await load(POSITIONS_URL,"positions.json",fallbackPositions);
   positions=Array.isArray(p)?p:(p.positions||[]);
   tlrefData=await load(TLREF_URL,"tlref.json",fallbackTlref);
@@ -417,7 +429,22 @@ async function boot(){
 document.getElementById("refreshBtn").onclick=async()=>{document.getElementById("syncState").textContent="Veriler yenileniyor…";await boot()};
 boot().catch(e=>{document.getElementById("syncState").textContent="Veri hatası";document.getElementById("grandTotal").textContent="Yüklenemedi";document.getElementById("sheetState").textContent="Veri yüklenemedi"});
 
-setInterval(async()=>{try{const r=await fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"});if(r.ok){quoteData=await r.json();render();renderRealCostMetrics()}}catch{}},300000);
+setInterval(async()=>{
+  try{
+    const r=await fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"});
+    if(r.ok){
+      let next=await r.json();
+      const age=next?.lastRefresh ? Date.now()-new Date(next.lastRefresh).getTime() : Infinity;
+      if(age>10*60*1000 || !String(next?.source||"").includes("Uzmanpara")){
+        try{
+          const live=await fetch(QUOTES_URL+"?refresh=1&v="+Date.now(),{cache:"no-store"});
+          if(live.ok) next=await live.json();
+        }catch{}
+      }
+      if(next?.quotes && !next?.errors?.length){quoteData=next;render();renderRealCostMetrics()}
+    }
+  }catch{}
+},300000);
 document.getElementById("historyRange").onchange=renderHistory;
 
 // Keep the balance page visible even if the browser blocks one live source.
