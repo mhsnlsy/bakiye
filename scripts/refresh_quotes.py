@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 STOCK_SOURCE = "https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum"
 STOCKS = ["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"]
+SOURCE_SYMBOL = {"ZPLIB.F":"ZPLIB"}
 
 class TableParser(HTMLParser):
     def __init__(self):
@@ -48,8 +49,9 @@ def parse_stock(source):
     for symbol in STOCKS:
         for row in p.rows:
             cells=[x.strip().upper() for x in row]
-            if symbol in cells:
-                i=cells.index(symbol)
+            source_symbol=SOURCE_SYMBOL.get(symbol,symbol)
+            if source_symbol in cells:
+                i=cells.index(source_symbol)
                 if i+1 < len(row):
                     v=number(row[i+1])
                     if v is not None:
