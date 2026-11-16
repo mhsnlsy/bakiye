@@ -55,14 +55,16 @@ def main():
     try:
         history=load("/tmp/history.json")
     except FileNotFoundError:
-        history={"version":1,"frequency":"daily","startDate":date,"retentionDays":365,"updatedAt":None,"snapshots":[]}
+        history={"version":1,"frequency":"daily","startDate":date,"retentionDays":700,"updatedAt":None,"snapshots":[]}
 
     snaps=[s for s in history.get("snapshots",[]) if s.get("date")!=date]
     snaps.append(entry)
     snaps.sort(key=lambda x:x.get("date",""))
-    history["snapshots"]=snaps[-365:]
+    history["snapshots"]=snaps[-700:]
+    history["retentionDays"]=700
     history["updatedAt"]=now.isoformat()
     history["frequency"]="daily"
+    history["snapshotTime"]="18:40 Europe/Istanbul"
     history["startDate"]=history["snapshots"][0]["date"] if history["snapshots"] else date
 
     with open("/tmp/history.json","w",encoding="utf-8") as f:
