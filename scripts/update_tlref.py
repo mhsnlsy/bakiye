@@ -28,6 +28,20 @@ if not rows:
     raise RuntimeError("TLREF verisi sayfadan ayrıştırılamadı")
 
 rows.sort(key=lambda x: x["date"])
+
+# Preserve the previously archived daily series so each successful run
+# adds the newly published TLREF observations instead of replacing history.
+if OUT.exists():
+    try:
+        previous = json.loads(OUT.read_text(encoding="utf-8"))
+        previous_rows = previous.get("historical", [])
+        merged = {r["date"]: float(r["rate"]) for r in previous_rows if r.get("date") and r.get("rate") is not None}
+        for r in rows:
+            merged[r["date"]] = float(r["rate"])
+        rows = [{"date": d, "rate": merged[d]} for d in sorted(merged)]
+    except Exception:
+        pass
+
 latest = rows[-1]
 net_latest = latest["rate"] * (1 - STOPAJ)
 
