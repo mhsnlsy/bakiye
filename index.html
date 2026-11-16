@@ -58,7 +58,7 @@ tr:last-child td{border-bottom:0}
 footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.wrap{padding:19px 12px 34px}.top{display:block}h1{font-size:27px}.topright{margin-top:12px}.hero{padding:18px}.heroTotal{font-size:34px}.grid{gap:8px}.card{padding:13px}.cardvalue{font-size:20px}.section{padding:13px}.liability{grid-template-columns:1fr 1fr}.liability>div:last-child{grid-column:1/-1}table{min-width:650px}}
-.historyChart{height:310px;position:relative;overflow:hidden;pointer-events:none}.historyChart svg{width:100%;height:100%;display:block}.chartGrid{stroke:#263b55;stroke-width:1}.chartAxis{fill:#8fa3bb;font-size:10px}.chartLine{fill:none;stroke-width:2.5;vector-effect:non-scaling-stroke}.chartDot{stroke:#101e30;stroke-width:2}.chartLegend{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px;position:relative;z-index:9999;isolation:isolate;pointer-events:auto}.chartLegend button{position:relative;z-index:10000;pointer-events:auto;touch-action:manipulation;cursor:pointer;padding:6px 9px;font-size:10px;background:#13243a;border-color:#2c4664}.chartLegend button.active{background:#1d3b5d;border-color:#6d99c7}.chartMeta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:8px}.chartEmpty{height:100%;display:grid;place-items:center;color:var(--muted);font-size:12px}.historySelect{border:1px solid #365577;background:#1b3654;color:var(--text);border-radius:8px;padding:7px 9px;font:inherit;font-size:11px}@media(max-width:560px){.historyChart{height:260px}}.benchmarkGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:11px}.metricCard{background:#13243a;border:1px solid var(--line);border-radius:11px;padding:12px}.metricCard span{display:block;color:var(--muted);font-size:10px}.metricCard strong{display:block;font-size:18px;margin-top:3px}.metricCard small{display:block;color:var(--muted);font-size:9px;margin-top:2px}@media(max-width:560px){.benchmarkGrid{grid-template-columns:1fr}}</style>
+.historyChart{height:310px;position:relative;overflow:hidden;pointer-events:none}.historyChart svg{width:100%;height:100%;display:block}.chartGrid{stroke:#263b55;stroke-width:1}.chartAxis{fill:#8fa3bb;font-size:10px}.chartLine{fill:none;stroke-width:2.5;vector-effect:non-scaling-stroke}.chartDot{stroke:#101e30;stroke-width:2}.chartLegend{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px;position:relative;z-index:9999;isolation:isolate;pointer-events:auto}.chartLegend a{position:relative;z-index:10000;pointer-events:auto;touch-action:manipulation;cursor:pointer;padding:6px 9px;font-size:10px;background:#13243a;border:1px solid #2c4664;border-radius:7px;color:var(--text);text-decoration:none}.chartLegend a.active{background:#1d3b5d;border-color:#6d99c7}.chartMeta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:8px}.chartEmpty{height:100%;display:grid;place-items:center;color:var(--muted);font-size:12px}.historySelect{border:1px solid #365577;background:#1b3654;color:var(--text);border-radius:8px;padding:7px 9px;font:inherit;font-size:11px}@media(max-width:560px){.historyChart{height:260px}}.benchmarkGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:11px}.metricCard{background:#13243a;border:1px solid var(--line);border-radius:11px;padding:12px}.metricCard span{display:block;color:var(--muted);font-size:10px}.metricCard strong{display:block;font-size:18px;margin-top:3px}.metricCard small{display:block;color:var(--muted);font-size:9px;margin-top:2px}@media(max-width:560px){.benchmarkGrid{grid-template-columns:1fr}}</style>
 </head>
 <body>
 <main class="wrap">
@@ -107,7 +107,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 
 <section class="section">
  <div class="sectionhead"><div><h2>Varlık geçmişi</h2><div class="note">16 Kasım 2026'dan itibaren her gün saat 18:30 Türkiye saati snapshot tutulur. Pazar snapshotları kalıcı arşivlenir.</div></div><select class="historySelect" id="historyRange"><option value="30">30 gün</option><option value="90">90 gün</option><option value="365" selected>1 yıl</option></select></div>
- <div class="chartLegend" id="historyLegend"><button type="button" class="active" data-series="total" onclick="setHistorySeries('total')">Toplam Varlık</button><button type="button" data-series="stocks" onclick="setHistorySeries('stocks')">Hisseler</button><button type="button" data-series="try" onclick="setHistorySeries('try')">Banka TL</button><button type="button" data-series="cashFx" onclick="setHistorySeries('cashFx')">Nakit Döviz</button><button type="button" data-series="bankFx" onclick="setHistorySeries('bankFx')">Banka Döviz</button></div>
+ <div class="chartLegend" id="historyLegend"><a href="#history-total" data-series="total">Toplam Varlık</a><a href="#history-stocks" data-series="stocks">Hisseler</a><a href="#history-try" data-series="try">Banka TL</a><a href="#history-cashFx" data-series="cashFx">Nakit Döviz</a><a href="#history-bankFx" data-series="bankFx">Banka Döviz</a></div>
  <div class="historyChart" id="historyChart"><div class="chartEmpty">Geçmiş veri biriktikçe grafik oluşacak.</div></div>
  <div class="chartMeta"><span>18:30 snapshot değişimi: <strong id="historyDailyPct">İlk snapshot</strong></span><span id="historyStart">Başlangıç: 16.11.2026</span><span id="historyEnd">Son kayıt: 16.11.2026</span><span id="weeklyArchiveMeta">Pazar arşivi: kalıcı</span></div>
 </section>
@@ -199,22 +199,20 @@ function renderRealCostMetrics(){
 }
 function setHistorySeries(series){
  const legend=document.getElementById("historyLegend");
- if(!legend)return false;
- legend.dataset.activeSeries=series;
- legend.querySelectorAll("button[data-series]").forEach(b=>b.classList.toggle("active",b.dataset.series===series));
- const status=document.getElementById("historyDailyPct");
- if(status) status.textContent="Seçim: "+(legend.querySelector('button[data-series="'+series+'"]')?.textContent||series);
- renderHistory();
- return false;
-}
-document.addEventListener("DOMContentLoaded",()=>{
- const legend=document.getElementById("historyLegend");
  if(!legend)return;
- legend.addEventListener("pointerdown",e=>{
-  const b=e.target.closest("button[data-series]");
-  if(b){ e.preventDefault(); setHistorySeries(b.dataset.series); }
- },true);
-});
+ legend.dataset.activeSeries=series;
+ legend.querySelectorAll("a[data-series]").forEach(b=>b.classList.toggle("active",b.dataset.series===series));
+ const status=document.getElementById("historyDailyPct");
+ if(status) status.textContent="Seçim: "+(legend.querySelector('a[data-series="'+series+'"]')?.textContent||series);
+ renderHistory();
+}
+function initHistorySeries(){
+ const hash=location.hash.replace("#history-","");
+ const allowed=["total","stocks","try","cashFx","bankFx"];
+ setHistorySeries(allowed.includes(hash)?hash:"total");
+}
+window.addEventListener("hashchange",initHistorySeries);
+
 function renderHistory(){
  const el=document.getElementById("historyChart"),legend=document.getElementById("historyLegend");
  if(!el||!historyData)return;
@@ -228,7 +226,7 @@ function renderHistory(){
   ["bankFx","Banka Döviz","var(--purple)"]
  ];
  legend.dataset.activeSeries=legend.dataset.activeSeries||"total";
- legend.querySelectorAll("button[data-series]").forEach(b=>b.classList.toggle("active",b.dataset.series===legend.dataset.activeSeries));
+ legend.querySelectorAll("a[data-series]").forEach(b=>b.classList.toggle("active",b.dataset.series===legend.dataset.activeSeries));
  if(!rows.length){el.innerHTML='<div class="chartEmpty">Henüz geçmiş veri yok.</div>';return}
  const active=legend.dataset.activeSeries||"total";
  const vals=rows.map(r=>active==="portfolio"?(Number(r.stocks||0)+Number(r.funds||0)):Number(r[active]||0));
