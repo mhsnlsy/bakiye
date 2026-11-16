@@ -12,8 +12,14 @@ positions = json.loads(POSITIONS.read_text(encoding="utf-8"))
 tlref = json.loads(TLREF.read_text(encoding="utf-8"))
 
 today = date.today()
+historical = {date.fromisoformat(r["date"]): float(r["rate"]) for r in tlref.get("historical", []) if r.get("date") and r.get("rate") is not None}
 latest_rate = float(tlref["grossAnnualRate"])
-net_annual = latest_rate * (1 - STOPAJ)
+
+def rate_for_day(day):
+    if day in historical:
+        return historical[day]
+    prior = [d for d in historical if d <= day]
+    return historical[max(prior)] if prior else latest_rate
 
 for p in positions:
     base_date = p.get("realCostBaseDate")
@@ -24,7 +30,10 @@ for p in positions:
 
     start = date.fromisoformat(base_date)
     days = max(0, (today - start).days)
-    factor = (1 + net_annual / DAYS_PER_YEAR) ** days
+    factor = 1.0
+    for offset in range(days):
+        day = start + __import__("datetime").timedelta(days=offset)
+        factor *= 1 + rate_for_day(day) * (1 - STOPAJ) / DAYS_PER_YEAR
     p["realCost"] = round(float(p["avgCost"]) * factor, 4)
     p["tlrefCostAdded"] = round(p["realCost"] - float(p["avgCost"]), 4)
     p["realCostUpdatedAt"] = today.isoformat()
@@ -33,6 +42,6 @@ POSITIONS.write_text(json.dumps(positions, ensure_ascii=False, indent=2) + "\n",
 
 print(
     f"Reel maliyet güncellendi: {today.isoformat()} | "
-    f"TLREF %{latest_rate*100:.4f} | net %{net_annual*100:.4f} | "
+    f"TLREF %{latest_rate*100:.4f} | net %{latest_rate*(1-STOPAJ)*100:.4f} | "
     f"{len(positions)} pozisyon"
 )
