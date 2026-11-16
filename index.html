@@ -89,9 +89,9 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 </div>
 
 <section class="section">
- <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez.</div></div><div class="controls"><a class="sourceLink" href="https://fintables.com/radar/hisse-senetleri" target="_blank" rel="noopener">Fintables Radar ↗</a></div></div>
+ <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez.</div></div><div class="controls"><span class="sourceLink">Midas Canlı Borsa</span></div></div>
  <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th></tr></thead><tbody id="positionsBody"></tbody><tfoot><tr><td colspan="4">Portföy toplamı</td><td id="portfolioTotal">—</td><td id="portfolioPnL">—</td></tr></tfoot></table></div>
- <div class="sourceRow"><span class="state" id="quoteState">Fiyat kaynağı doğrulanıyor…</span><div class="quoteImport"><label class="small" for="quoteCsv">Fintables dışa aktarma CSV</label><input id="quoteCsv" type="file" accept=".csv,text/csv"><button id="importQuotes">Fiyatları içe aktar</button></div></div>
+ <div class="sourceRow"><span class="state" id="quoteState">Fiyat kaynağı doğrulanıyor…</span></div>
  <div class="notice" id="priceNotice">Hisse fiyatları Midas Canlı Borsa sayfasından 5 dakikalık yenileme döngüsüyle alınır; Midas'ın web verisi 15 dakika gecikmelidir. Döviz kurları Döviz.com serbest piyasa verisinden yenilenir.</div>
 </section>
 
@@ -222,7 +222,7 @@ async function syncSheet(){
  }
 }
 async function importFintablesCsv(){
- const f=document.getElementById("quoteCsv").files[0];if(!f){alert("Önce Fintables dışa aktarma CSV dosyasını seç.");return}
+ const f=document.getElementById("quoteCsv").files[0];if(!f){alert("Önce Midas fiyat verisi dosyasını seç.");return}
  const rows=csvRows(await f.text());if(rows.length<2){alert("CSV boş veya okunamadı.");return}
  const hdr=rows[0].map(x=>String(x).toLocaleLowerCase("tr-TR").trim());
  const symIdx=hdr.findIndex(x=>["kod","sembol","hisse kodu","symbol","ticker"].includes(x));
@@ -232,7 +232,7 @@ async function importFintablesCsv(){
  rows.slice(1).forEach(r=>{const sym=String(r[symIdx]||"").trim().toUpperCase().replace("BIST:","");if(positions.some(p=>p.symbol===sym)){quoteOverrides[sym]=readTRNumber(r[priceIdx]);n++}});
  if(!n){alert("Portföyündeki hisseler CSV içinde bulunamadı.");return}
  localStorage.setItem("bakiye-fintables-quotes",JSON.stringify(quoteOverrides));
- render();document.getElementById("quoteState").textContent=n+" Fintables fiyatı içe aktarıldı · "+new Date().toLocaleString("tr-TR");
+ render();document.getElementById("quoteState").textContent=n+" Midas fiyatı içe aktarıldı · "+new Date().toLocaleString("tr-TR");
 }
 async function boot(){
  const [b,q,p]=await Promise.all([fetch(DATA_URL+"?v="+Date.now(),{cache:"no-store"}),fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"}),fetch(POSITIONS_URL+"?v="+Date.now(),{cache:"no-store"})]);
