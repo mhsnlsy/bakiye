@@ -1,4 +1,4 @@
-const MIDAS="https://uzmanpara.milliyet.com.tr/canli-borsa/";
+const MIDAS="https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum";
 const FX="https://kur.doviz.com/";
 const TLREF="https://www.borsaistanbul.com/endeksler/tlref";
 const STOCKS=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
