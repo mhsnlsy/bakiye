@@ -97,7 +97,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 <section class="section">
  <div class="sectionhead"><div><h2>Banka ve diğer varlıklar</h2><div class="note">Google Sheets üzerinden yenilenen hesap bakiyeleri. Midas satırı hisse/fon kırılımıyla değiştirilir.</div></div><a class="sourceLink" href="https://docs.google.com/spreadsheets/d/1jXDjZi5EROMpuANFpAOWfOGeFY_ObfCB83azPbvHsWM/edit?usp=sharing" target="_blank" rel="noopener">Google Sheets'i aç ↗</a></div>
  <div class="tablewrap"><table><thead><tr><th>Hesap / varlık</th><th>Kategori</th><th>Bakiye</th><th>Toplamda</th></tr></thead><tbody id="accountsBody"></tbody></table></div>
- <div class="sourceRow"><span class="state" id="sheetState">Google Sheets bağlantısı bekleniyor.</span><span class="small">Otomatik senkronizasyon: 5 dakikada bir</span></div>
+ <div class="sourceRow"><span class="state" id="sheetState">Manuel veri</span></div>
  <div class="notice" id="midasNote">Midas hesabı, yukarıdaki hisse ve fon pozisyonlarının bulunduğu hesap olarak ele alınır. Ekstredeki Midas bakiyesi ayrıca toplam varlığa eklenmez; böylece aynı yatırım iki kez sayılmaz.</div>
 </section>
 
@@ -119,7 +119,7 @@ const POSITIONS_URL="./data/positions.json";
 const TLREF_URL="./data/tlref.json";
 const fmt=n=>new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:2}).format(Number(n)||0);
 const nfmt=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(n)||0);
-let balanceData=null,quoteData=null,positions=[],tlrefData=null,sheetLastSync=null;
+let balanceData=null,quoteData=null,positions=[],tlrefData=null;
 let quoteOverrides={};
 const safe=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function readTRNumber(v){
@@ -236,9 +236,9 @@ function render(){
  document.getElementById("footerUpdate").textContent="Son hesaplama: "+new Date().toLocaleString("tr-TR");
 }
 // Manual balance data only. Google Sheets synchronization has been removed.
-document.getElementById("refreshBtn").onclick=async()=>{document.getElementById("syncState").textContent="Yenileniyor…";await syncSheet();render()};
-boot().catch(e=>{document.getElementById("syncState").textContent="Veri hatası";document.getElementById("grandTotal").textContent="Yüklenemedi";document.getElementById("sheetState").textContent=e.message});
-setInterval(()=>syncSheet(),300000);
+document.getElementById("refreshBtn").onclick=async()=>{document.getElementById("syncState").textContent="Veriler yenileniyor…";await boot()};
+boot().catch(e=>{document.getElementById("syncState").textContent="Veri hatası";document.getElementById("grandTotal").textContent="Yüklenemedi";document.getElementById("sheetState").textContent="Veri yüklenemedi"});
+
 setInterval(async()=>{try{const r=await fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"});if(r.ok){quoteData=await r.json();render()}}catch{}},300000);
 
 // Keep the balance page visible even if the browser blocks one live source.
