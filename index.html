@@ -127,7 +127,7 @@ const DATA_URL="./data/balance.json";
 const QUOTES_URL="/api/quotes";
 const POSITIONS_URL="./data/positions.json";
 const TLREF_URL="/api/tlref";
-const HISTORY_URL="./data/history.json";
+const HISTORY_URL="/api/history";
 const fmt=n=>new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:2}).format(Number(n)||0);
 const nfmt=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(n)||0);
 let balanceData=null,quoteData=null,positions=[],tlrefData=null,historyData=null;
