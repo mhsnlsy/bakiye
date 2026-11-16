@@ -22,20 +22,24 @@ def rate_for_day(day):
     return historical[max(prior)] if prior else latest_rate
 
 for p in positions:
-    base_date = p.get("realCostBaseDate")
-    if not base_date:
-        base_date = p.get("purchaseDate") or today.isoformat()
-        p["purchaseDate"] = base_date
-        p["realCostBaseDate"] = base_date
+    # realCost is the authoritative accumulated real cost.
+    # Each daily run compounds it from the last update date using the
+    # TLREF rate for each elapsed calendar day. Do NOT reconstruct it
+    # from avgCost: purchase dates are not stored in this portfolio.
+    last_updated = p.get("realCostUpdatedAt") or today.isoformat()
+    try:
+        last_date = date.fromisoformat(last_updated)
+    except ValueError:
+        last_date = today
 
-    start = date.fromisoformat(base_date)
-    days = max(0, (today - start).days)
-    factor = 1.0
-    for offset in range(days):
-        day = start + __import__("datetime").timedelta(days=offset)
-        factor *= 1 + rate_for_day(day) * (1 - STOPAJ) / DAYS_PER_YEAR
-    p["realCost"] = round(float(p["avgCost"]) * factor, 4)
-    p["tlrefCostAdded"] = round(p["realCost"] - float(p["avgCost"]), 4)
+    value = float(p.get("realCost") or p.get("avgCost") or 0)
+    if last_date < today:
+        for offset in range((today - last_date).days):
+            day = last_date + __import__("datetime").timedelta(days=offset)
+            value *= 1 + rate_for_day(day) * (1 - STOPAJ) / DAYS_PER_YEAR
+
+    p["realCost"] = round(value, 4)
+    p["tlrefCostAdded"] = round(value - float(p["avgCost"]), 4)
     p["realCostUpdatedAt"] = today.isoformat()
 
 POSITIONS.write_text(json.dumps(positions, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
