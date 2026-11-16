@@ -34,7 +34,7 @@ async function get(u){
  if(!r.ok)throw Error(u+" HTTP "+r.status);
  return r.text();
 }
-async function read(env,k,path){let x=await env.BAKIYE_DATA.get(k);if(x)return await x.json();let r=await env.ASSETS.fetch(new Request("https://assets.local"+path));return r.ok?await r.json():null}
+async function read(env,k,path){let x=await env.BAKIYE_DATA.get(k);if(x){const s=await x.text();return s?JSON.parse(s):null}let r=await env.ASSETS.fetch(new Request("https://assets.local"+path));return r.ok?await r.json():null}
 async function put(env,k,v){await env.BAKIYE_DATA.put(k,JSON.stringify(v,null,2))}
 async function quotes(env){
  const old=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
