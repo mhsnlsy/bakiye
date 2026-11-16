@@ -5,8 +5,7 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  schedule:
-    - cron: "45 16 * * 1-5"
+  # Daily execution is owned by update-tlref.yml to prevent overlapping writes.
   workflow_dispatch:
 
 permissions:
