@@ -284,7 +284,14 @@ function renderHistory(){
  const latest=rows.at(-1),previous=rows.length>1?rows.at(-2):null;
  const dailyPct=previous&&Number(previous.total)?((Number(latest.total)-Number(previous.total))/Number(previous.total))*100:0;
  const pctEl=document.getElementById("historyDailyPct");if(pctEl)pctEl.textContent=previous?((dailyPct>=0?"+":"")+dailyPct.toFixed(2)+"%"):"İlk snapshot";
-}\nfunction render(){
+}\nfunction formatQuoteUpdateTime(){
+ const raw=quoteData?.lastRefresh;
+ if(!raw)return "—";
+ const d=new Date(raw);
+ if(Number.isNaN(d.getTime()))return "—";
+ return new Intl.DateTimeFormat("tr-TR",{timeZone:"Europe/Istanbul",hour:"2-digit",minute:"2-digit"}).format(d);
+}
+function render(){
  const c=calc(),a=balanceData.accounts,allPositions=positions.reduce((s,p)=>s+p.qty,0);
  document.getElementById("grandTotal").textContent=fmt(c.total);
  document.getElementById("netTotal").textContent=fmt(c.net);
@@ -320,7 +327,7 @@ function renderHistory(){
   const price=Number(c.quotes[p.symbol]??p.snapshotPrice??0),market=price*p.qty,cost=p.avgCost*p.qty,pnl=market-cost;
   const realCostPerUnit=realCostPerUnitForPosition(p);
   const realPnl=market-(realCostPerUnit*p.qty);
-  return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+(p.type==="fund"?" · Fon":" · Hisse")+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(realCostPerUnit)+'</td><td>'+fmt(price)+'</td><td>'+fmt(market)+'</td><td class="'+(pnl>=0?"good":"bad")+'">'+fmt(pnl)+'</td><td class="'+(realPnl>=0?"good":"bad")+'">'+fmt(realPnl)+'</td></tr>';
+  return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+(p.type==="fund"?" · Fon":" · Hisse")+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(realCostPerUnit)+'</td><td>'+fmt(price)+'<span class="subline">Güncelleme: '+formatQuoteUpdateTime()+'</span></td><td>'+fmt(market)+'</td><td class="'+(pnl>=0?"good":"bad")+'">'+fmt(pnl)+'</td><td class="'+(realPnl>=0?"good":"bad")+'">'+fmt(realPnl)+'</td></tr>';
  }).join("");
  document.getElementById("positionsBody").innerHTML=posRows;
  const pf=positions.reduce((s,p)=>s+p.qty*Number(c.quotes[p.symbol]??p.snapshotPrice??0),0);
@@ -344,7 +351,7 @@ function renderHistory(){
  document.getElementById("rentValue").textContent=fmt(m.rent.value);
  document.getElementById("cardValue").textContent=fmt(m.creditCard.value);
  document.getElementById("monthlyTotal").textContent=fmt(c.obligations);
- document.getElementById("quoteState").textContent="Otomatik kaynak: Midas + Döviz.com · TLREF: Borsa İstanbul · "+(tlrefData?.asOf||"—")+" · Net "+nfmt((tlrefData?.netAnnualRate||0)*100)+"%";
+ document.getElementById("quoteState").textContent="Midas Son fiyat · Son güncelleme: "+formatQuoteUpdateTime()+" TSİ · TLREF: Borsa İstanbul · "+(tlrefData?.asOf||"—")+" · Net "+nfmt((tlrefData?.netAnnualRate||0)*100)+"%";
  document.getElementById("footerUpdate").textContent="Son hesaplama: "+new Date().toLocaleString("tr-TR");
 }
 async function boot(){
