@@ -97,6 +97,25 @@ export default{
   if(u.pathname==="/api/tlref"){const v=await read(env,"tlref.json","/data/tlref.json");return v?out(v):out({error:"tlref_not_ready"},503)}
   if(u.pathname==="/api/history"){const v=await read(env,"history.json","/data/history.json");return v?out(v):out({error:"history_not_ready"},503)}
   if(u.pathname==="/api/health")return out({ok:true,service:"bakiye",time:new Date().toISOString()});
+  // Allow the app to be mounted privately under /bakiye on istanbulunhavasi.com.
+  // The browser keeps relative asset URLs under /bakiye/, so strip the mount prefix
+  // before resolving files from the Worker asset manifest.
+  const mount="/bakiye";
+  if(u.pathname===mount || u.pathname.startsWith(mount+"/")){
+    const assetPath=u.pathname.slice(mount.length)||"/";
+    const assetUrl=new URL(req.url);
+    assetUrl.pathname=assetPath;
+    const assetReq=new Request(assetUrl,req);
+    const asset=await env.ASSETS.fetch(assetReq);
+    if(assetPath==="/"||assetPath==="/index.html"){
+      const headers=new Headers(asset.headers);
+      headers.set("cache-control","no-store, no-cache, must-revalidate");
+      headers.set("pragma","no-cache");
+      headers.set("expires","0");
+      return new Response(asset.body,{status:asset.status,statusText:asset.statusText,headers});
+    }
+    return asset;
+  }
   const asset=await env.ASSETS.fetch(req);
   if(u.pathname==="/"||u.pathname==="/index.html"){const headers=new Headers(asset.headers);headers.set("cache-control","no-store, no-cache, must-revalidate");headers.set("pragma","no-cache");headers.set("expires","0");return new Response(asset.body,{status:asset.status,statusText:asset.statusText,headers})}
   return asset;
