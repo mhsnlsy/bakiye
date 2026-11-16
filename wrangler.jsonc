@@ -21,14 +21,5 @@
       "30 15 * * *"
     ]
   },
-  "routes": [
-    {
-      "pattern": "istanbulunhavasi.com/bakiye",
-      "zone_name": "istanbulunhavasi.com"
-    },
-    {
-      "pattern": "istanbulunhavasi.com/bakiye/*",
-      "zone_name": "istanbulunhavasi.com"
-    }
-  ]
+  "workers_dev": true
 }
