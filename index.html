@@ -83,7 +83,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
  <article class="card"><div class="cardhead"><span class="cardlabel">Hisseler</span><span class="cardicon">↗</span></div><div class="cardvalue" id="stocksValue">—</div><div class="cardfoot" id="stocksSub">—</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Yatırım fonları</span><span class="cardicon">◈</span></div><div class="cardvalue" id="fundsValue">—</div><div class="cardfoot">Midas portföyündeki fon pozisyonları</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Banka & TL bakiyeleri</span><span class="cardicon">₺</span></div><div class="cardvalue" id="tryValue">—</div><div class="cardfoot">N Kolay · Enpara · BNC · Nakit</div></article>
- <article class="card"><div class="cardhead"><span class="cardlabel">Döviz varlıkları</span><span class="cardicon">＄</span></div><div class="cardvalue" id="fxValue">—</div><div class="cardfoot">Döviz + banka döviz, TL karşılığı</div></article>
+ <article class="card"><div class="cardhead"><span class="cardlabel">Nakit Döviz</span><span class="cardicon">＄</span></div><div class="cardvalue" id="cashFxValue">—</div><div class="cardfoot" id="cashFxSub">USD · EUR · GBP</div></article><article class="card"><div class="cardhead"><span class="cardlabel">Banka Döviz</span><span class="cardicon">€</span></div><div class="cardvalue" id="bankFxValue">—</div><div class="cardfoot" id="bankFxSub">EUR</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Altın</span><span class="cardicon">◇</span></div><div class="cardvalue goldtext" id="goldValue">—</div><div class="cardfoot" id="goldSub">N Kolay Altın</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Tahmini alacaklar</span><span class="cardicon">＋</span></div><div class="cardvalue" id="receivableValue">—</div><div class="cardfoot">Henüz tahsil edilmemiş tutarlar</div></article>
 </div>
@@ -143,7 +143,7 @@ function calc(){
  let totals={stocks:0,funds:0,try:0,fx:0,gold:0,receivable:0};
  positions.forEach(p=>{const price=Number(quotes[p.symbol]??p.snapshotPrice??0);const value=price*Number(p.qty||0);if(p.type==="fund")totals.funds+=value;else totals.stocks+=value});
  const a=balanceData.accounts;
- Object.values(a).forEach(x=>{let v=Number(x.value)||0;switch(x.category){case"try":totals.try+=v;break;case"fx":totals.fx+=v;break;case"gold":totals.gold+=v;break;case"receivable":totals.receivable+=v;break;case"brokerage_placeholder":break}});
+ Object.values(a).forEach(x=>{let v=Number(x.value)||0;switch(x.category){case"try":totals.try+=v;break;case"fx":{const fx=x===a.doviz?balanceData.accounts.doviz:balanceData.accounts.bankaDoviz;const rates=quoteData?.fx||{};if(fx?.currencies){for(const [code,qty] of Object.entries(fx.currencies)){const rate=Number(rates[code+"TRY"]||0);if(rate)totals.fx+=Number(qty||0)*rate;}}else totals.fx+=v;break;}case"gold":totals.gold+=v;break;case"receivable":totals.receivable+=v;break;case"brokerage_placeholder":break}});
  const total=totals.stocks+totals.funds+totals.try+totals.fx+totals.gold+totals.receivable;
  const obligations=Object.values(balanceData.monthlyObligations).reduce((s,x)=>s+(Number(x.value)||0),0);
  return {totals,total,obligations,net:total-obligations,quotes};
@@ -158,7 +158,13 @@ function render(){
  document.getElementById("stocksSub").textContent=positions.filter(p=>p.type==="stock").length+" hisse pozisyonu";
  document.getElementById("fundsValue").textContent=fmt(c.totals.funds);
  document.getElementById("tryValue").textContent=fmt(c.totals.try);
- document.getElementById("fxValue").textContent=fmt(c.totals.fx);
+ const cashFx=balanceData.accounts.doviz?.currencies||{},bankFx=balanceData.accounts.bankaDoviz?.currencies||{},rates=quoteData?.fx||{};
+ const cashFxTotal=(Number(cashFx.USD||0)*Number(rates.USDTRY||0))+(Number(cashFx.EUR||0)*Number(rates.EURTRY||0))+(Number(cashFx.GBP||0)*Number(rates.GBPTRY||0));
+ const bankFxTotal=(Number(bankFx.EUR||0)*Number(rates.EURTRY||0));
+ document.getElementById("cashFxValue").textContent=fmt(cashFxTotal);
+ document.getElementById("cashFxSub").textContent=nfmt(cashFx.USD||0)+" USD · "+nfmt(cashFx.EUR||0)+" EUR · "+nfmt(cashFx.GBP||0)+" GBP";
+ document.getElementById("bankFxValue").textContent=fmt(bankFxTotal);
+ document.getElementById("bankFxSub").textContent=nfmt(bankFx.EUR||0)+" EUR";
  document.getElementById("goldValue").textContent=fmt(c.totals.gold);
  const grams=balanceData.gold?.grams,gramPrice=balanceData.gold?.gramPriceSnapshot;
  document.getElementById("goldSub").textContent=grams? nfmt(grams)+" gr · referans "+fmt(gramPrice)+"/gr":"N Kolay Altın";
@@ -177,13 +183,15 @@ function render(){
  const cats={try:"TL / Banka",fx:"Döviz",gold:"Altın",receivable:"Alacak",brokerage_placeholder:"Midas (portföy alt kırılımı)"};
  document.getElementById("accountsBody").innerHTML=Object.values(a).map(x=>{
   const category=x.category, included=category!=="brokerage_placeholder",v=Number(x.value)||0;
-  return '<tr><td>'+safe(x.label)+'</td><td>'+safe(cats[category]||"Diğer")+'</td><td>'+fmt(v)+'</td><td class="'+(included?"good":"")+'">'+(included?"Dahil":"Hisseler/fonlarda sayıldı")+'</td></tr>';
+  const currencyLine=category==="fx"&&x.currencies?Object.entries(x.currencies).map(([k,q])=>nfmt(q)+" "+k).join(" · "):"";
+  const fxRowValue=category==="fx"?(x===a.doviz?cashFxTotal:bankFxTotal):v;
+  return '<tr><td>'+safe(x.label)+(currencyLine?'<span class="subline">'+safe(currencyLine)+'</span>':"")+'</td><td>'+safe(cats[category]||"Diğer")+'</td><td>'+fmt(fxRowValue)+'</td><td class="'+(included?"good":"")+'">'+(included?"Dahil":"Hisseler/fonlarda sayıldı")+'</td></tr>';
  }).join("");
  const m=balanceData.monthlyObligations;
  document.getElementById("rentValue").textContent=fmt(m.rent.value);
  document.getElementById("cardValue").textContent=fmt(m.creditCard.value);
  document.getElementById("monthlyTotal").textContent=fmt(c.obligations);
- document.getElementById("quoteState").textContent=quoteOverrides && Object.keys(quoteOverrides).length?"Fintables CSV fiyatları bu tarayıcıya uygulandı. Son kaynak: "+(quoteData?.asOf||"yüklenen dosya"):"Fiyat önbelleği: "+(quoteData?.asOf||"—")+" · "+(quoteData?.source||"Kaynak belirsiz");
+ document.getElementById("quoteState").textContent=quoteOverrides && Object.keys(quoteOverrides).length?"Fintables CSV fiyatları bu tarayıcıya uygulandı. Son kaynak: "+(quoteData?.asOf||"yüklenen dosya"):"Otomatik kaynak: Midas + Döviz.com · "+(quoteData?.lastRefresh||quoteData?.asOf||"—");
  document.getElementById("footerUpdate").textContent="Son hesaplama: "+new Date().toLocaleString("tr-TR");
 }
 function applySheetRows(rows){
