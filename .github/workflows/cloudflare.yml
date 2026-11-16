@@ -74,9 +74,11 @@ jobs:
           q=json.load(open("/tmp/verify-quotes.json"))
           print("R2 lastRefresh:", q.get("lastRefresh"))
           print("R2 quotes:", q.get("quotes"))
+          print("R2 FX:", q.get("fx"))
           print("R2 errors:", q.get("errors"))
           assert not q.get("errors"), q.get("errors")
           assert all(isinstance(q.get("quotes", {}).get(k), (int, float)) and q["quotes"][k] > 0 for k in ["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"])
+          assert all(isinstance(q.get("fx", {}).get(k), (int, float)) and q["fx"][k] > 0 for k in ["USDTRY","EURTRY","GBPTRY"])
           from datetime import datetime, timezone, timedelta
           refreshed=datetime.fromisoformat(q["lastRefresh"].replace("Z","+00:00"))
           assert datetime.now(timezone.utc)-refreshed < timedelta(minutes=3), "R2 quote data is not fresh"
@@ -94,8 +96,11 @@ jobs:
           assert actual.get("lastRefresh")==expected.get("lastRefresh"), (actual.get("lastRefresh"),expected.get("lastRefresh"))
           for symbol, value in expected["quotes"].items():
               assert float(actual["quotes"][symbol])==float(value), (symbol,actual["quotes"].get(symbol),value)
+          for symbol, value in expected.get("fx", {}).items():
+              assert float(actual["fx"][symbol])==float(value), (symbol,actual["fx"].get(symbol),value)
           print("Worker API lastRefresh:", actual["lastRefresh"])
           print("Worker API quotes:", actual["quotes"])
+          print("Worker API FX:", actual["fx"])
           print("Worker API and R2 match: OK")
           PY
       - name: Publish quote pipeline status
