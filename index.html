@@ -204,9 +204,10 @@ function renderHistory(){
  const rows=(historyData.snapshots||[]).slice(-range);
  const series=[
   ["total","Toplam varlık","var(--blue)"],
-  ["portfolio","Yatırım portföyü","var(--green)"],
+  ["stocks","Hisseler","var(--green)"],
   ["try","Banka TL","var(--blue)"],
-  ["cashFx","Nakit Döviz","#55d6a1"]
+  ["cashFx","Nakit Döviz","#55d6a1"],
+  ["bankFx","Banka Döviz","var(--purple)"]
  ];
  legend.dataset.activeSeries=legend.dataset.activeSeries||"total";
  legend.innerHTML=series.map((s)=>'<button class="'+(s[0]===legend.dataset.activeSeries?"active":"")+'" data-series="'+s[0]+'">'+s[1]+'</button>').join("");
