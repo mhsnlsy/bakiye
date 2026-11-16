@@ -141,12 +141,28 @@ function csvRows(text){
 function realCostPerUnitForPosition(p){
  const base=Number(p.avgCost)||0;
  const start=tlrefData?.startDate||balanceData?.depositBenchmark?.startDate;
- const rate=Number(tlrefData?.netAnnualRate ?? balanceData?.depositBenchmark?.annualRate*(1-(balanceData?.depositBenchmark?.stopaj??0.175)))||0;
- if(!base||!start||!rate)return base;
- const startMs=Date.parse(start+"T00:00:00Z");
- const todayMs=Date.parse((tlrefData?.asOf||new Date().toISOString().slice(0,10))+"T00:00:00Z");
- const days=Math.max(0,Math.floor((todayMs-startMs)/86400000));
- return base*Math.pow(1+rate/365,days);
+ const end=tlrefData?.asOf||new Date().toISOString().slice(0,10);
+ const history=Array.isArray(tlrefData?.historical)?tlrefData.historical:[];
+ if(!base||!start||!end||!history.length)return base;
+ const byDate=new Map(history.map(x=>[x.date,Number(x.rate)]));
+ const firstRate=Number(history[0]?.rate)||0;
+ if(!firstRate)return base;
+ let value=base;
+ let d=new Date(start+"T00:00:00Z");
+ const endMs=Date.parse(end+"T00:00:00Z");
+ while(d.getTime()<endMs){
+  const key=d.toISOString().slice(0,10);
+  let rate=byDate.get(key);
+  if(rate==null){
+   for(let i=history.length-1;i>=0;i--){
+    if(history[i].date<=key){rate=Number(history[i].rate);break}
+   }
+   if(rate==null)rate=firstRate;
+  }
+  value*=1+(rate*(1-(tlrefData?.stopaj??0.175)))/365;
+  d.setUTCDate(d.getUTCDate()+1);
+ }
+ return value;
 }
 function calc(){
  const quotes={...(quoteData?.quotes||{})};
