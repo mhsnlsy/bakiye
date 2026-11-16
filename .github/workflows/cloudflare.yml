@@ -3,8 +3,6 @@ on:
   push:
     branches: [main]
     paths: ["index.html","data/**","worker/**","wrangler.jsonc",".github/workflows/cloudflare.yml","scripts/**"]
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 concurrency:
@@ -59,3 +57,18 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           npx wrangler@latest r2 object put bakiye-data/quotes.json --file=/tmp/quotes.json --content-type=application/json
+      - name: Verify fresh quotes in R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler@latest r2 object get bakiye-data/quotes.json --file=/tmp/verify-quotes.json
+          python3 - <<'PY'
+          import json
+          q=json.load(open("/tmp/verify-quotes.json"))
+          print("R2 lastRefresh:", q.get("lastRefresh"))
+          print("R2 quotes:", q.get("quotes"))
+          print("R2 errors:", q.get("errors"))
+          assert not q.get("errors"), q.get("errors")
+          assert all(k in q.get("quotes", {}) for k in ["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"])
+          PY
