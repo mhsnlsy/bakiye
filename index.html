@@ -132,6 +132,10 @@ const fmt=n=>new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maxi
 const nfmt=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(n)||0);
 let balanceData=null,quoteData=null,positions=[],tlrefData=null,historyData=null;
 let quoteOverrides={};
+let quoteLoadError=null;
+const REQUIRED_QUOTES=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
+function validQuotePayload(q){return !!q?.quotes&&String(q.source||"").includes("Uzmanpara")&&!!q.lastRefresh&&REQUIRED_QUOTES.every(k=>Number.isFinite(Number(q.quotes[k]))&&Number(q.quotes[k])>0)}
+async function fetchLiveQuotes(){const r=await fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});if(!r.ok)throw Error("Fiyat API HTTP "+r.status);const q=await r.json();if(!validQuotePayload(q))throw Error("Canlı fiyat verisi eksik veya kaynak doğrulanamadı");return q}
 const safe=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function readTRNumber(v){
  if(v==null)return 0;let s=String(v).replace(/TRY|TL|₺/gi,"").replace(/\s/g,"").trim();if(!s)return 0;
@@ -351,7 +355,9 @@ function render(){
  document.getElementById("rentValue").textContent=fmt(m.rent.value);
  document.getElementById("cardValue").textContent=fmt(m.creditCard.value);
  document.getElementById("monthlyTotal").textContent=fmt(c.obligations);
- document.getElementById("quoteState").textContent="Uzmanpara Son fiyat · Son güncelleme: "+formatQuoteUpdateTime()+" TSİ · TLREF: Borsa İstanbul · "+(tlrefData?.asOf||"—")+" · Net "+nfmt((tlrefData?.netAnnualRate||0)*100)+"%";
+ const quoteAge=quoteData?.lastRefresh?Math.max(0,Date.now()-new Date(quoteData.lastRefresh).getTime()):Infinity;
+ const quoteAgeText=Number.isFinite(quoteAge)?Math.floor(quoteAge/60000)+" dk önce":"zaman bilgisi yok";
+ document.getElementById("quoteState").textContent="Uzmanpara Son fiyat · Güncelleme: "+formatQuoteUpdateTime()+" TSİ ("+quoteAgeText+")"+(quoteLoadError?" · UYARI: "+quoteLoadError:quoteAge>12*60000?" · UYARI: fiyat verisi 12 dakikadan eski":"")+" · TLREF: Borsa İstanbul · "+(tlrefData?.asOf||"—")+" · Net "+nfmt((tlrefData?.netAnnualRate||0)*100)+"%";
  document.getElementById("footerUpdate").textContent="Son hesaplama: "+new Date().toLocaleString("tr-TR");
 }
 async function boot(){
@@ -383,7 +389,7 @@ async function boot(){
     gold:{gramPriceSnapshot:6258.06,grams:1.7},
     depositBenchmark:{startDate:"2025-08-24",stopaj:0.175}
   };
-  const fallbackQuotes={asOf:"2026-11-14",quotes:{TAVHL:302.25,KARSN:7.66,THYAO:320.25,CGCAM:20.02,SISE:35.86,"ZPLIB.F":200.55},fx:{USDTRY:50.3921,EURTRY:55.5192,GBPTRY:66.5177}};
+  const fallbackQuotes={source:"Uzmanpara Son fiyat · Son doğrulanan yedek",sourceUrl:"https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum",asOf:"2026-11-16",lastRefresh:"2026-11-16T15:25:06.304321Z",quotes:{TAVHL:304.00,KARSN:7.92,THYAO:323.50,CGCAM:20.02,SISE:34.84,"ZPLIB.F":199.25},fx:{USDTRY:50.3855,EURTRY:55.4999,GBPTRY:66.492}};
   const fallbackPositions=[
     {symbol:"TAVHL",name:"TAV Havalimanları",type:"stock",qty:14,avgCost:246.52},
     {symbol:"KARSN",name:"Karsan Otomotiv",type:"stock",qty:888,avgCost:8.74},
@@ -402,13 +408,13 @@ async function boot(){
   document.getElementById("syncState").textContent="Veriler yükleniyor…";
   render();
   balanceData=await load(DATA_URL,"balance.json",fallbackBalance);
-  quoteData=await load(QUOTES_URL,"quotes.json",fallbackQuotes);
+  try{quoteData=await fetchLiveQuotes();quoteLoadError=null;}catch(e){quoteData=fallbackQuotes;quoteLoadError=String(e?.message||e);}
   // Prices are refreshed centrally by GitHub Actions and read from the canonical Worker API.
   const p=await load(POSITIONS_URL,"positions.json",fallbackPositions);
   positions=Array.isArray(p)?p:(p.positions||[]);
   tlrefData=await load(TLREF_URL,"tlref.json",fallbackTlref);
   historyData=await load(HISTORY_URL,"history.json",historyData);
-  document.getElementById("syncState").textContent="Veriler yüklendi";
+  document.getElementById("syncState").textContent=quoteLoadError?"Hisse fiyatı bağlantı uyarısı":"Veriler yüklendi";
   render();
   renderRealCostMetrics();
   renderHistory();
@@ -420,15 +426,16 @@ boot().catch(e=>{document.getElementById("syncState").textContent="Veri hatası"
 
 setInterval(async()=>{
   try{
-    const r=await fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"});
-    if(r.ok){
-      const next=await r.json();
-      if(next?.quotes && String(next?.source||"").includes("Uzmanpara")){
-        quoteData=next;render();renderRealCostMetrics();
-      }
-    }
-  }catch{}
-},300000);
+    quoteData=await fetchLiveQuotes();
+    quoteLoadError=null;
+    render();renderRealCostMetrics();
+    document.getElementById("syncState").textContent="Veriler yüklendi";
+  }catch(e){
+    quoteLoadError=String(e?.message||e);
+    render();
+    document.getElementById("syncState").textContent="Hisse fiyatı bağlantı uyarısı";
+  }
+},60000);
 document.getElementById("historyRange").onchange=renderHistory;
 
 // Keep the balance page visible even if the browser blocks one live source.
