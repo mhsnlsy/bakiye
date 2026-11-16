@@ -73,6 +73,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
  <div class="heroBottom">
   <div>Planlı aylık ödemeler<strong id="obligationHero">—</strong></div>
   <div>Ödemeler sonrası<strong id="netTotal">—</strong></div>
+  <div>Reel portföy K/Z<strong id="heroRealPnL">—</strong></div>
   <div>Toplam pozisyon<strong id="positionCount">—</strong></div>
  </div>
 </section>
@@ -89,7 +90,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 <section class="section">
  <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez. Reel K/Z, mevduat referansına göre fırsat maliyetini düşer.</div></div><div class="controls"><span class="sourceLink">Midas Canlı Borsa</span></div></div>
  <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Reel maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th><th>Reel K/Z</th></tr></thead><tbody id="positionsBody"></tbody><tfoot><tr><td colspan="5">Portföy toplamı</td><td id="portfolioTotal">—</td><td id="portfolioPnL">—</td><td id="portfolioRealPnL">—</td></tr></tfoot></table></div>
- <div class="sourceRow"><span class="state" id="quoteState">Fiyat kaynağı doğrulanıyor…</span><span class="small">Reel K/Z: mevduat referansı, stopaj sonrası</span></div>
+ <div class="sourceRow"><span class="state" id="quoteState">Fiyat kaynağı doğrulanıyor…</span><span class="small">Reel K/Z: mevduat referansı, stopaj sonrası · Fiyat güncellendiğinde otomatik yeniden hesaplanır.</span></div>
  <div class="notice" id="priceNotice">Hisse fiyatları Midas Canlı Borsa sayfasından 5 dakikalık yenileme döngüsüyle alınır; Midas'ın web verisi 15 dakika gecikmelidir. Döviz kurları Döviz.com serbest piyasa verisinden yenilenir.</div>
 </section>
 
@@ -152,6 +153,12 @@ function render(){
  document.getElementById("netTotal").textContent=fmt(c.net);
  document.getElementById("obligationHero").textContent=fmt(c.obligations);
  document.getElementById("positionCount").textContent=nfmt(allPositions)+" lot";
+ const realCostTotal=positions.reduce((s,p)=>s+p.qty*Number(p.realCost||p.avgCost),0);
+ const pfNow=positions.reduce((s,p)=>s+p.qty*Number(c.quotes[p.symbol]??p.snapshotPrice??0),0);
+ const heroRealPnl=pfNow-realCostTotal;
+ const heroRealEl=document.getElementById("heroRealPnL");
+ heroRealEl.textContent=fmt(heroRealPnl);
+ heroRealEl.className=heroRealPnl>=0?"good":"bad";
  document.getElementById("stocksValue").textContent=fmt(c.totals.stocks);
  document.getElementById("stocksSub").textContent=positions.filter(p=>p.type==="stock").length+" hisse pozisyonu";
  document.getElementById("fundsValue").textContent=fmt(c.totals.funds);
