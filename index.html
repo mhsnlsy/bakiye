@@ -88,14 +88,14 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 </div>
 
 <section class="section">
- <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez. Reel K/Z, mevduat referansına göre fırsat maliyetini düşer.</div></div><div class="controls"><span class="sourceLink">Midas Canlı Borsa</span></div></div>
+ <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez. Reel K/Z, mevduat referansına göre fırsat maliyetini düşer.</div></div><div class="controls"><span class="sourceLink">Uzmanpara Son fiyat</span></div></div>
  <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Reel maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th><th>Reel K/Z</th></tr></thead><tbody id="positionsBody"><tr><td><span class="ticker">TAVHL</span><span class="subline">TAV Havalimanları · Hisse</span></td><td>14</td><td>₺246,52</td><td>₺322,62</td><td>₺302,25</td><td>₺4.231,50</td><td class="good">₺780,22</td><td class="bad">-₺285,18</td></tr><tr><td><span class="ticker">KARSN</span><span class="subline">Karsan Otomotiv · Hisse</span></td><td>888</td><td>₺8,74</td><td>₺9,22</td><td>₺7,66</td><td>₺6.802,08</td><td class="bad">-₺959,04</td><td class="bad">-₺1.385,28</td></tr><tr><td><span class="ticker">THYAO</span><span class="subline">Türk Hava Yolları · Hisse</span></td><td>65</td><td>₺285,04</td><td>₺344,39</td><td>₺320,25</td><td>₺20.816,25</td><td class="good">₺2.292,65</td><td class="bad">-₺1.569,10</td></tr><tr><td><span class="ticker">CGCAM</span><span class="subline">Çağdaş Cam · Hisse</span></td><td>668</td><td>₺26,85</td><td>₺31,01</td><td>₺18,20</td><td>₺12.157,60</td><td class="bad">-₺5.770,60</td><td class="bad">-₺8.554,28</td></tr><tr><td><span class="ticker">SISE</span><span class="subline">Şişecam · Hisse</span></td><td>168</td><td>₺39,94</td><td>₺42,97</td><td>₺35,86</td><td>₺6.024,48</td><td class="bad">-₺1.101,44</td><td class="bad">-₺1.194,48</td></tr><tr><td><span class="ticker">ZPLIB.F</span><span class="subline">ZP Lip · Hisse</span></td><td>83</td><td>₺177,92</td><td>₺201,90</td><td>₺200,55</td><td>₺16.645,65</td><td class="good">₺1.051,79</td><td class="bad">-₺112,05</td></tr></tbody><tfoot><tr><td colspan="5">Portföy toplamı</td><td id="portfolioTotal">₺66.677,56</td><td id="portfolioPnL">-₺2.475,52</td><td id="portfolioRealPnL">-₺13.100,37</td></tr></tfoot></table></div>
- <div class="sourceRow"><span class="state" id="quoteState">Midas + Döviz.com · 14.11.2026</span><span class="small">Reel K/Z: mevduat referansı, stopaj sonrası · Fiyat güncellendiğinde otomatik yeniden hesaplanır.</span></div>
+ <div class="sourceRow"><span class="state" id="quoteState">Uzmanpara + Döviz.com · canlı veri</span><span class="small">Reel K/Z: mevduat referansı, stopaj sonrası · Fiyat güncellendiğinde otomatik yeniden hesaplanır.</span></div>
  <div class="benchmarkGrid">
   <div class="metricCard"><span>TLREF kaynaklı ek reel maliyet</span><strong id="tlrefAdded">₺0,00</strong><small id="tlrefAddedSub">Bugünkü portföy maliyeti farkı</small></div>
   <div class="metricCard"><span>Günlük reel maliyet değişimi</span><strong id="dailyRealCostChange">₺0,00</strong><small id="dailyRealCostSub">İlk gün: referans oluşturuldu</small></div>
 </div>
- <div class="notice" id="priceNotice">Hisse fiyatları Midas Canlı Borsa sayfasından 5 dakikalık yenileme döngüsüyle alınır; Midas'ın web verisi 15 dakika gecikmelidir. Döviz kurları Döviz.com serbest piyasa verisinden yenilenir.</div>
+ <div class="notice" id="priceNotice">Hisse fiyatları Uzmanpara Son fiyat verisinden alınır; veri yaklaşık 15 dakika gecikmelidir. Döviz kurları Döviz.com serbest piyasa verisinden yenilenir.</div>
 </section>
 
 <section class="section">
@@ -351,7 +351,7 @@ function render(){
  document.getElementById("rentValue").textContent=fmt(m.rent.value);
  document.getElementById("cardValue").textContent=fmt(m.creditCard.value);
  document.getElementById("monthlyTotal").textContent=fmt(c.obligations);
- document.getElementById("quoteState").textContent="Midas Son fiyat · Son güncelleme: "+formatQuoteUpdateTime()+" TSİ · TLREF: Borsa İstanbul · "+(tlrefData?.asOf||"—")+" · Net "+nfmt((tlrefData?.netAnnualRate||0)*100)+"%";
+ document.getElementById("quoteState").textContent="Uzmanpara Son fiyat · Son güncelleme: "+formatQuoteUpdateTime()+" TSİ · TLREF: Borsa İstanbul · "+(tlrefData?.asOf||"—")+" · Net "+nfmt((tlrefData?.netAnnualRate||0)*100)+"%";
  document.getElementById("footerUpdate").textContent="Son hesaplama: "+new Date().toLocaleString("tr-TR");
 }
 async function boot(){
@@ -383,7 +383,7 @@ async function boot(){
     gold:{gramPriceSnapshot:6258.06,grams:1.7},
     depositBenchmark:{startDate:"2025-08-24",stopaj:0.175}
   };
-  const fallbackQuotes={asOf:"2026-11-14",quotes:{TAVHL:302.25,KARSN:7.66,THYAO:320.25,CGCAM:18.2,SISE:35.86,"ZPLIB.F":200.55},fx:{USDTRY:50.3921,EURTRY:55.5192,GBPTRY:66.5177}};
+  const fallbackQuotes={asOf:"2026-11-14",quotes:{TAVHL:302.25,KARSN:7.66,THYAO:320.25,CGCAM:20.02,SISE:35.86,"ZPLIB.F":200.55},fx:{USDTRY:50.3921,EURTRY:55.5192,GBPTRY:66.5177}};
   const fallbackPositions=[
     {symbol:"TAVHL",name:"TAV Havalimanları",type:"stock",qty:14,avgCost:246.52},
     {symbol:"KARSN",name:"Karsan Otomotiv",type:"stock",qty:888,avgCost:8.74},
