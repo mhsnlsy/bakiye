@@ -4,41 +4,47 @@
     "name": "TAV Havalimanları",
     "type": "stock",
     "qty": 14,
-    "avgCost": 244.2
+    "avgCost": 244.2,
+    "realCost": 322.62
   },
   {
     "symbol": "KARSN",
     "name": "Karsan Otomotiv",
     "type": "stock",
     "qty": 888,
-    "avgCost": 8.74
+    "avgCost": 8.74,
+    "realCost": 9.22
   },
   {
     "symbol": "THYAO",
     "name": "Türk Hava Yolları",
     "type": "stock",
     "qty": 65,
-    "avgCost": 285.04
+    "avgCost": 285.04,
+    "realCost": 344.39
   },
   {
     "symbol": "CGCAM",
     "name": "Çağdaş Cam",
     "type": "stock",
     "qty": 668,
-    "avgCost": 26.85
+    "avgCost": 26.85,
+    "realCost": 31.01
   },
   {
     "symbol": "SISE",
     "name": "Şişecam",
     "type": "stock",
     "qty": 168,
-    "avgCost": 39.94
+    "avgCost": 39.94,
+    "realCost": 42.97
   },
   {
     "symbol": "ZPLIB.F",
     "name": "Ziraat Portföy ZPLIB",
     "type": "stock",
     "qty": 83,
-    "avgCost": 177.92
+    "avgCost": 177.92,
+    "realCost": 201.9
   }
 ]
