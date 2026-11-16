@@ -107,7 +107,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 
 <section class="section">
  <div class="sectionhead"><div><h2>Varlık geçmişi</h2><div class="note">16 Kasım 2026'dan itibaren her gün saat 18:30 Türkiye saati snapshot tutulur. Pazar snapshotları kalıcı arşivlenir.</div></div><select class="historySelect" id="historyRange"><option value="30">30 gün</option><option value="90">90 gün</option><option value="365" selected>1 yıl</option></select></div>
- <div class="chartLegend" id="historyLegend"></div>
+ <div class="chartLegend" id="historyLegend"><button type="button" class="active" data-series="total">Toplam Varlık</button><button type="button" data-series="stocks">Hisseler</button><button type="button" data-series="try">Banka TL</button><button type="button" data-series="cashFx">Nakit Döviz</button><button type="button" data-series="bankFx">Banka Döviz</button></div>
  <div class="historyChart" id="historyChart"><div class="chartEmpty">Geçmiş veri biriktikçe grafik oluşacak.</div></div>
  <div class="chartMeta"><span>18:30 snapshot değişimi: <strong id="historyDailyPct">İlk snapshot</strong></span><span id="historyStart">Başlangıç: 16.11.2026</span><span id="historyEnd">Son kayıt: 16.11.2026</span><span id="weeklyArchiveMeta">Pazar arşivi: kalıcı</span></div>
 </section>
@@ -273,6 +273,7 @@ function renderHistory(){
  document.getElementById("assetCards").querySelectorAll(".card").forEach(card=>{if(card.querySelector("#receivableValue"))card.style.display=c.totals.receivable===0?"none":""});
  const asOf=quoteData?.asOf||balanceData.asOf;
  document.getElementById("asOfLabel").textContent="Değerleme "+(asOf||"—");
+ renderHistory();
  const posRows=positions.map(p=>{
   const price=Number(c.quotes[p.symbol]??p.snapshotPrice??0),market=price*p.qty,cost=p.avgCost*p.qty,pnl=market-cost;
   const realCostPerUnit=realCostPerUnitForPosition(p);
