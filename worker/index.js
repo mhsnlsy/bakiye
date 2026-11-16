@@ -1,6 +1,7 @@
 const STOCK_SOURCE="https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum";
 const FX="https://kur.doviz.com/";
 const TLREF="https://www.borsaistanbul.com/endeksler/tlref";
+const TLREF_FALLBACK="https://borsa.doviz.com/endeksler/tlref-turk-lirasi-gecelik-referans-faiz-orani/tarihsel-veri";
 const STOCKS=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
 const SOURCE_SYMBOL={"ZPLIB.F":"ZPLIB"};
 const FXC=["USD","EUR","GBP"];
@@ -105,10 +106,19 @@ async function snapshot(env){
 }
 async function tlref(env){
  let old=await read(env,"tlref.json","/data/tlref.json")||{historical:[],stopaj:.175,startDate:"2025-08-24"};
- let fresh=tl(await get(TLREF));if(!fresh.length)throw Error("TLREF ayrıştırılamadı");
+ const today=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date());
+ let fresh=[],sourceUsed=TLREF;
+ try{fresh=tl(await get(TLREF));}catch(_){}
+ if(!fresh.length || !fresh.some(x=>x.date===today)){
+   try{
+     const fallback=tl(await get(TLREF_FALLBACK));
+     if(fallback.length) { fresh=fallback; sourceUsed=TLREF_FALLBACK; }
+   }catch(_){}
+ }
+ if(!fresh.length)throw Error("TLREF ayrıştırılamadı");
  let map=new Map((old.historical||[]).map(x=>[x.date,Number(x.rate)]));for(const x of fresh)map.set(x.date,x.rate);
  let historical=[...map].sort(([a],[b])=>a.localeCompare(b)).map(([date,rate])=>({date,rate})),last=historical.at(-1),stopaj=Number(old.stopaj??.175);
- const v={...old,source:"Borsa İstanbul TLREF",sourceUrl:TLREF,asOf:last.date,grossAnnualRate:last.rate,stopaj,netAnnualRate:last.rate*(1-stopaj),historical,updatedAt:new Date().toISOString(),method:"Günlük net TLREF fırsat maliyeti; brüt TLREF üzerinden %17,5 stopaj düşülür ve günlük bileşiklenir."};
+ const v={...old,source:sourceUsed===TLREF?"Borsa İstanbul TLREF":"Borsa İstanbul TLREF · doğrulama kaynağı",sourceUrl:TLREF,verificationUrl:sourceUsed===TLREF?null:TLREF_FALLBACK,asOf:last.date,grossAnnualRate:last.rate,stopaj,netAnnualRate:last.rate*(1-stopaj),historical,updatedAt:new Date().toISOString(),method:"Günlük net TLREF fırsat maliyeti; brüt TLREF üzerinden %17,5 stopaj düşülür ve günlük bileşiklenir.",todayAvailable:historical.some(x=>x.date===today),sourceUsed};
  await put(env,"tlref.json",v);return v;
 }
 function out(v,s=200){return new Response(JSON.stringify(v),{status:s,headers:H})}
@@ -152,7 +162,7 @@ export default{
   return asset;
  },
  async scheduled(e,env,ctx){
-   if(e.cron==="30 15 * * *")ctx.waitUntil((async()=>{
+   if(e.cron==="35 16 * * *")ctx.waitUntil((async()=>{
      await quotes(env);
      await tlref(env);
      await snapshot(env);
