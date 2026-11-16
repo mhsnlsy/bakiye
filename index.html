@@ -314,5 +314,8 @@ document.getElementById("refreshBtn").onclick=async()=>{document.getElementById(
 boot().catch(e=>{document.getElementById("syncState").textContent="Veri hatası";document.getElementById("grandTotal").textContent="Yüklenemedi";document.getElementById("sheetState").textContent=e.message});
 setInterval(()=>syncSheet(),300000);
 setInterval(async()=>{try{const r=await fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"});if(r.ok){quoteData=await r.json();render()}}catch{}},300000);
+
+// Keep the balance page visible even if the browser blocks one live source.
+window.addEventListener("error",e=>{document.getElementById("syncState").textContent="Canlı veri uyarısı";});
 </script>
 </body></html>
