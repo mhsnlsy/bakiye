@@ -124,9 +124,9 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 </main>
 <script>
 const DATA_URL="./data/balance.json";
-const QUOTES_URL="./data/quotes.json";
+const QUOTES_URL="/api/quotes";
 const POSITIONS_URL="./data/positions.json";
-const TLREF_URL="./data/tlref.json";
+const TLREF_URL="/api/tlref";
 const HISTORY_URL="./data/history.json";
 const fmt=n=>new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:2}).format(Number(n)||0);
 const nfmt=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(n)||0);
