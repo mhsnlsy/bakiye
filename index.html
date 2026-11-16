@@ -55,8 +55,6 @@ tr:last-child td{border-bottom:0}
 .balanceLine:last-child{border:0}.lineName{font-size:12px}.lineMeta{font-size:10px;color:var(--muted)}
 .small{font-size:10px;color:var(--muted)}
 .notice{padding:11px 13px;background:rgba(231,189,114,.07);border:1px solid rgba(231,189,114,.3);border-radius:10px;color:#e9d4ae;font-size:11px;margin-top:12px}
-.quoteImport{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.quoteImport input{font:inherit;font-size:11px;max-width:230px;color:var(--muted)}
 footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.wrap{padding:19px 12px 34px}.top{display:block}h1{font-size:27px}.topright{margin-top:12px}.hero{padding:18px}.heroTotal{font-size:34px}.grid{gap:8px}.card{padding:13px}.cardvalue{font-size:20px}.section{padding:13px}.liability{grid-template-columns:1fr 1fr}.liability>div:last-child{grid-column:1/-1}table{min-width:650px}}
@@ -221,29 +219,7 @@ async function syncSheet(){
   document.getElementById("syncState").textContent="Önbellek";
  }
 }
-async function importFintablesCsv(){
- const f=document.getElementById("quoteCsv").files[0];if(!f){alert("Önce Midas fiyat verisi dosyasını seç.");return}
- const rows=csvRows(await f.text());if(rows.length<2){alert("CSV boş veya okunamadı.");return}
- const hdr=rows[0].map(x=>String(x).toLocaleLowerCase("tr-TR").trim());
- const symIdx=hdr.findIndex(x=>["kod","sembol","hisse kodu","symbol","ticker"].includes(x));
- const priceIdx=hdr.findIndex(x=>["fiyat","son fiyat","son","price","kapanış","son işlem"].includes(x));
- if(symIdx<0||priceIdx<0){alert("CSV içinde hisse kodu/sembol ve fiyat sütunları bulunamadı. Başlıkları kontrol et.");return}
- let n=0;
- rows.slice(1).forEach(r=>{const sym=String(r[symIdx]||"").trim().toUpperCase().replace("BIST:","");if(positions.some(p=>p.symbol===sym)){quoteOverrides[sym]=readTRNumber(r[priceIdx]);n++}});
- if(!n){alert("Portföyündeki hisseler CSV içinde bulunamadı.");return}
- localStorage.setItem("bakiye-fintables-quotes",JSON.stringify(quoteOverrides));
- render();document.getElementById("quoteState").textContent=n+" Midas fiyatı içe aktarıldı · "+new Date().toLocaleString("tr-TR");
-}
-async function boot(){
- const [b,q,p]=await Promise.all([fetch(DATA_URL+"?v="+Date.now(),{cache:"no-store"}),fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"}),fetch(POSITIONS_URL+"?v="+Date.now(),{cache:"no-store"})]);
- if(!b.ok||!q.ok||!p.ok)throw Error("Veri dosyaları yüklenemedi");
- balanceData=await b.json();quoteData=await q.json();positions=await p.json();
- render();document.getElementById("syncState").textContent="Başlangıç verisi yüklendi";
- document.getElementById("sheetState").textContent="Google Sheets senkronizasyonu deneniyor…";
- await syncSheet();
-}
 document.getElementById("refreshBtn").onclick=async()=>{document.getElementById("syncState").textContent="Yenileniyor…";await syncSheet();render()};
-document.getElementById("importQuotes").onclick=importFintablesCsv;
 boot().catch(e=>{document.getElementById("syncState").textContent="Veri hatası";document.getElementById("grandTotal").textContent="Yüklenemedi";document.getElementById("sheetState").textContent=e.message});
 setInterval(()=>syncSheet(),300000);
 setInterval(async()=>{try{const r=await fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"});if(r.ok){quoteData=await r.json();render()}}catch{}},300000);
