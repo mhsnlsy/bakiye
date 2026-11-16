@@ -91,10 +91,10 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 
 <section class="section">
  <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez. Reel K/Z, mevduat referansına göre fırsat maliyetini düşer.</div></div><div class="controls">
-  <button id="nominalModeBtn" class="btn" style="font-size:11px;padding:6px 10px">Nominal</button>
+  <button id="nominalModeBtn" class="btn" style="font-size:11px;padding:6px 10px">Günlük</button>
   <span class="sourceLink">Uzmanpara Son fiyat</span>
 </div></div>
- <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Reel maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th id="nominalKzHeader">Nominal K/Z</th><th id="nominalPctHeader">Nominal %</th><th>Reel K/Z</th><th>Reel %</th></tr></thead><tbody id="positionsBody"><tr><td><span class="ticker">TAVHL</span><span class="subline">TAV Havalimanları · Hisse</span></td><td>14</td><td>₺246,52</td><td>₺322,62</td><td>₺304,00</td><td>₺4.256,00</td><td class="good">₺804,72</td><td class="good">23,30%</td><td class="bad">-₺260,68</td><td class="bad">-6,99%</td></tr><tr><td><span class="ticker">KARSN</span><span class="subline">Karsan Otomotiv · Hisse</span></td><td>888</td><td>₺8,74</td><td>₺9,22</td><td>₺7,92</td><td>₺7.032,96</td><td class="bad">-₺728,16</td><td class="bad">-9,38%</td><td class="bad">-₺1.154,40</td><td class="bad">-12,57%</td></tr><tr><td><span class="ticker">THYAO</span><span class="subline">Türk Hava Yolları · Hisse</span></td><td>65</td><td>₺285,04</td><td>₺344,39</td><td>₺323,50</td><td>₺21.027,50</td><td class="good">₺2.499,90</td><td class="good">13,49%</td><td class="bad">-₺1.357,85</td><td class="bad">-6,08%</td></tr><tr><td><span class="ticker">CGCAM</span><span class="subline">Çağdaş Cam · Hisse</span></td><td>668</td><td>₺26,85</td><td>₺31,01</td><td>₺20,02</td><td>₺13.373,36</td><td class="bad">-₺4.562,44</td><td class="bad">-25,44%</td><td class="bad">-₺7.341,32</td><td class="bad">-23,85%</td></tr><tr><td><span class="ticker">SISE</span><span class="subline">Şişecam · Hisse</span></td><td>168</td><td>₺39,94</td><td>₺42,97</td><td>₺34,84</td><td>₺5.853,12</td><td class="bad">-₺856,80</td><td class="bad">-12,77%</td><td class="bad">-₺1.365,84</td><td class="bad">-23,34%</td></tr><tr><td><span class="ticker">ZPLIB.F</span><span class="subline">ZP Lip · Hisse</span></td><td>83</td><td>₺177,92</td><td>₺201,90</td><td>₺199,25</td><td>₺16.537,75</td><td class="good">₺1.770,39</td><td class="good">11,98%</td><td class="bad">-₺220,05</td><td class="bad">-1,31%</td></tr></tbody><tfoot><tr><td colspan="5">Portföy toplamı</td><td id="portfolioTotal">₺68.080,69</td><td id="portfolioPnL">-₺1.072,39</td><td id="portfolioPnLPct">-1,55%</td><td id="portfolioRealPnL">-₺11.700,04</td><td id="portfolioRealPnLPct">-14,67%</td></tr></tfoot></table></div>
+ <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Reel maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th id="pnlHeader">Nominal K/Z</th><th id="pnlPctHeader">Nominal %</th><th>Reel K/Z</th><th>Reel %</th></tr></thead><tbody id="positionsBody"><tr><td><span class="ticker">TAVHL</span><span class="subline">TAV Havalimanları · Hisse</span></td><td>14</td><td>₺246,52</td><td>₺322,62</td><td>₺304,00</td><td>₺4.256,00</td><td class="good">₺804,72</td><td class="good">23,30%</td><td class="bad">-₺260,68</td><td class="bad">-6,99%</td></tr><tr><td><span class="ticker">KARSN</span><span class="subline">Karsan Otomotiv · Hisse</span></td><td>888</td><td>₺8,74</td><td>₺9,22</td><td>₺7,92</td><td>₺7.032,96</td><td class="bad">-₺728,16</td><td class="bad">-9,38%</td><td class="bad">-₺1.154,40</td><td class="bad">-12,57%</td></tr><tr><td><span class="ticker">THYAO</span><span class="subline">Türk Hava Yolları · Hisse</span></td><td>65</td><td>₺285,04</td><td>₺344,39</td><td>₺323,50</td><td>₺21.027,50</td><td class="good">₺2.499,90</td><td class="good">13,49%</td><td class="bad">-₺1.357,85</td><td class="bad">-6,08%</td></tr><tr><td><span class="ticker">CGCAM</span><span class="subline">Çağdaş Cam · Hisse</span></td><td>668</td><td>₺26,85</td><td>₺31,01</td><td>₺20,02</td><td>₺13.373,36</td><td class="bad">-₺4.562,44</td><td class="bad">-25,44%</td><td class="bad">-₺7.341,32</td><td class="bad">-23,85%</td></tr><tr><td><span class="ticker">SISE</span><span class="subline">Şişecam · Hisse</span></td><td>168</td><td>₺39,94</td><td>₺42,97</td><td>₺34,84</td><td>₺5.853,12</td><td class="bad">-₺856,80</td><td class="bad">-12,77%</td><td class="bad">-₺1.365,84</td><td class="bad">-23,34%</td></tr><tr><td><span class="ticker">ZPLIB.F</span><span class="subline">ZP Lip · Hisse</span></td><td>83</td><td>₺177,92</td><td>₺201,90</td><td>₺199,25</td><td>₺16.537,75</td><td class="good">₺1.770,39</td><td class="good">11,98%</td><td class="bad">-₺220,05</td><td class="bad">-1,31%</td></tr></tbody><tfoot><tr><td colspan="5">Portföy toplamı</td><td id="portfolioTotal">₺68.080,69</td><td id="portfolioPnL">-₺1.072,39</td><td id="portfolioPnLPct">-1,55%</td><td id="portfolioRealPnL">-₺11.700,04</td><td id="portfolioRealPnLPct">-14,67%</td></tr></tfoot></table></div>
  <div class="sourceRow"><span class="state" id="quoteState">Uzmanpara + Döviz.com · canlı veri</span><span class="small">Reel K/Z: TLREF referansı, %17,5 stopaj sonrası · Fiyatlar güncellendikçe yeniden hesaplanır.</span></div>
  <div class="benchmarkGrid">
   <div class="metricCard"><span>Canlı döviz kurları</span><strong id="liveFxRates" style="font-size:13px;letter-spacing:0">USD — · EUR — · GBP —</strong><small id="liveFxSub">Döviz.com · güncelleme —</small></div>
@@ -137,6 +137,7 @@ function fmt(n){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:
 function nfmt(n){return new Intl.NumberFormat("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
 function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let balanceData={},quoteData={},positions=[],historyData={},tlrefData={};
+window.pnlMode="nominal";
 async function api(path){const r=await fetch(path+"?v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}});if(!r.ok)throw Error(path+" HTTP "+r.status);return r.json()}
 async function loadData(){
  const [b,q,p,h,t]=await Promise.all([api("/api/balance"),api("/api/quotes"),api("/api/positions"),api("/api/history"),api("/api/tlref")]);
@@ -144,12 +145,12 @@ async function loadData(){
 }
 function calc(){
  const rates=quoteData.fx||{}, q=quoteData.quotes||{};
- let stocks=0,realPnl=0,nominalPnl=0,positionCount=0,tlrefAdded=0;
+ let stocks=0,realPnl=0,nominalPnl=0,dailyPnl=0,positionCount=0,tlrefAdded=0;
  const rows=positions.map(p=>{
   const qty=Number(p.qty)||0, avg=Number(p.avgCost)||0, real=Number(p.realCost)||avg, price=Number(q[p.symbol]||p.snapshotPrice||0);
   const market=price*qty,cost=avg*qty,rp=market-real*qty,np=market-cost;
-  stocks+=market;realPnl+=rp;nominalPnl+=np;positionCount+=qty;tlrefAdded+=(Number(p.tlrefCostAdded)||0)*qty;
-  return {p,qty,avg,real,price,market,rp,np,nominalPct:cost?np/cost*100:0,realPct:cost?rp/cost*100:0};
+  const dailyPct=Number((q.dailyPct||{})[p.symbol])||0; const dailyBase=100+dailyPct; const dp=dailyBase?market*dailyPct/dailyBase:0; stocks+=market;realPnl+=rp;nominalPnl+=np;dailyPnl+=dp;positionCount+=qty;tlrefAdded+=(Number(p.tlrefCostAdded)||0)*qty;
+  return {p,qty,avg,real,price,market,rp,np,dp,dailyPct,nominalPct:cost?np/cost*100:0,dailyPnlPct:dailyPct,realPct:cost?rp/cost*100:0};
  });
  const a=balanceData.accounts||{};
  const tryVal=Object.values(a).filter(x=>x.category==="try").reduce((s,x)=>s+(Number(x.value)||0),0);
@@ -158,7 +159,7 @@ function calc(){
  const gold=Number(a.nkolayAltin?.value)||0,receivable=Number(a.tahminiAlacak?.value)||0;
  const total=stocks+tryVal+cashFx+bankFx+gold+receivable;
  const obligations=(Number(a.monthlyObligations?.rent?.value)||0)+(Number(a.monthlyObligations?.creditCard?.value)||0);
- return {rows,stocks,realPnl,nominalPnl,positionCount,tlrefAdded,tryVal,cashFx,bankFx,gold,receivable,total,obligations,net:total-obligations,rates};
+ return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal,cashFx,bankFx,gold,receivable,total,obligations,net:total-obligations,rates};
 }
 function render(){
  const x=calc();
@@ -179,6 +180,11 @@ function render(){
  document.getElementById("portfolioRealPnL").textContent=fmt(x.realPnl);
  const originalCost=x.rows.reduce((s,r)=>s+r.avg*r.qty,0);
  document.getElementById("portfolioRealPnLPct").textContent=nfmt(originalCost?x.realPnl/originalCost*100:0)+"%";
+ document.getElementById("pnlHeader").textContent=window.pnlMode==="daily"?"Günlük K/Z":"Nominal K/Z";
+ document.getElementById("pnlPctHeader").textContent=window.pnlMode==="daily"?"Günlük %":"Nominal %";
+ document.getElementById("nominalModeBtn").textContent=window.pnlMode==="daily"?"Nominal":"Günlük";
+ document.getElementById("portfolioPnL").textContent=fmt(window.pnlMode==="daily"?x.dailyPnl:x.nominalPnl);
+ document.getElementById("portfolioPnLPct").textContent=nfmt(window.pnlMode==="daily"?(x.stocks?x.dailyPnl/x.stocks*100:0):(originalCost?x.nominalPnl/originalCost*100:0))+"%";
  document.getElementById("positionsBody").innerHTML=x.rows.map(r=>'<tr><td><span class="ticker">'+safe(r.p.symbol)+'</span><span class="subline">'+safe(r.p.name)+' · Hisse</span></td><td>'+nfmt(r.qty)+'</td><td>'+fmt(r.avg)+'</td><td>'+fmt(r.real)+'</td><td>'+fmt(r.price)+'</td><td>'+fmt(r.market)+'</td><td class="'+(r.np>=0?"good":"bad")+'">'+fmt(r.np)+'</td><td class="'+(r.nominalPct>=0?"good":"bad")+'">'+nfmt(r.nominalPct)+'%</td><td class="'+(r.rp>=0?"good":"bad")+'">'+fmt(r.rp)+'</td><td class="'+(r.realPct>=0?"good":"bad")+'">'+nfmt(r.realPct)+'%</td></tr>').join("");
  const fx=x.rates;
  document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
@@ -202,5 +208,6 @@ async function boot(){
 boot();
 setInterval(boot,60000);
 document.getElementById("refreshBtn").addEventListener("click",boot);
+document.getElementById("nominalModeBtn").addEventListener("click",()=>{window.pnlMode=window.pnlMode==="nominal"?"daily":"nominal";render()});
 </script>
 </body></html>
