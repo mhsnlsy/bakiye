@@ -197,7 +197,6 @@ function renderRealCostMetrics(){
  const ds=document.getElementById("dailyRealCostSub");
  if(ds)ds.textContent=previous?"Önceki güne göre net TLREF etkisi":"İlk gün: referans oluşturuldu";
 }
-function historyLegendClick(e){const b=e.target.closest?.("#historyLegend button[data-series]");if(!b)return;const legend=document.getElementById("historyLegend");if(!legend)return;e.preventDefault();legend.dataset.activeSeries=b.dataset.series;renderHistory()}
 function renderHistory(){
  const el=document.getElementById("historyChart"),legend=document.getElementById("historyLegend");
  if(!el||!historyData)return;
@@ -211,7 +210,7 @@ function renderHistory(){
   ["bankFx","Banka Döviz","var(--purple)"]
  ];
  legend.dataset.activeSeries=legend.dataset.activeSeries||"total";
- legend.innerHTML=series.map((s)=>'<button class="'+(s[0]===legend.dataset.activeSeries?"active":"")+'" data-series="'+s[0]+'">'+s[1]+'</button>').join("");
+ legend.querySelectorAll("button[data-series]").forEach(b=>b.classList.toggle("active",b.dataset.series===legend.dataset.activeSeries));
  if(!rows.length){el.innerHTML='<div class="chartEmpty">Henüz geçmiş veri yok.</div>';return}
  const active=legend.dataset.activeSeries||"total";
  const vals=rows.map(r=>active==="portfolio"?(Number(r.stocks||0)+Number(r.funds||0)):Number(r[active]||0));
@@ -242,9 +241,7 @@ function renderHistory(){
  const latest=rows.at(-1),previous=rows.length>1?rows.at(-2):null;
  const dailyPct=previous&&Number(previous.total)?((Number(latest.total)-Number(previous.total))/Number(previous.total))*100:0;
  const pctEl=document.getElementById("historyDailyPct");if(pctEl)pctEl.textContent=previous?((dailyPct>=0?"+":"")+dailyPct.toFixed(2)+"%"):"İlk snapshot";
- // Global delegated handler: survives every legend re-render and does not depend on a replaced button node.
- document.removeEventListener("click",historyLegendClick);
- document.addEventListener("click",historyLegendClick);
+ legend.querySelectorAll("button[data-series]").forEach(b=>b.onclick=()=>{legend.dataset.activeSeries=b.dataset.series;renderHistory()});
 }\nfunction render(){
  const c=calc(),a=balanceData.accounts,allPositions=positions.reduce((s,p)=>s+p.qty,0);
  document.getElementById("grandTotal").textContent=fmt(c.total);
