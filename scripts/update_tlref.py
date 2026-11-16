@@ -1,60 +1,70 @@
 #!/usr/bin/env python3
-import json
-import re
-import urllib.request
-from datetime import datetime
+import json, re, urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
-URL = "https://www.borsaistanbul.com/endeksler/tlref"
+TV_URL = "https://tr.tradingview.com/symbols/BIST-TLREF/"
+TV_SCAN_URL = "https://scanner.tradingview.com/turkey/scan"
 OUT = Path("data/tlref.json")
 STOPAJ = 0.175
 START_DATE = "2025-08-24"
 
-req = urllib.request.Request(URL, headers={"User-Agent": "Mozilla/5.0"})
-html = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "ignore")
+def tv_tlref():
+    payload = {
+        "columns": ["close", "change", "change_abs", "exchange", "type", "name", "description"],
+        "symbols": {"tickers": ["BIST:TLREF"]},
+        "range": [0, 1]
+    }
+    req = urllib.request.Request(
+        TV_SCAN_URL,
+        data=json.dumps(payload).encode(),
+        headers={
+            "Content-Type": "text/plain;charset=UTF-8",
+            "Accept": "application/json",
+            "Origin": "https://www.tradingview.com",
+            "Referer": TV_URL,
+            "User-Agent": "Mozilla/5.0"
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=30) as r:
+        data=json.loads(r.read().decode("utf-8"))
+    for row in data.get("data", []):
+        if row.get("s") == "BIST:TLREF":
+            vals=row.get("d", [])
+            rate=float(vals[0])
+            if 20 < rate < 60:
+                return rate / 100
+    raise RuntimeError("TradingView BIST:TLREF verisi bulunamadı")
 
-section = html[html.find("TLREF Verileri"):]
-matches = re.findall(r"(\d{2}\.\d{2}\.\d{4}).{0,500}?(\d{2,3}[,.]\d{4})", section, re.S)
-rows = []
-seen = set()
-for d, r in matches:
-    iso = datetime.strptime(d, "%d.%m.%Y").date().isoformat()
-    if iso in seen:
-        continue
-    seen.add(iso)
-    rows.append({"date": iso, "rate": float(r.replace(",", ".")) / 100})
+today=datetime.now().astimezone().date().isoformat()
+rate=tv_tlref()
 
-if not rows:
-    raise RuntimeError("TLREF verisi sayfadan ayrıştırılamadı")
-
-rows.sort(key=lambda x: x["date"])
-
-# Preserve the previously archived daily series so each successful run
-# adds the newly published TLREF observations instead of replacing history.
+previous=[]
 if OUT.exists():
     try:
-        previous = json.loads(OUT.read_text(encoding="utf-8"))
-        previous_rows = previous.get("historical", [])
-        merged = {r["date"]: float(r["rate"]) for r in previous_rows if r.get("date") and r.get("rate") is not None}
-        for r in rows:
-            merged[r["date"]] = float(r["rate"])
-        rows = [{"date": d, "rate": merged[d]} for d in sorted(merged)]
+        previous=json.loads(OUT.read_text(encoding="utf-8")).get("historical", [])
     except Exception:
-        pass
+        previous=[]
 
-latest = rows[-1]
-net_latest = latest["rate"] * (1 - STOPAJ)
+merged={r["date"]:float(r["rate"]) for r in previous if r.get("date") and r.get("rate") is not None}
+merged[today]=rate
+historical=[{"date":d,"rate":merged[d]} for d in sorted(merged)]
+net=rate*(1-STOPAJ)
 
-payload = {
-    "source": URL,
-    "asOf": latest["date"],
-    "grossAnnualRate": latest["rate"],
-    "stopaj": STOPAJ,
-    "netAnnualRate": net_latest,
-    "startDate": START_DATE,
-    "method": "Günlük net TLREF fırsat maliyeti; brüt TLREF üzerinden %17,5 stopaj düşülür ve günlük bileşiklenir.",
-    "historical": rows,
-    "updatedAt": datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+payload={
+    "source":"TradingView BIST:TLREF",
+    "sourceUrl":TV_URL,
+    "asOf":today,
+    "grossAnnualRate":rate,
+    "stopaj":STOPAJ,
+    "netAnnualRate":net,
+    "startDate":START_DATE,
+    "historical":historical,
+    "updatedAt":datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00","Z"),
+    "todayAvailable":True,
+    "method":"Günlük net TLREF fırsat maliyeti; TradingView BIST:TLREF üzerinden brüt TLREF, %17,5 stopaj sonrası netleştirilir ve günlük bileşiklenir."
 }
-OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
-print(f"TLREF {latest['date']} = %{latest['rate']*100:.4f}; net yıllık %{net_latest*100:.4f}; {len(rows)} kayıt")
+OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2)+"
+",encoding="utf-8")
+print(f"TradingView BIST:TLREF {today} = %{rate*100:.4f}; net yıllık %{net*100:.4f}; {len(historical)} kayıt")
