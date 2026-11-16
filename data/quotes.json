@@ -1,20 +1,21 @@
 {
-  "source": "Midas Canlı Borsa",
-  "sourceUrl": "https://www.getmidas.com/canli-borsa/tum-hisseler",
+  "source": "Mynet Finans Son fiyat (tek seferlik manuel güncelleme) + Döviz.com serbest piyasa",
+  "sourceUrl": "https://finans.mynet.com/borsa/canliborsa/",
   "asOf": "2026-11-16",
   "currency": "TRY",
   "quotes": {
-    "TAVHL": 302.25,
-    "KARSN": 7.66,
-    "THYAO": 320.25,
-    "CGCAM": 18.2,
-    "SISE": 35.86,
+    "TAVHL": 305,
+    "KARSN": 7.81,
+    "THYAO": 321.25,
+    "CGCAM": 18.99,
+    "SISE": 35.38,
     "ZPLIB.F": 200.55
   },
-  "fxSourceUrl": "https://www.doviz.com/",
+  "fxSourceUrl": "https://kur.doviz.com/",
   "fx": {
-    "USDTRY": 50.3921,
-    "EURTRY": 55.5192,
-    "GBPTRY": 66.5177
-  }
+    "USDTRY": 50.3855,
+    "EURTRY": 55.4999,
+    "GBPTRY": 66.492
+  },
+  "lastRefresh": "2026-11-16T14:13:00+00:00"
 }
