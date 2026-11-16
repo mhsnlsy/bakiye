@@ -58,7 +58,9 @@ tr:last-child td{border-bottom:0}
 footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.wrap{padding:19px 12px 34px}.top{display:block}h1{font-size:27px}.topright{margin-top:12px}.hero{padding:18px}.heroTotal{font-size:34px}.grid{gap:8px}.card{padding:13px}.cardvalue{font-size:20px}.section{padding:13px}.liability{grid-template-columns:1fr 1fr}.liability>div:last-child{grid-column:1/-1}table{min-width:650px}}
-.historyChart{height:310px;position:relative;overflow:hidden;pointer-events:none}.historyChart svg{width:100%;height:100%;display:block}.chartGrid{stroke:#263b55;stroke-width:1}.chartAxis{fill:#8fa3bb;font-size:10px}.chartLine{fill:none;stroke-width:2.5;vector-effect:non-scaling-stroke}.chartDot{stroke:#101e30;stroke-width:2}.chartLegend{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px;position:relative;z-index:9999;isolation:isolate;pointer-events:auto}.chartLegend a{position:relative;z-index:10000;pointer-events:auto;touch-action:manipulation;cursor:pointer;padding:6px 9px;font-size:10px;background:#13243a;border:1px solid #2c4664;border-radius:7px;color:var(--text);text-decoration:none}.chartLegend a.active,.chartLegend a[data-active="true"]{background:#2f6ea5 !important;border-color:#8fc7ff !important;color:#fff !important;box-shadow:0 0 0 1px rgba(143,199,255,.25),0 3px 10px rgba(0,0,0,.18);font-weight:700 !important}.chartMeta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:8px}.chartEmpty{height:100%;display:grid;place-items:center;color:var(--muted);font-size:12px}.historySelect{border:1px solid #365577;background:#1b3654;color:var(--text);border-radius:8px;padding:7px 9px;font:inherit;font-size:11px}@media(max-width:560px){.historyChart{height:260px}}.benchmarkGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:11px}.metricCard{background:#13243a;border:1px solid var(--line);border-radius:11px;padding:12px}.metricCard span{display:block;color:var(--muted);font-size:10px}.metricCard strong{display:block;font-size:18px;margin-top:3px}.metricCard small{display:block;color:var(--muted);font-size:9px;margin-top:2px}@media(max-width:560px){.benchmarkGrid{grid-template-columns:1fr}}</style>
+.historyChart{height:310px;position:relative;overflow:hidden;pointer-events:none}.historyChart svg{width:100%;height:100%;display:block}.chartGrid{stroke:#263b55;stroke-width:1}.chartAxis{fill:#8fa3bb;font-size:10px}.chartLine{fill:none;stroke-width:2.5;vector-effect:non-scaling-stroke}.chartDot{stroke:#101e30;stroke-width:2}.chartLegend{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px;position:relative;z-index:9999;isolation:isolate;pointer-events:auto}.chartLegend a{position:relative;z-index:10000;pointer-events:auto;touch-action:manipulation;cursor:pointer;padding:6px 9px;font-size:10px;background:#13243a;border:1px solid #2c4664;border-radius:7px;color:var(--text);text-decoration:none}.chartLegend a.active,.chartLegend a[data-active="true"]{background:#2f6ea5 !important;border-color:#8fc7ff !important;color:#fff !important;box-shadow:0 0 0 1px rgba(143,199,255,.25),0 3px 10px rgba(0,0,0,.18);font-weight:700 !important}.chartMeta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:8px}.chartEmpty{height:100%;display:grid;place-items:center;color:var(--muted);font-size:12px}.historySelect{border:1px solid #365577;background:#1b3654;color:var(--text);border-radius:8px;padding:7px 9px;font:inherit;font-size:11px}@media(max-width:560px){.historyChart{height:260px}}.benchmarkGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:11px}.metricCard{background:#13243a;border:1px solid var(--line);border-radius:11px;padding:12px}.metricCard span{display:block;color:var(--muted);font-size:10px}.metricCard strong{display:block;font-size:18px;margin-top:3px}.metricCard small{display:block;color:var(--muted);font-size:9px;margin-top:2px}@media(max-width:560px){.benchmarkGrid{grid-template-columns:1fr}}
+.btn.active{background:#2f6ea5;border-color:#8fc7ff;color:#fff}
+</style>
 </head>
 <body>
 <main class="wrap">
@@ -88,7 +90,10 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 </div>
 
 <section class="section">
- <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez. Reel K/Z, mevduat referansına göre fırsat maliyetini düşer.</div></div><div class="controls"><span class="sourceLink">Uzmanpara Son fiyat</span></div></div>
+ <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez. Reel K/Z, mevduat referansına göre fırsat maliyetini düşer.</div></div><div class="controls">
+  <button id="nominalModeBtn" class="btn" style="font-size:11px;padding:6px 10px">Nominal</button>
+  <span class="sourceLink">Uzmanpara Son fiyat</span>
+</div></div>
  <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Reel maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th><th>Nominal %</th><th>Reel K/Z</th><th>Reel %</th></tr></thead><tbody id="positionsBody"><tr><td><span class="ticker">TAVHL</span><span class="subline">TAV Havalimanları · Hisse</span></td><td>14</td><td>₺246,52</td><td>₺322,62</td><td>₺304,00</td><td>₺4.256,00</td><td class="good">₺804,72</td><td class="good">23,30%</td><td class="bad">-₺260,68</td><td class="bad">-6,99%</td></tr><tr><td><span class="ticker">KARSN</span><span class="subline">Karsan Otomotiv · Hisse</span></td><td>888</td><td>₺8,74</td><td>₺9,22</td><td>₺7,92</td><td>₺7.032,96</td><td class="bad">-₺728,16</td><td class="bad">-9,38%</td><td class="bad">-₺1.154,40</td><td class="bad">-12,57%</td></tr><tr><td><span class="ticker">THYAO</span><span class="subline">Türk Hava Yolları · Hisse</span></td><td>65</td><td>₺285,04</td><td>₺344,39</td><td>₺323,50</td><td>₺21.027,50</td><td class="good">₺2.499,90</td><td class="good">13,49%</td><td class="bad">-₺1.357,85</td><td class="bad">-6,08%</td></tr><tr><td><span class="ticker">CGCAM</span><span class="subline">Çağdaş Cam · Hisse</span></td><td>668</td><td>₺26,85</td><td>₺31,01</td><td>₺20,02</td><td>₺13.373,36</td><td class="bad">-₺4.562,44</td><td class="bad">-25,44%</td><td class="bad">-₺7.341,32</td><td class="bad">-23,85%</td></tr><tr><td><span class="ticker">SISE</span><span class="subline">Şişecam · Hisse</span></td><td>168</td><td>₺39,94</td><td>₺42,97</td><td>₺34,84</td><td>₺5.853,12</td><td class="bad">-₺856,80</td><td class="bad">-12,77%</td><td class="bad">-₺1.365,84</td><td class="bad">-23,34%</td></tr><tr><td><span class="ticker">ZPLIB.F</span><span class="subline">ZP Lip · Hisse</span></td><td>83</td><td>₺177,92</td><td>₺201,90</td><td>₺199,25</td><td>₺16.537,75</td><td class="good">₺1.770,39</td><td class="good">11,98%</td><td class="bad">-₺220,05</td><td class="bad">-1,31%</td></tr></tbody><tfoot><tr><td colspan="5">Portföy toplamı</td><td id="portfolioTotal">₺68.080,69</td><td id="portfolioPnL">-₺1.072,39</td><td id="portfolioPnLPct">-1,55%</td><td id="portfolioRealPnL">-₺11.700,04</td><td id="portfolioRealPnLPct">-14,67%</td></tr></tfoot></table></div>
  <div class="sourceRow"><span class="state" id="quoteState">Uzmanpara + Döviz.com · canlı veri</span><span class="small">Reel K/Z: TLREF referansı, %17,5 stopaj sonrası · Fiyatlar güncellendikçe yeniden hesaplanır.</span></div>
  <div class="benchmarkGrid">
@@ -336,11 +341,29 @@ function render(){
  const asOf=quoteData?.asOf||balanceData.asOf;
  document.getElementById("asOfLabel").textContent="Değerleme "+(asOf||"—");
  renderHistory();
+ const dailyMode = document.getElementById("nominalModeBtn")?.dataset.mode === "daily";
+ const prevQuotes = JSON.parse(localStorage.getItem("prevQuotes") || "{}");
  const posRows=positions.map(p=>{
   const price=Number(c.quotes[p.symbol]??p.snapshotPrice??0),market=price*p.qty,cost=p.avgCost*p.qty,pnl=market-cost;
   const realCostPerUnit=realCostPerUnitForPosition(p);
   const realPnl=market-(realCostPerUnit*p.qty);
-  const nominalPct=cost?pnl/cost*100:0; const realBase=realCostPerUnit*p.qty; const realPct=cost?realPnl/cost*100:0; return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+(p.type==="fund"?" · Fon":" · Hisse")+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(realCostPerUnit)+'</td><td>'+fmt(price)+'<span class="subline">Güncelleme: '+formatQuoteUpdateTime()+'</span></td><td>'+fmt(market)+'</td><td class="'+(pnl>=0?"good":"bad")+'">'+fmt(pnl)+'</td><td class="'+(nominalPct>=0?"good":"bad")+'">'+nfmt(nominalPct)+'%</td><td class="'+(realPnl>=0?"good":"bad")+'">'+fmt(realPnl)+'</td><td class="'+(realPct>=0?"good":"bad")+'">'+nfmt(realPct)+'%</td></tr>';
+  const nominalPct=cost?pnl/cost*100:0; const realPct=cost?realPnl/cost*100:0;
+  let displayPnl = pnl, displayPct = nominalPct, displayLabel = "";
+  if(dailyMode){
+    const prev = Number(prevQuotes[p.symbol] || 0);
+    if(prev > 0){
+      const dailyPnl = (price - prev) * p.qty;
+      const dailyPct = ((price - prev) / prev) * 100;
+      displayPnl = dailyPnl;
+      displayPct = dailyPct;
+      displayLabel = '<span class="subline">Günlük</span>';
+    } else {
+      displayPnl = 0;
+      displayPct = 0;
+      displayLabel = '<span class="subline">Önceki fiyat yok</span>';
+    }
+  }
+  return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+(p.type==="fund"?" · Fon":" · Hisse")+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(realCostPerUnit)+'</td><td>'+fmt(price)+'<span class="subline">Güncelleme: '+formatQuoteUpdateTime()+'</span></td><td>'+fmt(market)+'</td><td class="'+(displayPnl>=0?"good":"bad")+'">'+fmt(displayPnl)+displayLabel+'</td><td class="'+(displayPct>=0?"good":"bad")+'">'+nfmt(displayPct)+'%</td><td class="'+(realPnl>=0?"good":"bad")+'">'+fmt(realPnl)+'</td><td class="'+(realPct>=0?"good":"bad")+'">'+nfmt(realPct)+'%</td></tr>';
  }).join("");
  document.getElementById("positionsBody").innerHTML=posRows;
  const pf=positions.reduce((s,p)=>s+p.qty*Number(c.quotes[p.symbol]??p.snapshotPrice??0),0);
@@ -349,9 +372,25 @@ function render(){
  const nominalPnl=pf-pc;
  const realCostTotal=positions.reduce((s,p)=>s+p.qty*realCostPerUnitForPosition(p),0);
  const realPnl=pf-realCostTotal;
- document.getElementById("portfolioPnL").textContent=fmt(nominalPnl);
- const nominalPctTotal=pc?nominalPnl/pc*100:0;
- const portfolioPctEl=document.getElementById("portfolioPnLPct"); if(portfolioPctEl){portfolioPctEl.textContent=nfmt(nominalPctTotal)+"%";portfolioPctEl.className=nominalPctTotal>=0?"good":"bad";}
+ let displayTotalPnl = nominalPnl, displayTotalPct = pc?nominalPnl/pc*100:0;
+ if(dailyMode){
+   let dailyTotal = 0, hasPrev = true;
+   for(const p of positions){
+     const prev = Number(prevQuotes[p.symbol] || 0);
+     const price = Number(c.quotes[p.symbol]??p.snapshotPrice??0);
+     if(prev <= 0){ hasPrev = false; break; }
+     dailyTotal += (price - prev) * p.qty;
+   }
+   if(hasPrev && positions.length){
+     displayTotalPnl = dailyTotal;
+     displayTotalPct = pc ? (dailyTotal / pc * 100) : 0;
+   } else {
+     displayTotalPnl = 0;
+     displayTotalPct = 0;
+   }
+ }
+ document.getElementById("portfolioPnL").textContent=fmt(displayTotalPnl);
+ const portfolioPctEl=document.getElementById("portfolioPnLPct"); if(portfolioPctEl){portfolioPctEl.textContent=nfmt(displayTotalPct)+"%";portfolioPctEl.className=displayTotalPct>=0?"good":"bad";}
 
  document.getElementById("portfolioPnL").title="Nominal K/Z: "+fmt(nominalPnl)+" · Mevduat referansına göre reel K/Z: "+fmt(realPnl);
  const reelCell=document.getElementById("portfolioRealPnL");
@@ -508,5 +547,51 @@ window.addEventListener("focus",async()=>{
 
 // Keep the balance page visible even if the browser blocks one live source.
 window.addEventListener("error",e=>{document.getElementById("syncState").textContent="Canlı veri uyarısı";});
+
+// Nominal / Günlük toggle
+(function(){
+  const btn = document.getElementById("nominalModeBtn");
+  if(!btn) return;
+  let mode = localStorage.getItem("nominalMode") || "total";
+  function applyMode(){
+    btn.textContent = mode === "daily" ? "Günlük" : "Nominal";
+    btn.classList.toggle("active", mode === "daily");
+    btn.dataset.mode = mode;
+    if(typeof render === "function") render();
+  }
+  btn.onclick = () => {
+    mode = mode === "daily" ? "total" : "daily";
+    localStorage.setItem("nominalMode", mode);
+    applyMode();
+  };
+  applyMode();
+
+  // Store previous day's prices for daily change calculation
+  function updatePrevQuotes(){
+    if(!quoteData?.quotes) return;
+    const today = new Date().toISOString().slice(0,10);
+    const stored = JSON.parse(localStorage.getItem("prevQuotesMeta") || "{}");
+    if(stored.date !== today){
+      // New day: save yesterday's prices as previous
+      if(stored.quotes){
+        localStorage.setItem("prevQuotes", JSON.stringify(stored.quotes));
+      }
+      localStorage.setItem("prevQuotesMeta", JSON.stringify({date: today, quotes: quoteData.quotes}));
+    } else {
+      // Same day: keep updating today's snapshot
+      localStorage.setItem("prevQuotesMeta", JSON.stringify({date: today, quotes: quoteData.quotes}));
+    }
+  }
+  // Call after quoteData is available
+  const origBoot = window.boot;
+  if(typeof origBoot === "function"){
+    window.boot = async function(){
+      await origBoot();
+      updatePrevQuotes();
+    };
+  }
+  setInterval(updatePrevQuotes, 60000);
+})();
+
 </script>
 </body></html>
