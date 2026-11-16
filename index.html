@@ -147,8 +147,8 @@ function csvRows(text){
 }
 function realCostPerUnitForPosition(p){
  const base=Number(p.avgCost)||0;
- const start=tlrefData?.startDate||balanceData?.depositBenchmark?.startDate;
- const end=tlrefData?.asOf||new Date().toISOString().slice(0,10);
+ const start=p.realCostBaseDate||tlrefData?.asOf||new Date().toISOString().slice(0,10);
+ const end=new Date().toISOString().slice(0,10);
  const history=Array.isArray(tlrefData?.historical)?tlrefData.historical:[];
  if(!base||!start||!end||!history.length)return base;
  const byDate=new Map(history.map(x=>[x.date,Number(x.rate)]));
