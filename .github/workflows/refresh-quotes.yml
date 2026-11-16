@@ -1,0 +1,32 @@
+name: Refresh Bakiye Quotes
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-bakiye-quotes
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch Midas and Döviz.com quotes
+        run: python3 scripts/update_quotes.py
+      - name: Commit updated quotes
+        run: |
+          if git diff --quiet -- data/quotes.json; then
+            echo "No quote changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/quotes.json
+          git commit -m "Refresh Midas and FX quotes"
+          git push
