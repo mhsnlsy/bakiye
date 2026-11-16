@@ -1,7 +1,7 @@
 {
-  "source": "Midas hesap ekstresi kapanış satırları; Fintables Radar primary source requested, automated BIST quote feed pending",
-  "sourceUrl": "https://fintables.com/radar/hisse-senetleri",
-  "asOf": "2026-11-14",
+  "source": "Midas Canlı Borsa (15 dk gecikmeli) + Döviz.com serbest piyasa",
+  "sourceUrl": "https://www.getmidas.com/canli-borsa/tum-hisseler",
+  "asOf": "2026-11-16",
   "currency": "TRY",
   "quotes": {
     "TAVHL": 302.25,
@@ -10,5 +10,11 @@
     "CGCAM": 18.2,
     "SISE": 35.86,
     "ZPLIB.F": 200.55
+  },
+  "fxSourceUrl": "https://www.doviz.com/",
+  "fx": {
+    "USDTRY": 50.3921,
+    "EURTRY": 55.5192,
+    "GBPTRY": 66.5177
   }
 }
