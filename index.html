@@ -274,6 +274,13 @@ async function boot(){
     {symbol:"ZPLIB.F",name:"Ziraat Portföy ZPLIB",type:"fund",qty:83,avgCost:177.92}
   ];
   const fallbackTlref={asOf:"2026-10-28",grossAnnualRate:0.357733,netAnnualRate:0.295131725,stopaj:0.175,startDate:"2025-08-24",historical:[]};
+  // Render immediately from known-good local fallback data; live JSON refreshes afterward.
+  balanceData=fallbackBalance;
+  quoteData=fallbackQuotes;
+  positions=fallbackPositions;
+  tlrefData=fallbackTlref;
+  document.getElementById("syncState").textContent="Veriler yükleniyor…";
+  render();
   balanceData=await load(DATA_URL,"balance.json",fallbackBalance);
   quoteData=await load(QUOTES_URL,"quotes.json",fallbackQuotes);
   const p=await load(POSITIONS_URL,"positions.json",fallbackPositions);
