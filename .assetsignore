@@ -1,0 +1,6 @@
+worker/
+.github/
+scripts/
+wrangler.jsonc
+README.md
+*.py
