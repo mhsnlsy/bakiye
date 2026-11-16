@@ -79,31 +79,6 @@ function tlrefCostAddedForPosition(p,tl){
  }
  return Math.max(0,value-base);
 }
-async function snapshot(env){
- let old=await read(env,"history.json","/data/history.json")||{version:1,frequency:"daily",startDate:"2026-11-16",retentionDays:365,snapshots:[]};
- let balance=await read(env,"balance.json","/data/balance.json")||{accounts:{}};
- let positions=await read(env,"positions.json","/data/positions.json")||[];
- let quotes=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
- let tlrefData=await read(env,"tlref.json","/data/tlref.json")||{historical:[],stopaj:.175};
- let t={stocks:0,funds:0,try:0,cashFx:0,bankFx:0,gold:0,receivable:0};
- for(const p of positions){const v=Number(quotes.quotes?.[p.symbol]??p.snapshotPrice??0)*Number(p.qty||0);if(p.type==="fund")t.funds+=v;else t.stocks+=v}
- const a=balance.accounts||{};
- for(const x of Object.values(a)){
-   const v=Number(x.value)||0;
-   if(x.category==="try")t.try+=v;else if(x.category==="gold")t.gold+=v;else if(x.category==="receivable")t.receivable+=v;else if(x.category==="fx"){
-     const isCash=x===a.doviz,rates=quotes.fx||{};
-     for(const [code,qty] of Object.entries(x.currencies||{})){const rate=Number(rates[code+"TRY"]||0);if(rate){const amount=Number(qty||0)*rate;if(isCash)t.cashFx+=amount;else t.bankFx+=amount}}
-   }
- }
- const total=t.stocks+t.funds+t.try+t.cashFx+t.bankFx+t.gold+t.receivable;
- const tlrefCostAdded=positions.reduce((s,p)=>s+tlrefCostAddedForPosition(p,tlrefData)*Number(p.qty||0),0);
- const now=new Date(),date=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(now);
- const rows=(old.snapshots||[]).filter(x=>x.date!==date);rows.push({date,total,...t,tlrefCostAdded,tlrefAsOf:tlrefData.asOf||null,tlrefGrossAnnualRate:tlrefData.grossAnnualRate||null,tlrefNetAnnualRate:tlrefData.netAnnualRate||null});
- const cutoffDate=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date(now.getTime()-365*86400000));
- const kept=rows.filter(x=>{const weekday=new Date(x.date+"T12:00:00Z").getUTCDay();return weekday===0||x.date>=cutoffDate}).sort((a,b)=>a.date.localeCompare(b.date));
- const v={...old,version:1,frequency:"daily",startDate:old.startDate||date,retentionDays:365,updatedAt:now.toISOString(),snapshots:kept};
- await put(env,"history.json",v);return v;
-}
 async function tlref(env){
  let old=await read(env,"tlref.json","/data/tlref.json")||{historical:[],stopaj:.175,startDate:"2025-08-24"};
  const today=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date());
@@ -164,11 +139,5 @@ export default{
   const asset=await env.ASSETS.fetch(req);
   if(u.pathname==="/"||u.pathname==="/index.html"){const headers=new Headers(asset.headers);headers.set("cache-control","no-store, no-cache, must-revalidate");headers.set("pragma","no-cache");headers.set("expires","0");return new Response(asset.body,{status:asset.status,statusText:asset.statusText,headers})}
   return asset;
- },
- async scheduled(e,env,ctx){
-   if(e.cron==="35 16 * * *")ctx.waitUntil((async()=>{
-     await quotes(env);
-     await snapshot(env);
-   })());
  }
 };
