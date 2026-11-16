@@ -2,13 +2,18 @@ name: Deploy Bakiye to Cloudflare
 on:
   push:
     branches: [main]
-    paths: ["index.html","data/**","worker/**","wrangler.jsonc",".github/workflows/cloudflare.yml"]
+    paths: ["index.html","data/**","worker/**","wrangler.jsonc",".github/workflows/cloudflare.yml","scripts/**"]
+  schedule:
+    - cron: "*/5 * * * *"
   workflow_dispatch:
+
 concurrency:
   group: bakiye-cloudflare
   cancel-in-progress: true
+
 jobs:
   deploy:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     permissions: {contents: read}
     steps:
@@ -32,22 +37,25 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler@latest deploy
-      - name: Force fresh quotes
+
+  refresh-quotes:
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Read current quotes from R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          set -euo pipefail
-          curl --fail --silent --show-error --retry 3 --retry-delay 5 --max-time 30             "https://bakiye.muhsin-ulusoy.workers.dev/api/quotes?refresh=1"             -o /tmp/quotes.json
-          python3 - <<'PY'
-          import json
-          with open("/tmp/quotes.json", encoding="utf-8") as f:
-              q=json.load(f)
-          print("source:", q.get("source"))
-          print("lastRefresh:", q.get("lastRefresh"))
-          print("CGCAM:", q.get("quotes", {}).get("CGCAM"))
-          print("quotes:", q.get("quotes"))
-          print("missing:", q.get("missing"))
-          print("errors:", q.get("errors"))
-          if q.get("errors"):
-              raise SystemExit("Quote source returned errors")
-          if q.get("quotes", {}).get("CGCAM") is None:
-              raise SystemExit("CGCAM quote missing")
-          PY
+          npx wrangler@latest r2 object get bakiye-data/quotes.json --file=/tmp/quotes.json
+      - name: Fetch fresh Uzmanpara prices
+        run: python3 scripts/refresh_quotes.py
+      - name: Write fresh quotes to R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler@latest r2 object put bakiye-data/quotes.json --file=/tmp/quotes.json --content-type=application/json
