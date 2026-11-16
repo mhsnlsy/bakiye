@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "frequency": "daily",
+  "startDate": "2026-11-16",
+  "retentionDays": 365,
+  "updatedAt": "2026-11-16T15:27:00+03:00",
+  "snapshots": [
+    {
+      "date": "2026-11-16",
+      "total": 456606.74,
+      "stocks": 66677.56,
+      "funds": 16645.65,
+      "try": 138000,
+      "cashFx": 104712.95,
+      "bankFx": 136577.23,
+      "gold": 10639,
+      "receivable": 0
+    }
+  ]
+}
