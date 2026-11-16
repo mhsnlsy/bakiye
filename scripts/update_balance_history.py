@@ -57,7 +57,7 @@ tlref_cost_added=round(real_cost_total-nominal_cost_total,2)
 try:
     h=json.loads(HISTORY.read_text(encoding="utf-8"))
 except Exception:
-    h={"version":1,"frequency":"daily","startDate":today,"retentionDays":365,"snapshots":[]}
+    h={"version":1,"frequency":"daily","startDate":today,"retentionDays":365,"snapshots":[],"weeklySnapshots":[]}
 
 snap={"date":today,"total":round(total,2),"stocks":round(stocks,2),"funds":round(funds,2),
       "try":round(tl,2),"cashFx":round(cash_fx,2),"bankFx":round(bank_fx,2),
@@ -65,6 +65,13 @@ snap={"date":today,"total":round(total,2),"stocks":round(stocks,2),"funds":round
 
 rows=[x for x in h.get("snapshots",[]) if x.get("date")!=today]
 rows.append(snap)
+
+# Sunday snapshots are kept permanently in a separate archive.
+if date.today().weekday() == 6:
+    weekly=[x for x in h.get("weeklySnapshots",[]) if x.get("date")!=today]
+    weekly.append(snap)
+    weekly.sort(key=lambda x:x["date"])
+    h["weeklySnapshots"]=weekly
 rows.sort(key=lambda x:x["date"])
 cutoff=date.today()-timedelta(days=int(h.get("retentionDays",365))-1)
 rows=[x for x in rows if date.fromisoformat(x["date"])>=cutoff]
@@ -72,5 +79,6 @@ rows=[x for x in rows if date.fromisoformat(x["date"])>=cutoff]
 h["startDate"]=rows[0]["date"] if rows else today
 h["updatedAt"]=datetime.now().astimezone().replace(microsecond=0).isoformat()
 h["snapshots"]=rows
+h.setdefault("weeklySnapshots", [])
 HISTORY.write_text(json.dumps(h,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
 print(f"Balance history: {today} total={total:.2f}; snapshots={len(rows)}")
