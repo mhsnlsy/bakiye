@@ -30,7 +30,7 @@ function fx(h,c){
 }
 function tl(h){let a=[],seen=new Set(),m,r=/(\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?:\\|\\s*)?([0-9]{2,3}[.,]\\d{4})/g,t=text(h);while((m=r.exec(t))){let d=m[1].split(".").reverse().join("-");if(!seen.has(d)){seen.add(d);a.push({date:d,rate:num(m[2])/100})}}return a.sort((a,b)=>a.date.localeCompare(b.date))}
 async function get(u){
- const r=await fetch(u,{headers:{"User-Agent":"Mozilla/5.0 (compatible; BakiyeWorker/1.0)","Accept":"text/html,application/xhtml+xml","Accept-Language":"tr-TR,tr;q=0.9","Cache-Control":"no-cache"},cache:"no-store",cf:{cacheTtl:0},signal:AbortSignal.timeout(12000)});
+ const r=await fetch(u,{headers:{"User-Agent":"Mozilla/5.0 (compatible; BakiyeWorker/1.0)","Accept":"text/html,application/xhtml+xml","Accept-Language":"tr-TR,tr;q=0.9","Cache-Control":"no-cache"},cache:"no-store",signal:AbortSignal.timeout(12000)});
  if(!r.ok)throw Error(u+" HTTP "+r.status);
  return r.text();
 }
