@@ -164,7 +164,6 @@ export default{
  async scheduled(e,env,ctx){
    if(e.cron==="35 16 * * *")ctx.waitUntil((async()=>{
      await quotes(env);
-     await tlref(env);
      await snapshot(env);
    })());
  }
