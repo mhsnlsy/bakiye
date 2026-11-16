@@ -435,8 +435,33 @@ setInterval(async()=>{
     render();
     document.getElementById("syncState").textContent="Hisse fiyatı bağlantı uyarısı";
   }
-},60000);
+},15000);
 document.getElementById("historyRange").onchange=renderHistory;
+
+// Recalculate totals immediately when the page becomes active again.
+document.addEventListener("visibilitychange",async()=>{
+  if(document.visibilityState!=="visible")return;
+  try{
+    quoteData=await fetchLiveQuotes();
+    quoteLoadError=null;
+    render();renderRealCostMetrics();
+    document.getElementById("syncState").textContent="Veriler yüklendi";
+  }catch(e){
+    quoteLoadError=String(e?.message||e);
+    render();
+  }
+});
+window.addEventListener("focus",async()=>{
+  try{
+    quoteData=await fetchLiveQuotes();
+    quoteLoadError=null;
+    render();renderRealCostMetrics();
+    document.getElementById("syncState").textContent="Veriler yüklendi";
+  }catch(e){
+    quoteLoadError=String(e?.message||e);
+    render();
+  }
+});
 
 // Keep the balance page visible even if the browser blocks one live source.
 window.addEventListener("error",e=>{document.getElementById("syncState").textContent="Canlı veri uyarısı";});
