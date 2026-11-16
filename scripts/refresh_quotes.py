@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 STOCK_SOURCE = "https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum"
 STOCKS = ["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"]
 SOURCE_SYMBOL = {"ZPLIB.F":"ZPLIB"}
+FX_SOURCE = "https://kur.doviz.com/"
+FXC = ["USD","EUR","GBP"]
 
 class TableParser(HTMLParser):
     def __init__(self):
@@ -43,6 +45,27 @@ def number(s):
     try: return float(s)
     except: return None
 
+def parse_fx(source):
+    p=TableParser(); p.feed(source)
+    out={}
+    for code in FXC:
+        for row in p.rows:
+            cells=[x.strip().upper() for x in row]
+            for i,cell in enumerate(cells):
+                if cell.startswith(code+" ") and i+1 < len(row):
+                    v=number(row[i+1])
+                    if v is not None:
+                        out[code+"TRY"]=v
+                        break
+            if code+"TRY" in out:
+                break
+    plain=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",source))
+    for code in FXC:
+        if code+"TRY" in out: continue
+        m=re.search(r"(?:^|\s)"+re.escape(code)+r"(?:\s+[^|]{0,50})?\s*\|\s*([0-9]+(?:[.,][0-9]+)?)",plain,re.I)
+        if m: out[code+"TRY"]=number(m.group(1))
+    return out
+
 def parse_stock(source):
     p=TableParser(); p.feed(source)
     out={}
@@ -73,14 +96,20 @@ def main():
     missing=[s for s in STOCKS if s not in prices]
     if missing:
         raise SystemExit("Uzmanpara parse failed; missing: "+",".join(missing))
+    fx_source=fetch(FX_SOURCE)
+    fx=parse_fx(fx_source)
+    fx_missing=[c for c in FXC if c+"TRY" not in fx]
+    if fx_missing:
+        raise SystemExit("Döviz.com parse failed; missing: "+",".join(fx_missing)+"TRY")
     q["source"]="Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa"
     q["sourceUrl"]=STOCK_SOURCE
     q["asOf"]=datetime.now(timezone.utc).date().isoformat()
     q["lastRefresh"]=datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
     q["quotes"].update(prices)
+    q["fx"].update(fx)
     q["missing"]=missing
     q["errors"]=[]
-    q["sourceStatus"]={"uzmanpara":"fulfilled","refreshMethod":"GitHub Actions direct fetch"}
+    q["sourceStatus"]={"uzmanpara":"fulfilled","doviz":"fulfilled","refreshMethod":"GitHub Actions direct fetch"}
     with open(path,"w",encoding="utf-8") as f: json.dump(q,f,ensure_ascii=False,indent=2)
     print("source:",q["source"])
     print("lastRefresh:",q["lastRefresh"])
