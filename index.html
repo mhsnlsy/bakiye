@@ -241,7 +241,7 @@ function renderHistory(){
  const latest=rows.at(-1),previous=rows.length>1?rows.at(-2):null;
  const dailyPct=previous&&Number(previous.total)?((Number(latest.total)-Number(previous.total))/Number(previous.total))*100:0;
  const pctEl=document.getElementById("historyDailyPct");if(pctEl)pctEl.textContent=previous?((dailyPct>=0?"+":"")+dailyPct.toFixed(2)+"%"):"İlk snapshot";
- legend.querySelectorAll("button").forEach(b=>b.onclick=()=>{legend.dataset.activeSeries=b.dataset.series;renderHistory()});
+ legend.onclick=(e)=>{const b=e.target.closest("button[data-series]");if(!b)return;legend.dataset.activeSeries=b.dataset.series;renderHistory()};
 }\nfunction render(){
  const c=calc(),a=balanceData.accounts,allPositions=positions.reduce((s,p)=>s+p.qty,0);
  document.getElementById("grandTotal").textContent=fmt(c.total);
