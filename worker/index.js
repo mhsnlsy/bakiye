@@ -2,6 +2,7 @@ const STOCK_SOURCE="https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum";
 const FX="https://kur.doviz.com/";
 const TLREF="https://www.borsaistanbul.com/endeksler/tlref";
 const STOCKS=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
+const SOURCE_SYMBOL={"ZPLIB.F":"ZPLIB"};
 const FXC=["USD","EUR","GBP"];
 const H={"content-type":"application/json;charset=utf-8","cache-control":"no-store","access-control-allow-origin":"*"};
 
@@ -40,9 +41,11 @@ async function quotes(env){
  const old=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
  const q={...old.quotes},f={...old.fx},missing=[],errors=[];
  const [mr,fr]=await Promise.allSettled([get(STOCK_SOURCE),get(FX)]);
+ const stockMissing=[];
  if(mr.status==="fulfilled"){
-   for(const s of STOCKS){const p=stock(mr.value,s);if(p!=null)q[s]=p;else missing.push(s)}
+   for(const s of STOCKS){const p=stock(mr.value,SOURCE_SYMBOL[s]||s);if(p!=null&&p>0)q[s]=p;else {missing.push(s);stockMissing.push(s)}}
  }else errors.push("Uzmanpara: "+String(mr.reason?.message||mr.reason));
+ if(mr.status!=="fulfilled"||stockMissing.length)throw Error("Uzmanpara fiyatları eksik: "+stockMissing.join(", "));
  if(fr.status==="fulfilled"){
    for(const c of FXC){const p=fx(fr.value,c);if(p!=null)f[c+"TRY"]=p;else missing.push(c+"TRY")}
  }else errors.push("Döviz.com: "+String(fr.reason?.message||fr.reason));
