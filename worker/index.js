@@ -1,4 +1,4 @@
-const MIDAS="https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum";
+const STOCK_SOURCE="https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum";
 const FX="https://kur.doviz.com/";
 const TLREF="https://www.borsaistanbul.com/endeksler/tlref";
 const STOCKS=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
@@ -34,12 +34,12 @@ async function get(u){
  if(!r.ok)throw Error(u+" HTTP "+r.status);
  return r.text();
 }
-async function read(env,k,path){let x=await env.BAKIYE_DATA.get(k);if(x)return JSON.parse(x);let r=await env.ASSETS.fetch(new Request("https://assets.local"+path));return r.ok?r.json():null}
+async function read(env,k,path){let x=await env.BAKIYE_DATA.get(k);if(x)return await x.json();let r=await env.ASSETS.fetch(new Request("https://assets.local"+path));return r.ok?await r.json():null}
 async function put(env,k,v){await env.BAKIYE_DATA.put(k,JSON.stringify(v,null,2))}
 async function quotes(env){
  const old=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
  const q={...old.quotes},f={...old.fx},missing=[],errors=[];
- const [mr,fr]=await Promise.allSettled([get(MIDAS),get(FX)]);
+ const [mr,fr]=await Promise.allSettled([get(STOCK_SOURCE),get(FX)]);
  if(mr.status==="fulfilled"){
    for(const s of STOCKS){const p=stock(mr.value,s);if(p!=null)q[s]=p;else missing.push(s)}
  }else errors.push("Uzmanpara: "+String(mr.reason?.message||mr.reason));
@@ -47,7 +47,7 @@ async function quotes(env){
    for(const c of FXC){const p=fx(fr.value,c);if(p!=null)f[c+"TRY"]=p;else missing.push(c+"TRY")}
  }else errors.push("Döviz.com: "+String(fr.reason?.message||fr.reason));
  const now=new Date().toISOString();
- const v={...old,source:"Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:MIDAS,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,fx:f,missing,errors,sourceStatus:{uzmanpara:mr.status,doviz:fr.status}};
+ const v={...old,source:"Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:STOCK_SOURCE,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,fx:f,missing,errors,sourceStatus:{uzmanpara:mr.status,doviz:fr.status}};
  await put(env,"quotes.json",v);
  return v;
 }
