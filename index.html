@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1220">
+<title>Bakiye — Portföy & Nakit Akışı</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#111c2d;--panel2:#162338;--line:#263750;--muted:#93a4bb;--text:#edf3fb;--green:#44d49a;--red:#ff7185;--blue:#80aaff;--amber:#f6c76d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(1100px 600px at 5% -10%,#1a3150 0,transparent 60%),var(--bg);color:var(--text);font:14px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:28px 22px 50px}.top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:24px}.eyebrow{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.h1{font-size:30px;letter-spacing:-.04em;font-weight:750;margin:5px 0}.sub{color:var(--muted)}.pill{border:1px solid var(--line);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}.card,.section{background:linear-gradient(145deg,rgba(22,35,56,.96),rgba(15,26,42,.96));border:1px solid var(--line);border-radius:16px}.card{padding:16px}.k{color:var(--muted);font-size:12px}.v{font-size:25px;font-weight:750;letter-spacing:-.04em;margin-top:6px}.delta{font-size:12px;margin-top:4px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--amber)}
+.section{padding:18px;margin-top:16px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.section h2{font-size:16px;margin:0;letter-spacing:-.02em}.section p.note{color:var(--muted);font-size:12px;margin:4px 0 0}
+.tabs{display:flex;gap:7px;flex-wrap:wrap}.tab,button{border:1px solid var(--line);background:#17263c;color:var(--text);border-radius:9px;padding:8px 11px;font:inherit;cursor:pointer}.tab.active{background:#24436c;border-color:#416a9f}.btn-primary{background:#244d7f;border-color:#4779b3}.btn-danger{color:#ff9aa8}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th{text-align:right;color:var(--muted);font-size:11px;font-weight:650;padding:10px 9px;border-bottom:1px solid var(--line);white-space:nowrap}td{text-align:right;padding:12px 9px;border-bottom:1px solid rgba(38,55,80,.65);white-space:nowrap}th:first-child,td:first-child{text-align:left}tr:last-child td{border-bottom:0}.ticker{font-weight:750}.tiny{display:block;font-size:11px;color:var(--muted);font-weight:400}.positive{color:var(--green)}.negative{color:var(--red)}
+.scroller{overflow:auto}.empty{padding:25px;text-align:center;color:var(--muted)}
+.sheetbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.sheetbox input{background:#0d1727;border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--text);min-width:260px;max-width:100%}.muted{color:var(--muted)}.split{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+.formgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.formgrid label{font-size:11px;color:var(--muted)}.formgrid input,.formgrid select{width:100%;margin-top:5px;background:#0d1727;border:1px solid var(--line);border-radius:8px;padding:9px;color:var(--text);min-width:0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.notice{border:1px solid #6c5630;background:rgba(246,199,109,.08);color:#f1d69f;border-radius:10px;padding:11px 13px;font-size:12px;margin-top:12px}
+.mini{font-size:11px;color:var(--muted)}.chart{height:190px;width:100%;display:block}.legend{display:flex;gap:14px;color:var(--muted);font-size:11px;margin-top:8px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:var(--blue)}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}.formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.wrap{padding:20px 13px 36px}.h1{font-size:25px}.top{display:block}.pill{display:inline-block;margin-top:10px}.section{padding:14px}.v{font-size:21px}.grid{gap:8px}.card{padding:13px}table{min-width:760px}}
+</style></head>
+<body><main class="wrap">
+<header class="top"><div><div class="eyebrow">PERSONAL FINANCE</div><div class="h1">Bakiye</div><div class="sub">Nakit akışı, varlıklar ve mevduat fırsat maliyeti tek yerde.</div></div><div class="pill" id="lastUpdate">Veriler hazırlanıyor</div></header>
+<div class="grid" id="summary"></div>
+<section class="section"><div class="section-head"><div><h2>Portföy görünümü</h2><p class="note">Hisse senetlerinde alış geçmişi, satışlar ve net mevduat alternatifi.</p></div><div class="tabs"><button class="tab active" data-tab="stocks">Hisseler</button><button class="tab" data-tab="cash">Sheets / Bakiye</button></div></div>
+<div id="stocksView"><div class="scroller"><table><thead><tr><th>Varlık</th><th>Lot</th><th>Normal maliyet</th><th>Mevduat maliyeti</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Mevduata göre</th></tr></thead><tbody id="stockRows"></tbody></table></div><div class="mini" id="stockFoot"></div></div>
+<div id="cashView" hidden><div class="sheetbox"><input id="csvUrl" placeholder="Google Sheets yayınlanmış CSV bağlantısı"><button class="btn-primary" id="loadSheet">Sheets verisini yükle</button><span id="sheetStatus" class="mini">Henüz bağlantı yapılmadı.</span></div><div class="notice">Sheets bağlantısı için dosyada Paylaş → Web'de yayınla → CSV seçeneğiyle alınan yayın bağlantısı gerekir. Özel paylaşım linki tarayıcıdan güvenilir biçimde okunamaz.</div><div class="scroller" style="margin-top:14px"><table><thead id="sheetHead"></thead><tbody id="sheetRows"></tbody></table></div></div></section>
+<section class="section"><div class="section-head"><div><h2>Varlık ve nakit hareketleri</h2><p class="note">Yeni alış, satış veya nakit kaydını buradan ekle. Kayıtlar tarayıcıda saklanır.</p></div><span class="pill">Yerel kayıt</span></div>
+<div class="formgrid">
+<label>Tarih<input id="txDate" type="date"></label><label>Tür<select id="txType"><option value="buy">Hisse alış</option><option value="sell">Hisse satış</option><option value="cash-in">Nakit giriş</option><option value="cash-out">Nakit çıkış</option></select></label><label>Sembol / açıklama<input id="txSymbol" placeholder="CGCAM / Maaş"></label><label>Adet<input id="txQty" type="number" step="0.0001" placeholder="Lot"></label><label>Birim fiyat / tutar<input id="txPrice" type="number" step="0.0001" placeholder="TL"></label></div>
+<div class="actions"><button class="btn-primary" id="addTx">Hareket ekle</button><button id="exportTx">Hareketleri CSV indir</button><button id="clearTx" class="btn-danger">Yerel kayıtları temizle</button></div>
+<div class="scroller" style="margin-top:13px"><table><thead><tr><th>Tarih</th><th>Tür</th><th>Sembol / açıklama</th><th>Adet</th><th>Fiyat</th><th>Tutar</th></tr></thead><tbody id="txRows"></tbody></table></div>
+</section>
+<section class="section"><div class="section-head"><div><h2>Hesaplama ayarları</h2><p class="note">Mevduat oranı yıllık brüt; stopaj yalnızca faiz gelirine uygulanır.</p></div></div>
+<div class="formgrid"><label>Yıllık brüt mevduat (%)<input id="rate" type="number" min="0" step=".01" value="42"></label><label>Stopaj (%)<input id="tax" type="number" min="0" max="100" step=".1" value="17.5"></label><label>Değerleme tarihi<input id="asOf" type="date" value="2026-11-16"></label></div><div class="actions"><button id="recalc" class="btn-primary">Hesaplamayı güncelle</button></div><p class="mini">Not: Geçmiş mevduat oranlarının tarihsel serisi bağlanmadığı için başlangıçta tek bir yıllık oran varsayımı uygulanır. Doğru tarihsel karşılaştırma için dönemsel oran tablosu sisteme eklenmelidir.</p></section>
+<footer class="mini" style="padding:18px 2px">Bakiye · İlk sürüm · Veriler tarayıcıda işlenir; bu sayfa bir aracı kurum hesabına bağlanmaz.</footer>
+</main>
+<script>
+const initialStocks=[
+{symbol:"TAVHL",name:"TAV Havalimanları",qty:14,cost:244.20,price:302.25,depo:322.62},
+{symbol:"KARSN",name:"Karsan Otomotiv",qty:888,cost:8.74,price:7.66,depo:9.22},
+{symbol:"THYAO",name:"Türk Hava Yolları",qty:65,cost:285.04,price:320.25,depo:344.39},
+{symbol:"ZPLIB.F",name:"Ziraat Portföy",qty:83,cost:177.92,price:200.55,depo:201.90},
+{symbol:"CGCAM",name:"Çağdaş Cam",qty:668,cost:26.85,price:18.20,depo:31.01},
+{symbol:"SISE",name:"Şişecam",qty:168,cost:39.94,price:35.86,depo:42.97}
+];
+let stocks=initialStocks;
+let txs=JSON.parse(localStorage.getItem("bakiye-tx")||"[]");
+const fmt=n=>new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:2}).format(Number(n)||0);
+const num=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(n)||0);
+function render(){
+const market=stocks.reduce((s,x)=>s+x.qty*x.price,0), opportunity=stocks.reduce((s,x)=>s+x.qty*x.depo,0), normal=stocks.reduce((s,x)=>s+x.qty*x.cost,0), diff=market-opportunity;
+document.getElementById("summary").innerHTML=[
+["Hisse portföy değeri",fmt(market),"Son bilinen kapanış fiyatları"],
+["Normal maliyet",fmt(normal),"Ağırlıklı ortalama maliyet"],
+["Mevduat karşılığı",fmt(opportunity),"Net faiz varsayımıyla"],
+["Mevduata göre fark",fmt(diff),(diff>=0?"Alternatifin üzerinde":"Alternatifin gerisinde")]
+].map((a,i)=>'<div class="card"><div class="k">'+a[0]+'</div><div class="v">'+a[1]+'</div><div class="delta '+(i===3?(diff>=0?"good":"bad"):"")+'">'+a[2]+'</div></div>').join("");
+document.getElementById("stockRows").innerHTML=stocks.map(x=>{let mv=x.qty*x.price,dv=x.qty*x.depo,d=mv-dv,p=dv?100*d/dv:0;return '<tr><td><span class="ticker">'+x.symbol+'</span><span class="tiny">'+x.name+'</span></td><td>'+num(x.qty)+'</td><td>'+fmt(x.cost)+'</td><td>'+fmt(x.depo)+'</td><td>'+fmt(x.price)+'</td><td>'+fmt(mv)+'</td><td class="'+(d>=0?"positive":"negative")+'">'+fmt(d)+'<span class="tiny">'+(p>0?"+":"")+num(p)+'%</span></td></tr>'}).join("");
+document.getElementById("stockFoot").textContent="Mevcut pozisyonlar: Midas ekstresi 14.11.2026 kapanış özeti. Hisse fiyatları ve mevduat maliyetleri ilk kurulum referans değerleridir.";
+document.getElementById("txRows").innerHTML=txs.slice().reverse().map(t=>'<tr><td>'+t.date+'</td><td>'+t.type+'</td><td>'+t.symbol+'</td><td>'+num(t.qty)+'</td><td>'+fmt(t.price)+'</td><td>'+fmt(t.qty*t.price)+'</td></tr>').join("")||'<tr><td colspan="6" class="empty">Henüz ek hareket yok.</td></tr>';
+document.getElementById("lastUpdate").textContent="Güncellendi · "+new Date().toLocaleString("tr-TR");
+}
+document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));document.getElementById("stocksView").hidden=b.dataset.tab!=="stocks";document.getElementById("cashView").hidden=b.dataset.tab!=="cash"});
+document.getElementById("addTx").onclick=()=>{let t={date:txDate.value||new Date().toISOString().slice(0,10),type:txType.value,symbol:txSymbol.value.trim().toUpperCase(),qty:Number(txQty.value)||0,price:Number(txPrice.value)||0};if(!t.symbol||!t.price){alert("Sembol/açıklama ve fiyat/tutar gir.");return}txs.push(t);localStorage.setItem("bakiye-tx",JSON.stringify(txs));render();};
+document.getElementById("clearTx").onclick=()=>{if(confirm("Bu tarayıcıdaki tüm ek hareketler silinsin mi?")){txs=[];localStorage.removeItem("bakiye-tx");render()}};
+document.getElementById("exportTx").onclick=()=>{let rows=[["date","type","symbol","qty","price"],...txs.map(t=>[t.date,t.type,t.symbol,t.qty,t.price])];let blob=new Blob(["\ufeff"+rows.map(r=>r.join(";")).join("\n")],{type:"text/csv;charset=utf-8"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="bakiye-hareketleri.csv";a.click();URL.revokeObjectURL(a.href)};
+document.getElementById("recalc").onclick=()=>{let rate=Number(document.getElementById("rate").value),tax=Number(document.getElementById("tax").value);let net=rate*(1-tax/100);document.querySelector("#recalc").textContent="Net yıllık oran: %"+net.toFixed(2).replace(".",",");};
+document.getElementById("loadSheet").onclick=async()=>{let url=document.getElementById("csvUrl").value.trim(),s=document.getElementById("sheetStatus");if(!url){s.textContent="Önce yayınlanmış CSV URL'sini gir.";return}try{let r=await fetch(url);if(!r.ok)throw Error("HTTP "+r.status);let text=await r.text();let rows=text.trim().split(/\r?\n/).map(l=>l.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c=>c.replace(/^"|"$/g,"").replace(/""/g,'"')));document.getElementById("sheetHead").innerHTML="<tr>"+rows[0].map(x=>"<th>"+x+"</th>").join("")+"</tr>";document.getElementById("sheetRows").innerHTML=rows.slice(1).map(row=>"<tr>"+row.map(x=>"<td>"+x+"</td>").join("")+"</tr>").join("");s.textContent=rows.length-1+" satır yüklendi."}catch(e){s.textContent="Yüklenemedi: "+e.message+" (CSV yayın URL'si ve CORS kontrol edilmeli)"}};
+render();
+</script></body></html>
