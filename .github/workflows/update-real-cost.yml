@@ -2,7 +2,7 @@ name: Update Real Cost
 
 on:
   schedule:
-    - cron: "10 13 * * *"
+    - cron: "45 16 * * 1-5"
   workflow_dispatch:
 
 permissions:
