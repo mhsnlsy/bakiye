@@ -48,7 +48,11 @@ async function snapshot(env){
      const rates=quotes.fx||{};
      for(const [code,qty] of Object.entries(x.currencies||{})){
        const rate=Number(rates[code+"TRY"]||0);
-       if(rate){\n         const amount=Number(qty||0)*rate;\n         if(isCash)t.cashFx+=amount;\n         else t.bankFx+=amount;\n       }
+       if(rate){
+         const amount=Number(qty||0)*rate;
+         if(isCash)t.cashFx+=amount;
+         else t.bankFx+=amount;
+       }
      }
    }
  }
