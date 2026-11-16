@@ -80,6 +80,7 @@ def parse_fx(source):
 def parse_stock(source):
     p=TableParser(); p.feed(source)
     out={}
+    daily_pct={}
     for symbol in STOCKS:
         for row in p.rows:
             cells=[x.strip().upper() for x in row]
@@ -89,20 +90,24 @@ def parse_stock(source):
                 if i+1 < len(row):
                     v=number(row[i+1])
                     if v is not None:
-                        out[symbol]=v; break
+                        out[symbol]=v
+                        if i+2 < len(row):
+                            pct=number(row[i+2])
+                            if pct is not None: daily_pct[symbol]=pct
+                        break
     plain=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",source))
     for symbol in STOCKS:
         if symbol in out: continue
         source_symbol=SOURCE_SYMBOL.get(symbol,symbol)
         m=re.search(r"(?:^|\s)"+re.escape(source_symbol)+r"\s+([0-9]+(?:[.,][0-9]+)?)",plain,re.I)
         if m: out[symbol]=number(m.group(1))
-    return out
+    return out, daily_pct
 
 def main():
     path="/tmp/quotes.json"
     with open(path,encoding="utf-8") as f: q=json.load(f)
     source=fetch(STOCK_SOURCE)
-    prices=parse_stock(source)
+    prices, daily_pct=parse_stock(source)
     missing=[s for s in STOCKS if s not in prices]
     if missing:
         raise SystemExit("Uzmanpara parse failed; missing: "+",".join(missing))
@@ -116,6 +121,7 @@ def main():
     q["asOf"]=datetime.now(timezone.utc).date().isoformat()
     q["lastRefresh"]=datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
     q["quotes"].update(prices)
+    q["dailyPct"]=daily_pct
     q["fx"].update(fx)
     q["missing"]=missing
     q["errors"]=[]
