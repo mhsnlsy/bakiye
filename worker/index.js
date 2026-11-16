@@ -1,4 +1,4 @@
-const MIDAS="https://www.getmidas.com/canli-borsa/";
+const MIDAS="https://finans.mynet.com/borsa/canliborsa/";
 const FX="https://kur.doviz.com/";
 const TLREF="https://www.borsaistanbul.com/endeksler/tlref";
 const STOCKS=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
@@ -47,7 +47,7 @@ async function quotes(env){
    for(const c of FXC){const p=fx(fr.value,c);if(p!=null)f[c+"TRY"]=p;else missing.push(c+"TRY")}
  }else errors.push("Döviz.com: "+String(fr.reason?.message||fr.reason));
  const now=new Date().toISOString();
- const v={...old,source:"Midas Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:MIDAS,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,fx:f,missing,errors,sourceStatus:{midas:mr.status,doviz:fr.status}};
+ const v={...old,source:"Mynet Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:MIDAS,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,fx:f,missing,errors,sourceStatus:{midas:mr.status,doviz:fr.status}};
  await put(env,"quotes.json",v);
  return v;
 }
