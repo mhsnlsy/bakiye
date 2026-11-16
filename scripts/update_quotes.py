@@ -2,7 +2,7 @@
 import json, re, urllib.request
 from datetime import datetime, timezone
 
-Midas URL = "https://www.getmidas.com/canli-borsa/tum-hisseler"
+MIDAS_URL = "https://www.getmidas.com/canli-borsa/tum-hisseler"
 DOVIZ_URL = "https://www.doviz.com/"
 
 def get(url):
