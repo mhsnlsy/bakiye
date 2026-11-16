@@ -11,7 +11,7 @@ def get(url):
         return r.read().decode("utf-8", "ignore")
 
 def price_from_table(html, symbol):
-    pat = rf"{re.escape(symbol)}\\s*\\|\\s*([0-9.,]+)"
+    pat = rf"{re.escape(symbol)}\s*\|\s*([0-9.,]+)"
     m = re.search(pat, html, re.I)
     if not m:
         pat = rf"{re.escape(symbol)}.*?([0-9]+,[0-9]+)"
@@ -41,18 +41,21 @@ def main():
             data["fx"][code + "TRY"] = p
             updated.append(code + "TRY")
 
-    data["asOf"] = datetime.now(timezone.utc).isoformat()
+    old = json.dumps(data, ensure_ascii=False, sort_keys=True)
     data["source"] = "Midas Canlı Borsa (15 dk gecikmeli) + Döviz.com serbest piyasa"
     data["sourceUrl"] = MIDAS_URL
     data["fxSourceUrl"] = DOVIZ_URL
-    data["lastRefresh"] = datetime.now(timezone.utc).isoformat()
-    data["updatedSymbols"] = updated
-
-    with open("data/quotes.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-        f.write("\n")
-
-    print("Updated:", ", ".join(updated))
+    changed = old != json.dumps(data, ensure_ascii=False, sort_keys=True)
+    if changed:
+        data["asOf"] = datetime.now(timezone.utc).isoformat()
+        data["lastRefresh"] = datetime.now(timezone.utc).isoformat()
+        data["updatedSymbols"] = updated
+        with open("data/quotes.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+            f.write("\n")
+        print("Updated:", ", ".join(updated))
+    else:
+        print("No quote changes.")
 
 if __name__ == "__main__":
     main()
