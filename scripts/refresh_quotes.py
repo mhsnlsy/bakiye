@@ -60,7 +60,8 @@ def parse_stock(source):
     plain=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",source))
     for symbol in STOCKS:
         if symbol in out: continue
-        m=re.search(r"(?:^|\s)"+re.escape(symbol)+r"\s+([0-9]+(?:[.,][0-9]+)?)",plain,re.I)
+        source_symbol=SOURCE_SYMBOL.get(symbol,symbol)
+        m=re.search(r"(?:^|\s)"+re.escape(source_symbol)+r"\s+([0-9]+(?:[.,][0-9]+)?)",plain,re.I)
         if m: out[symbol]=number(m.group(1))
     return out
 
