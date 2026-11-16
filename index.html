@@ -133,40 +133,74 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 </footer>
 </main>
 <script>
-/* restored full working script */
-function fmt(n){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0)}
-function nfmt(n){return new Intl.NumberFormat("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0)}
-function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&","<":"<",">":">",'"':""","'":"&#39;"}[c]))}
-let balanceData={}, quoteData={}, positions=[], historyData={};
+function fmt(n){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
+function nfmt(n){return new Intl.NumberFormat("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
+function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+let balanceData={},quoteData={},positions=[],historyData={},tlrefData={};
+async function api(path){const r=await fetch(path+"?v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}});if(!r.ok)throw Error(path+" HTTP "+r.status);return r.json()}
 async function loadData(){
- try{
-  const [b,q,p,h,t]=await Promise.all([
-   fetch("/api/balance").then(r=>r.json()),
-   fetch("/api/quotes").then(r=>r.json()),
-   fetch("/api/positions").then(r=>r.json()),
-   fetch("/api/history").then(r=>r.json()).catch(()=>({})),
-   fetch("/api/tlref").then(r=>r.json()).catch(()=>({}))
-  ]);
-  balanceData=b; quoteData=q; positions=Array.isArray(p)?p:[]; historyData=h||{}; window.tlrefData=t;
- }catch(e){console.error("loadData",e)}
+ const [b,q,p,h,t]=await Promise.all([api("/api/balance"),api("/api/quotes"),api("/api/positions"),api("/api/history"),api("/api/tlref")]);
+ balanceData=b;quoteData=q;positions=Array.isArray(p)?p:[];historyData=h||{};tlrefData=t||{};
 }
-function realCostPerUnitForPosition(p){return Number(p.realCost)||Number(p.avgCost)||0}
-function formatQuoteUpdateTime(){const d=new Date(); return d.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"})}
-function formatFxUpdateTime(){return formatQuoteUpdateTime()}
+function calc(){
+ const rates=quoteData.fx||{}, q=quoteData.quotes||{};
+ let stocks=0,realPnl=0,nominalPnl=0,positionCount=0,tlrefAdded=0;
+ const rows=positions.map(p=>{
+  const qty=Number(p.qty)||0, avg=Number(p.avgCost)||0, real=Number(p.realCost)||avg, price=Number(q[p.symbol]||p.snapshotPrice||0);
+  const market=price*qty,cost=avg*qty,rp=market-real*qty,np=market-cost;
+  stocks+=market;realPnl+=rp;nominalPnl+=np;positionCount+=qty;tlrefAdded+=(Number(p.tlrefCostAdded)||0)*qty;
+  return {p,qty,avg,real,price,market,rp,np,nominalPct:cost?np/cost*100:0,realPct:cost?rp/cost*100:0};
+ });
+ const a=balanceData.accounts||{};
+ const tryVal=Object.values(a).filter(x=>x.category==="try").reduce((s,x)=>s+(Number(x.value)||0),0);
+ const fxVal=(id)=>{const x=a[id]||{};return Object.entries(x.currencies||{}).reduce((s,[code,qty])=>s+(Number(qty)||0)*(Number(rates[code+"TRY"])||0),0)};
+ const cashFx=fxVal("doviz"),bankFx=fxVal("bankaDoviz");
+ const gold=Number(a.nkolayAltin?.value)||0,receivable=Number(a.tahminiAlacak?.value)||0;
+ const total=stocks+tryVal+cashFx+bankFx+gold+receivable;
+ const obligations=(Number(a.monthlyObligations?.rent?.value)||0)+(Number(a.monthlyObligations?.creditCard?.value)||0);
+ return {rows,stocks,realPnl,nominalPnl,positionCount,tlrefAdded,tryVal,cashFx,bankFx,gold,receivable,total,obligations,net:total-obligations,rates};
+}
 function render(){
- if(!positions.length) return;
- const c={quotes:quoteData?.quotes||{}, totals:{}};
- const posRows=positions.map(p=>{
-  const price=Number(c.quotes[p.symbol]||p.snapshotPrice||0), market=price*p.qty, cost=p.avgCost*p.qty, pnl=market-cost;
-  const realCostPerUnit=realCostPerUnitForPosition(p);
-  const realPnl=market-(realCostPerUnit*p.qty);
-  const nominalPct=cost?pnl/cost*100:0; const realPct=cost?realPnl/cost*100:0;
-  return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(realCostPerUnit)+'</td><td>'+fmt(price)+'</td><td>'+fmt(market)+'</td><td class="'+(pnl>=0?"good":"bad")+'">'+fmt(pnl)+'</td><td class="'+(nominalPct>=0?"good":"bad")+'">'+nfmt(nominalPct)+'%</td><td class="'+(realPnl>=0?"good":"bad")+'">'+fmt(realPnl)+'</td><td class="'+(realPct>=0?"good":"bad")+'">'+nfmt(realPct)+'%</td></tr>';
- }).join("");
- document.getElementById("positionsBody").innerHTML=posRows;
+ const x=calc();
+ document.getElementById("grandTotal").textContent=fmt(x.total);
+ document.getElementById("netTotal").textContent=fmt(x.net);
+ document.getElementById("obligationHero").textContent=fmt(x.obligations);
+ document.getElementById("heroRealPnL").textContent=fmt(x.realPnl);
+ document.getElementById("positionCount").textContent=nfmt(x.positionCount)+" lot";
+ document.getElementById("stocksValue").textContent=fmt(x.stocks);
+ document.getElementById("tryValue").textContent=fmt(x.tryVal);
+ document.getElementById("cashFxValue").textContent=fmt(x.cashFx);
+ document.getElementById("bankFxValue").textContent=fmt(x.bankFx);
+ document.getElementById("goldValue").textContent=fmt(x.gold);
+ document.getElementById("receivableValue").textContent=fmt(x.receivable);
+ document.getElementById("portfolioTotal").textContent=fmt(x.stocks);
+ document.getElementById("portfolioPnL").textContent=fmt(x.nominalPnl);
+ document.getElementById("portfolioPnLPct").textContent=nfmt((x.rows.reduce((s,r)=>s+r.avg*r.qty,0)?x.nominalPnl/x.rows.reduce((s,r)=>s+r.avg*r.qty,0)*100:0))+"%";
+ document.getElementById("portfolioRealPnL").textContent=fmt(x.realPnl);
+ const originalCost=x.rows.reduce((s,r)=>s+r.avg*r.qty,0);
+ document.getElementById("portfolioRealPnLPct").textContent=nfmt(originalCost?x.realPnl/originalCost*100:0)+"%";
+ document.getElementById("positionsBody").innerHTML=x.rows.map(r=>'<tr><td><span class="ticker">'+safe(r.p.symbol)+'</span><span class="subline">'+safe(r.p.name)+' · Hisse</span></td><td>'+nfmt(r.qty)+'</td><td>'+fmt(r.avg)+'</td><td>'+fmt(r.real)+'</td><td>'+fmt(r.price)+'</td><td>'+fmt(r.market)+'</td><td class="'+(r.np>=0?"good":"bad")+'">'+fmt(r.np)+'</td><td class="'+(r.nominalPct>=0?"good":"bad")+'">'+nfmt(r.nominalPct)+'%</td><td class="'+(r.rp>=0?"good":"bad")+'">'+fmt(r.rp)+'</td><td class="'+(r.realPct>=0?"good":"bad")+'">'+nfmt(r.realPct)+'%</td></tr>').join("");
+ const fx=x.rates;
+ document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
+ document.getElementById("liveFxSub").textContent="Döviz.com · "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—");
+ const tr=Number(tlrefData.grossAnnualRate||0)*100;
+ document.getElementById("liveTlrefRate").textContent=tr?nfmt(tr)+"%":"—";
+ document.getElementById("liveTlrefSub").textContent=tlrefData.source||"Borsa İstanbul TLREF";
+ document.getElementById("tlrefAdded").textContent=fmt(x.tlrefAdded);
+ const snaps=historyData.snapshots||[];
+ const today=snaps[snaps.length-1];
+ document.getElementById("dailyRealCostChange").textContent=fmt(Number(today?.tlrefCostAdded)||x.tlrefAdded);
+ document.getElementById("dailyRealCostSub").textContent=today?.date?today.date+" snapshot":"Bugünkü TLREF maliyeti";
+ document.getElementById("asOfLabel").textContent="Değerleme "+(balanceData.asOf||new Date().toLocaleDateString("tr-TR"));
+ document.getElementById("footerMeta").textContent="Son fiyat güncelleme: "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul"}):"—");
+ document.getElementById("quoteState").textContent="Uzmanpara + Döviz.com · canlı veri · "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—");
+ document.getElementById("syncState").textContent="Canlı veri";
 }
-async function boot(){await loadData(); render();}
+async function boot(){
+ try{await loadData();render()}catch(e){console.error("Bakiye veri akışı:",e);document.getElementById("syncState").textContent="Veri alınamadı"}
+}
 boot();
-setInterval(boot, 300000);
+setInterval(boot,60000);
+document.getElementById("refreshBtn").addEventListener("click",boot);
 </script>
 </body></html>
