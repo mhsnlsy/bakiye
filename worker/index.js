@@ -54,11 +54,36 @@ async function quotes(env){
  await put(env,"quotes.json",v);
  return v;
 }
+function tlrefCostAddedForPosition(p,tl){
+ const base=Number(p.avgCost)||0;
+ const start=p.realCostBaseDate||p.purchaseDate||null;
+ const end=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date());
+ const history=Array.isArray(tl?.historical)?tl.historical:[];
+ if(!base||!start||!end||!history.length||start>=end)return 0;
+ const byDate=new Map(history.map(x=>[x.date,Number(x.rate)]));
+ const firstRate=Number(history[0]?.rate)||0;
+ if(!firstRate)return 0;
+ let value=base;
+ let d=new Date(start+"T00:00:00Z");
+ const endMs=Date.parse(end+"T00:00:00Z");
+ while(d.getTime()<endMs){
+   const key=d.toISOString().slice(0,10);
+   let rate=byDate.get(key);
+   if(rate==null){
+     for(let i=history.length-1;i>=0;i--){if(history[i].date<=key){rate=Number(history[i].rate);break}}
+     if(rate==null)rate=firstRate;
+   }
+   value*=1+(rate*(1-(Number(tl?.stopaj??.175))))/365;
+   d.setUTCDate(d.getUTCDate()+1);
+ }
+ return Math.max(0,value-base);
+}
 async function snapshot(env){
  let old=await read(env,"history.json","/data/history.json")||{version:1,frequency:"daily",startDate:"2026-11-16",retentionDays:365,snapshots:[]};
  let balance=await read(env,"balance.json","/data/balance.json")||{accounts:{}};
  let positions=await read(env,"positions.json","/data/positions.json")||[];
  let quotes=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
+ let tlrefData=await read(env,"tlref.json","/data/tlref.json")||{historical:[],stopaj:.175};
  let t={stocks:0,funds:0,try:0,cashFx:0,bankFx:0,gold:0,receivable:0};
  for(const p of positions){const v=Number(quotes.quotes?.[p.symbol]??p.snapshotPrice??0)*Number(p.qty||0);if(p.type==="fund")t.funds+=v;else t.stocks+=v}
  const a=balance.accounts||{};
@@ -70,8 +95,9 @@ async function snapshot(env){
    }
  }
  const total=t.stocks+t.funds+t.try+t.cashFx+t.bankFx+t.gold+t.receivable;
+ const tlrefCostAdded=positions.reduce((s,p)=>s+tlrefCostAddedForPosition(p,tlrefData)*Number(p.qty||0),0);
  const now=new Date(),date=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(now);
- const rows=(old.snapshots||[]).filter(x=>x.date!==date);rows.push({date,total,...t});
+ const rows=(old.snapshots||[]).filter(x=>x.date!==date);rows.push({date,total,...t,tlrefCostAdded,tlrefAsOf:tlrefData.asOf||null,tlrefGrossAnnualRate:tlrefData.grossAnnualRate||null,tlrefNetAnnualRate:tlrefData.netAnnualRate||null});
  const cutoffDate=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date(now.getTime()-365*86400000));
  const kept=rows.filter(x=>{const weekday=new Date(x.date+"T12:00:00Z").getUTCDay();return weekday===0||x.date>=cutoffDate}).sort((a,b)=>a.date.localeCompare(b.date));
  const v={...old,version:1,frequency:"daily",startDate:old.startDate||date,retentionDays:365,updatedAt:now.toISOString(),snapshots:kept};
@@ -94,7 +120,12 @@ export default{
     }
     const v=await read(env,"quotes.json","/data/quotes.json");return v?out(v):out({error:"quotes_not_ready"},503)
   }
-  if(u.pathname==="/api/tlref"){const v=await read(env,"tlref.json","/data/tlref.json");return v?out(v):out({error:"tlref_not_ready"},503)}
+  if(u.pathname==="/api/tlref"){
+    if(u.searchParams.get("refresh")==="1"){
+      try{return out(await tlref(env))}catch(e){return out({error:String(e?.message||e)},502)}
+    }
+    const v=await read(env,"tlref.json","/data/tlref.json");return v?out(v):out({error:"tlref_not_ready"},503)
+  }
   if(u.pathname==="/api/history"){const v=await read(env,"history.json","/data/history.json");return v?out(v):out({error:"history_not_ready"},503)}
   if(u.pathname==="/api/health")return out({ok:true,service:"bakiye",time:new Date().toISOString()});
   // Allow the app to be mounted privately under /bakiye on istanbulunhavasi.com.
@@ -121,6 +152,10 @@ export default{
   return asset;
  },
  async scheduled(e,env,ctx){
-   if(e.cron==="30 15 * * *")ctx.waitUntil((async()=>{await tlref(env);await snapshot(env)})());
+   if(e.cron==="30 15 * * *")ctx.waitUntil((async()=>{
+     await quotes(env);
+     await tlref(env);
+     await snapshot(env);
+   })());
  }
 };
