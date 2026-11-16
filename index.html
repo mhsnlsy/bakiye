@@ -241,7 +241,8 @@ function render(){
  heroRealEl.className=heroRealPnl>=0?"good":"bad";
  document.getElementById("stocksValue").textContent=fmt(c.totals.stocks);
  document.getElementById("stocksSub").textContent=positions.filter(p=>p.type==="stock").length+" hisse pozisyonu";
- document.getElementById("fundsValue").textContent=fmt(c.totals.funds);\n const fundsCard=document.getElementById("fundsCard"); if(fundsCard) fundsCard.style.display=Number(c.totals.funds)>0?"":"none";
+ document.getElementById("fundsValue").textContent=fmt(c.totals.funds);
+ const fundsCard=document.getElementById("fundsCard"); if(fundsCard) fundsCard.style.display=Number(c.totals.funds)>0?"":"none";
  document.getElementById("tryValue").textContent=fmt(c.totals.try);
  const cashFx=balanceData.accounts.doviz?.currencies||{},bankFx=balanceData.accounts.bankaDoviz?.currencies||{},rates=quoteData?.fx||{};
  const cashFxTotal=(Number(cashFx.USD||0)*Number(rates.USDTRY||0))+(Number(cashFx.EUR||0)*Number(rates.EURTRY||0))+(Number(cashFx.GBP||0)*Number(rates.GBPTRY||0));
