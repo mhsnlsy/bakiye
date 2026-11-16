@@ -35,14 +35,22 @@ receivable=sum(float(x.get("value",0)) for x in a.values() if x.get("category")=
 total=stocks+funds+tl+cash_fx+bank_fx+gold+receivable
 
 today=date.today().isoformat()
-net_annual=float(tlref.get("netAnnualRate",0))
+historical={date.fromisoformat(r["date"]):float(r["rate"]) for r in tlref.get("historical",[]) if r.get("date") and r.get("rate") is not None}
+latest_rate=float(tlref.get("grossAnnualRate",0))
+def rate_for_day(day):
+    if day in historical: return historical[day]
+    prior=[d for d in historical if d<=day]
+    return historical[max(prior)] if prior else latest_rate
 real_cost_total=0.0
 for p in positions:
     base=float(p.get("avgCost",0))
     start=date.fromisoformat(p.get("realCostBaseDate",today))
     days=max(0,(date.today()-start).days)
-    real_unit=base*((1+net_annual/365)**days)
-    real_cost_total += real_unit*float(p.get("qty",0))
+    factor=1.0
+    for offset in range(days):
+        day=start+timedelta(days=offset)
+        factor*=1+rate_for_day(day)*(1-float(tlref.get("stopaj",0.175)))/365
+    real_cost_total += base*factor*float(p.get("qty",0))
 real_cost_total=round(real_cost_total,2)
 nominal_cost_total=round(sum(float(p.get("avgCost",0))*float(p.get("qty",0)) for p in positions),2)
 tlref_cost_added=round(real_cost_total-nominal_cost_total,2)
@@ -53,7 +61,7 @@ except Exception:
 
 snap={"date":today,"total":round(total,2),"stocks":round(stocks,2),"funds":round(funds,2),
       "try":round(tl,2),"cashFx":round(cash_fx,2),"bankFx":round(bank_fx,2),
-      "gold":round(gold,2),"receivable":round(receivable,2),"realCostTotal":real_cost_total,"nominalCostTotal":nominal_cost_total,"tlrefCostAdded":tlref_cost_added,"netTlrefAnnualRate":net_annual}
+      "gold":round(gold,2),"receivable":round(receivable,2),"realCostTotal":real_cost_total,"nominalCostTotal":nominal_cost_total,"tlrefCostAdded":tlref_cost_added,"netTlrefAnnualRate":latest_rate*(1-float(tlref.get("stopaj",0.175)))}
 
 rows=[x for x in h.get("snapshots",[]) if x.get("date")!=today]
 rows.append(snap)
