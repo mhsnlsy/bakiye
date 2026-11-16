@@ -6,7 +6,10 @@
     "qty": 14,
     "avgCost": 246.52,
     "realCost": 246.52,
-    "realCostBaseDate": "2026-11-16"
+    "realCostBaseDate": "2026-11-16",
+    "purchaseDate": "2026-11-16",
+    "tlrefCostAdded": 0,
+    "realCostUpdatedAt": "2026-11-16"
   },
   {
     "symbol": "KARSN",
@@ -15,7 +18,10 @@
     "qty": 888,
     "avgCost": 8.74,
     "realCost": 8.74,
-    "realCostBaseDate": "2026-11-16"
+    "realCostBaseDate": "2026-11-16",
+    "purchaseDate": "2026-11-16",
+    "tlrefCostAdded": 0,
+    "realCostUpdatedAt": "2026-11-16"
   },
   {
     "symbol": "THYAO",
@@ -24,7 +30,10 @@
     "qty": 65,
     "avgCost": 285.04,
     "realCost": 285.04,
-    "realCostBaseDate": "2026-11-16"
+    "realCostBaseDate": "2026-11-16",
+    "purchaseDate": "2026-11-16",
+    "tlrefCostAdded": 0,
+    "realCostUpdatedAt": "2026-11-16"
   },
   {
     "symbol": "CGCAM",
@@ -33,7 +42,10 @@
     "qty": 668,
     "avgCost": 26.85,
     "realCost": 26.85,
-    "realCostBaseDate": "2026-11-16"
+    "realCostBaseDate": "2026-11-16",
+    "purchaseDate": "2026-11-16",
+    "tlrefCostAdded": 0,
+    "realCostUpdatedAt": "2026-11-16"
   },
   {
     "symbol": "SISE",
@@ -42,7 +54,10 @@
     "qty": 168,
     "avgCost": 39.94,
     "realCost": 39.94,
-    "realCostBaseDate": "2026-11-16"
+    "realCostBaseDate": "2026-11-16",
+    "purchaseDate": "2026-11-16",
+    "tlrefCostAdded": 0,
+    "realCostUpdatedAt": "2026-11-16"
   },
   {
     "symbol": "ZPLIB.F",
@@ -51,6 +66,9 @@
     "qty": 83,
     "avgCost": 177.92,
     "realCost": 177.92,
-    "realCostBaseDate": "2026-11-16"
+    "realCostBaseDate": "2026-11-16",
+    "purchaseDate": "2026-11-16",
+    "tlrefCostAdded": 0,
+    "realCostUpdatedAt": "2026-11-16"
   }
 ]
