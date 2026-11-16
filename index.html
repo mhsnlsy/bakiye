@@ -116,9 +116,10 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 const DATA_URL="./data/balance.json";
 const QUOTES_URL="./data/quotes.json";
 const POSITIONS_URL="./data/positions.json";
+const TLREF_URL="./data/tlref.json";
 const fmt=n=>new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:2}).format(Number(n)||0);
 const nfmt=n=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(n)||0);
-let balanceData=null,quoteData=null,positions=[],sheetLastSync=null;
+let balanceData=null,quoteData=null,positions=[],tlrefData=null,sheetLastSync=null;
 let quoteOverrides={};
 const safe=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function readTRNumber(v){
@@ -137,6 +138,16 @@ function csvRows(text){
  else cell+=ch}
  if(cell.length||row.length){row.push(cell);out.push(row)}return out;
 }
+function realCostPerUnitForPosition(p){
+ const base=Number(p.avgCost)||0;
+ const start=tlrefData?.startDate||balanceData?.depositBenchmark?.startDate;
+ const rate=Number(tlrefData?.netAnnualRate ?? balanceData?.depositBenchmark?.annualRate*(1-(balanceData?.depositBenchmark?.stopaj??0.175)))||0;
+ if(!base||!start||!rate)return base;
+ const startMs=Date.parse(start+"T00:00:00Z");
+ const todayMs=Date.parse((tlrefData?.asOf||new Date().toISOString().slice(0,10))+"T00:00:00Z");
+ const days=Math.max(0,Math.floor((todayMs-startMs)/86400000));
+ return base*Math.pow(1+rate/365,days);
+}
 function calc(){
  const quotes={...(quoteData?.quotes||{})};
  let totals={stocks:0,funds:0,try:0,fx:0,gold:0,receivable:0};
@@ -153,7 +164,7 @@ function render(){
  document.getElementById("netTotal").textContent=fmt(c.net);
  document.getElementById("obligationHero").textContent=fmt(c.obligations);
  document.getElementById("positionCount").textContent=nfmt(allPositions)+" lot";
- const realCostTotal=positions.reduce((s,p)=>s+p.qty*Number(p.realCost||p.avgCost),0);
+ const realCostTotal=positions.reduce((s,p)=>s+p.qty*realCostPerUnitForPosition(p),0);
  const pfNow=positions.reduce((s,p)=>s+p.qty*Number(c.quotes[p.symbol]??p.snapshotPrice??0),0);
  const heroRealPnl=pfNow-realCostTotal;
  const heroRealEl=document.getElementById("heroRealPnL");
@@ -179,7 +190,7 @@ function render(){
  document.getElementById("asOfLabel").textContent="Değerleme "+(asOf||"—");
  const posRows=positions.map(p=>{
   const price=Number(c.quotes[p.symbol]??p.snapshotPrice??0),market=price*p.qty,cost=p.avgCost*p.qty,pnl=market-cost;
-  const realCostPerUnit=Number(p.realCost||p.avgCost);
+  const realCostPerUnit=realCostPerUnitForPosition(p);
   const realPnl=market-(realCostPerUnit*p.qty);
   return '<tr><td><span class="ticker">'+safe(p.symbol)+'</span><span class="subline">'+safe(p.name)+(p.type==="fund"?" · Fon":" · Hisse")+'</span></td><td>'+nfmt(p.qty)+'</td><td>'+fmt(p.avgCost)+'</td><td>'+fmt(realCostPerUnit)+'</td><td>'+fmt(price)+'</td><td>'+fmt(market)+'</td><td class="'+(pnl>=0?"good":"bad")+'">'+fmt(pnl)+'</td><td class="'+(realPnl>=0?"good":"bad")+'">'+fmt(realPnl)+'</td></tr>';
  }).join("");
@@ -205,7 +216,7 @@ function render(){
  document.getElementById("rentValue").textContent=fmt(m.rent.value);
  document.getElementById("cardValue").textContent=fmt(m.creditCard.value);
  document.getElementById("monthlyTotal").textContent=fmt(c.obligations);
- document.getElementById("quoteState").textContent="Otomatik kaynak: Midas + Döviz.com · "+(quoteData?.lastRefresh||quoteData?.asOf||"—");
+ document.getElementById("quoteState").textContent="Otomatik kaynak: Midas + Döviz.com · TLREF: Borsa İstanbul · "+(tlrefData?.asOf||"—")+" · Net "+nfmt((tlrefData?.netAnnualRate||0)*100)+"%";
  document.getElementById("footerUpdate").textContent="Son hesaplama: "+new Date().toLocaleString("tr-TR");
 }
 function applySheetRows(rows){
@@ -225,12 +236,13 @@ function applySheetRows(rows){
  render();return true;
 }
 async function boot(){
- const [b,q,p]=await Promise.all([
+ const [b,q,p,t]=await Promise.all([
   fetch("./data/balance.json?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("balance.json HTTP "+r.status);return r.json()}),
   fetch(QUOTES_URL+"?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("quotes.json HTTP "+r.status);return r.json()}),
-  fetch(POSITIONS_URL+"?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("positions.json HTTP "+r.status);return r.json()})
+  fetch(POSITIONS_URL+"?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("positions.json HTTP "+r.status);return r.json()}),
+  fetch(TLREF_URL+"?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("tlref.json HTTP "+r.status);return r.json()})
  ]);
- balanceData=b;quoteData=q;positions=Array.isArray(p)?p:(p.positions||[]);
+ balanceData=b;quoteData=q;positions=Array.isArray(p)?p:(p.positions||[]);tlrefData=t;
  document.getElementById("syncState").textContent="Veriler yüklendi";
  render();
  await syncSheet();
