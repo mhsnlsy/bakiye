@@ -1,8 +1,6 @@
 {
   "asOf": "2026-11-16",
-  "source": "Google Sheets CSV export supplied by user",
-  "sheetUrl": "https://docs.google.com/spreadsheets/d/1jXDjZi5EROMpuANFpAOWfOGeFY_ObfCB83azPbvHsWM/edit?usp=sharing",
-  "sheetCsvUrl": "https://docs.google.com/spreadsheets/d/1jXDjZi5EROMpuANFpAOWfOGeFY_ObfCB83azPbvHsWM/export?format=csv&gid=0",
+  "source": "Manuel girilen bakiye verileri",
   "accounts": {
     "nkolay": {
       "label": "N Kolay",
@@ -72,8 +70,7 @@
     "gramPriceSnapshot": 6258.06,
     "grams": 1.7
   },
-  "sheetReportedTotal": 462639,
-  "note": "Midas hesabındaki 65.000 TL, aşağıda tek tek gösterilen Midas pozisyonlarının yerine geçer; toplamda ikinci kez sayılmaz.",
+  "note": "Bakiye verileri Google Sheets kullanılmadan manuel güncellenir.",
   "fxSource": "Döviz.com serbest piyasa",
   "fxUnitsNote": "Döviz hesapları para birimi miktarı olarak tutulur; TL karşılığı güncel kurlarla hesaplanır.",
   "depositBenchmark": {
