@@ -403,7 +403,8 @@ async function boot(){
   render();
   balanceData=await load(DATA_URL,"balance.json",fallbackBalance);
   quoteData=await load(QUOTES_URL,"quotes.json",fallbackQuotes);
-  // Prices are refreshed centrally by GitHub Actions and read from the canonical Worker API.\n  const p=await load(POSITIONS_URL,"positions.json",fallbackPositions);
+  // Prices are refreshed centrally by GitHub Actions and read from the canonical Worker API.
+  const p=await load(POSITIONS_URL,"positions.json",fallbackPositions);
   positions=Array.isArray(p)?p:(p.positions||[]);
   tlrefData=await load(TLREF_URL,"tlref.json",fallbackTlref);
   historyData=await load(HISTORY_URL,"history.json",historyData);
