@@ -19,11 +19,12 @@ def clean(text):
     return re.sub(r"\s+", " ", text)
 
 def price_from_table(text, symbol):
-    m = re.search(rf"\b{re.escape(symbol)}\s*\|?\s*([0-9]+(?:[.,][0-9]+)?)", text, re.I)
+    # Midas columns: Hisse | Son | Alış | Satış | ...
+    # The first numeric value after the ticker is the Son price.
+    m = re.search(rf"(?<![A-Z0-9]){re.escape(symbol)}\\s*\\|\\s*([0-9]+(?:[.,][0-9]+)?)", text, re.I)
     if not m:
         return None
     return float(m.group(1).replace(".", "").replace(",", "."))
-
 def main():
     with open("data/quotes.json", encoding="utf-8") as f:
         data = json.load(f)
@@ -31,7 +32,7 @@ def main():
     midas = clean(get(MIDAS_URL))
     doviz = clean(get(DOVIZ_URL))
 
-    symbols = ["TAVHL", "KARSN", "THYAO", "CGCAM", "SISE"]
+    symbols = ["TAVHL", "KARSN", "THYAO", "CGCAM", "SISE", "ZPLIB.F"]
     updated = []
     for s in symbols:
         p = price_from_table(midas, s)
