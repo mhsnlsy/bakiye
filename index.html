@@ -99,6 +99,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
  <div class="sectionhead"><div><h2>Banka ve diğer varlıklar</h2><div class="note">Google Sheets üzerinden yenilenen hesap bakiyeleri. Midas satırı hisse/fon kırılımıyla değiştirilir.</div></div><a class="sourceLink" href="https://docs.google.com/spreadsheets/d/1jXDjZi5EROMpuANFpAOWfOGeFY_ObfCB83azPbvHsWM/edit?usp=sharing" target="_blank" rel="noopener">Google Sheets'i aç ↗</a></div>
  <div class="tablewrap"><table><thead><tr><th>Hesap / varlık</th><th>Kategori</th><th>Bakiye</th><th>Toplamda</th></tr></thead><tbody id="accountsBody"></tbody></table></div>
  <div class="sourceRow"><span class="state" id="sheetState">Google Sheets bağlantısı bekleniyor.</span><span class="small">Otomatik senkronizasyon: 5 dakikada bir</span></div>
+ <div class="notice" id="midasNote">Midas hesabı, yukarıdaki hisse ve fon pozisyonlarının bulunduğu hesap olarak ele alınır. Ekstredeki Midas bakiyesi ayrıca toplam varlığa eklenmez; böylece aynı yatırım iki kez sayılmaz.</div>
 </section>
 
 <section class="section">
@@ -128,10 +129,13 @@ function readTRNumber(v){
 }
 function csvRows(text){
  const out=[];let row=[],cell="",q=false;
- for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){cell+='"';i++}else q=!q}
- else if(c===","&&!q){row.push(cell);cell=""}
- else if((c==="\n"||c==="\r")&&!q){if(c==="\r"&&text[i+1]==="\n")i++;row.push(cell);out.push(row);row=[];cell=""}
- else cell+=c}
+ const firstLine=String(text).split(/\r?\n/,1)[0]||"";
+ const commas=(firstLine.match(/,/g)||[]).length,semis=(firstLine.match(/;/g)||[]).length;
+ const delimiter=semis>commas?";":",";
+ for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'){if(q&&text[i+1]==='"'){cell+='"';i++}else q=!q}
+ else if(ch===delimiter&&!q){row.push(cell);cell=""}
+ else if((ch==="\n"||ch==="\r")&&!q){if(ch==="\r"&&text[i+1]==="\n")i++;row.push(cell);out.push(row);row=[];cell=""}
+ else cell+=ch}
  if(cell.length||row.length){row.push(cell);out.push(row)}return out;
 }
 function calc(){
@@ -188,7 +192,8 @@ function applySheetRows(rows){
  const map={"nkolay":"nkolay","enpara":"enpara","döviz":"doviz","banka döviz":"bankaDoviz","midas":"midas","tahmini alacak":"tahminiAlacak","bnc":"bnc","nkolayaltın":"nkolayAltin","nakit":"nakit"};
  let found=0;
  h.forEach((label,i)=>{const key=map[label];if(key&&balanceData.accounts[key]){const amount=readTRNumber(v[i]);balanceData.accounts[key].value=amount;found++}});
- const rentIndex=h.indexOf("kira"),cardIndex=h.indexOf("kredi kartı");
+ const monthlyLabels=(rows[1]||[]).map(x=>String(x||"").trim().toLocaleLowerCase("tr-TR"));
+ const rentIndex=monthlyLabels.indexOf("kira"),cardIndex=monthlyLabels.indexOf("kredi kartı");
  if(rentIndex>=0)balanceData.monthlyObligations.rent.value=readTRNumber(rows[3]?.[rentIndex]);
  if(cardIndex>=0)balanceData.monthlyObligations.creditCard.value=readTRNumber(rows[3]?.[cardIndex]);
  if(found<5)return false;
