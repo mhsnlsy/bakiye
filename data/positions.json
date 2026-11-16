@@ -7,7 +7,7 @@
     "avgCost": 246.52,
     "realCost": 322.62,
     "tlrefCostAdded": 76.1,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCostUpdatedAt": "2026-11-15"
   },
   {
     "symbol": "KARSN",
@@ -17,7 +17,7 @@
     "avgCost": 8.74,
     "realCost": 9.22,
     "tlrefCostAdded": 0.48,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCostUpdatedAt": "2026-11-15"
   },
   {
     "symbol": "THYAO",
@@ -27,7 +27,7 @@
     "avgCost": 285.04,
     "realCost": 344.39,
     "tlrefCostAdded": 59.35,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCostUpdatedAt": "2026-11-15"
   },
   {
     "symbol": "CGCAM",
@@ -37,7 +37,7 @@
     "avgCost": 26.85,
     "realCost": 31.01,
     "tlrefCostAdded": 4.16,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCostUpdatedAt": "2026-11-15"
   },
   {
     "symbol": "SISE",
@@ -47,7 +47,7 @@
     "avgCost": 39.94,
     "realCost": 42.97,
     "tlrefCostAdded": 3.03,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCostUpdatedAt": "2026-11-15"
   },
   {
     "symbol": "ZPLIB.F",
@@ -57,6 +57,6 @@
     "avgCost": 177.92,
     "realCost": 201.9,
     "tlrefCostAdded": 23.98,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCostUpdatedAt": "2026-11-15"
   }
 ]
