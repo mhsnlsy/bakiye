@@ -90,8 +90,10 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 <section class="section">
  <div class="sectionhead"><div><h2>Yatırım portföyü</h2><div class="note">Hisseler ve fonlar, Midas bakiyesinin alt kırılımı olarak gösterilir; toplamda ikinci kez eklenmez. Reel K/Z, mevduat referansına göre fırsat maliyetini düşer.</div></div><div class="controls"><span class="sourceLink">Uzmanpara Son fiyat</span></div></div>
  <div class="tablewrap"><table><thead><tr><th>Varlık</th><th>Adet</th><th>Ort. maliyet</th><th>Reel maliyet</th><th>Son fiyat</th><th>Piyasa değeri</th><th>Nominal K/Z</th><th>Nominal %</th><th>Reel K/Z</th><th>Reel %</th></tr></thead><tbody id="positionsBody"><tr><td><span class="ticker">TAVHL</span><span class="subline">TAV Havalimanları · Hisse</span></td><td>14</td><td>₺246,52</td><td>₺322,62</td><td>₺304,00</td><td>₺4.256,00</td><td class="good">₺804,72</td><td class="good">23,30%</td><td class="bad">-₺260,68</td><td class="bad">-6,99%</td></tr><tr><td><span class="ticker">KARSN</span><span class="subline">Karsan Otomotiv · Hisse</span></td><td>888</td><td>₺8,74</td><td>₺9,22</td><td>₺7,92</td><td>₺7.032,96</td><td class="bad">-₺728,16</td><td class="bad">-9,38%</td><td class="bad">-₺1.154,40</td><td class="bad">-12,57%</td></tr><tr><td><span class="ticker">THYAO</span><span class="subline">Türk Hava Yolları · Hisse</span></td><td>65</td><td>₺285,04</td><td>₺344,39</td><td>₺323,50</td><td>₺21.027,50</td><td class="good">₺2.499,90</td><td class="good">13,49%</td><td class="bad">-₺1.357,85</td><td class="bad">-6,08%</td></tr><tr><td><span class="ticker">CGCAM</span><span class="subline">Çağdaş Cam · Hisse</span></td><td>668</td><td>₺26,85</td><td>₺31,01</td><td>₺20,02</td><td>₺13.373,36</td><td class="bad">-₺4.562,44</td><td class="bad">-25,44%</td><td class="bad">-₺7.341,32</td><td class="bad">-23,85%</td></tr><tr><td><span class="ticker">SISE</span><span class="subline">Şişecam · Hisse</span></td><td>168</td><td>₺39,94</td><td>₺42,97</td><td>₺34,84</td><td>₺5.853,12</td><td class="bad">-₺856,80</td><td class="bad">-12,77%</td><td class="bad">-₺1.365,84</td><td class="bad">-23,34%</td></tr><tr><td><span class="ticker">ZPLIB.F</span><span class="subline">ZP Lip · Hisse</span></td><td>83</td><td>₺177,92</td><td>₺201,90</td><td>₺199,25</td><td>₺16.537,75</td><td class="good">₺1.770,39</td><td class="good">11,98%</td><td class="bad">-₺220,05</td><td class="bad">-1,31%</td></tr></tbody><tfoot><tr><td colspan="5">Portföy toplamı</td><td id="portfolioTotal">₺68.080,69</td><td id="portfolioPnL">-₺1.072,39</td><td id="portfolioPnLPct">-1,55%</td><td id="portfolioRealPnL">-₺11.700,04</td><td id="portfolioRealPnLPct">-14,67%</td></tr></tfoot></table></div>
- <div class="sourceRow"><span class="state" id="quoteState">Uzmanpara + Döviz.com · canlı veri</span><span class="small">Reel K/Z: mevduat referansı, stopaj sonrası · Fiyat güncellendiğinde otomatik yeniden hesaplanır.</span></div>
+ <div class="sourceRow"><span class="state" id="quoteState">Uzmanpara + Döviz.com · canlı veri</span><span class="small">Reel K/Z: TLREF referansı, %17,5 stopaj sonrası · Fiyatlar güncellendikçe yeniden hesaplanır.</span></div>
  <div class="benchmarkGrid">
+  <div class="metricCard"><span>Canlı döviz kurları</span><strong id="liveFxRates" style="font-size:13px;letter-spacing:0">USD — · EUR — · GBP —</strong><small id="liveFxSub">Döviz.com · güncelleme —</small></div>
+  <div class="metricCard"><span>TLREF · bugün</span><strong id="liveTlrefRate">—</strong><small id="liveTlrefSub">Borsa İstanbul · kontrol ediliyor…</small></div>
   <div class="metricCard"><span>TLREF kaynaklı ek reel maliyet</span><strong id="tlrefAdded">₺0,00</strong><small id="tlrefAddedSub">Bugünkü portföy maliyeti farkı</small></div>
   <div class="metricCard"><span>Günlük reel maliyet değişimi</span><strong id="dailyRealCostChange">₺0,00</strong><small id="dailyRealCostSub">İlk gün: referans oluşturuldu</small></div>
 </div>
@@ -101,7 +103,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 <section class="section">
  <div class="sectionhead"><div><h2>Banka ve diğer varlıklar</h2><div class="note">Manuel girilen bakiye verileri.</div></div></div>
  <div class="tablewrap"><table><thead><tr><th>Hesap / varlık</th><th>Kategori</th><th>Bakiye</th><th>Toplamda</th></tr></thead><tbody id="accountsBody"><tr><td>N Kolay</td><td>TL / Banka</td><td>₺106.000,00</td><td class="good">Dahil</td></tr><tr><td>Enpara</td><td>TL / Banka</td><td>₺19.000,00</td><td class="good">Dahil</td></tr><tr><td>Döviz<span class="subline">1.427 USD · 495 EUR · 80 GBP</span></td><td>Döviz</td><td>₺104.712,95</td><td class="good">Dahil</td></tr><tr><td>Banka döviz<span class="subline">2.460 EUR</span></td><td>Döviz</td><td>₺136.577,23</td><td class="good">Dahil</td></tr><tr><td>Midas</td><td>Midas (portföy alt kırılımı)</td><td>₺65.000,00</td><td>Hisseler/fonlarda sayıldı</td></tr><tr><td>BNC</td><td>TL / Banka</td><td>₺12.000,00</td><td class="good">Dahil</td></tr><tr><td>N Kolay Altın</td><td>Altın</td><td>₺10.639,00</td><td class="good">Dahil</td></tr><tr><td>Nakit</td><td>TL / Banka</td><td>₺1.000,00</td><td class="good">Dahil</td></tr></tbody></table></div>
- <div class="sourceRow"><span class="state" id="sheetState">Manuel veri · 16.11.2026</span></div>
+ <div class="sourceRow"><span class="state" id="sheetState">Manuel veri · 16.11.2026</span><span class="small">Döviz TL karşılıkları yukarıdaki canlı kurlardan hesaplanır.</span></div>
  <div class="notice" id="midasNote">Midas hesabı, yukarıdaki hisse ve fon pozisyonlarının bulunduğu hesap olarak ele alınır. Ekstredeki Midas bakiyesi ayrıca toplam varlığa eklenmez; böylece aynı yatırım iki kez sayılmaz.</div>
 </section>
 
@@ -288,7 +290,34 @@ function renderHistory(){
  const latest=rows.at(-1),previous=rows.length>1?rows.at(-2):null;
  const dailyPct=previous&&Number(previous.total)?((Number(latest.total)-Number(previous.total))/Number(previous.total))*100:0;
  const pctEl=document.getElementById("historyDailyPct");if(pctEl)pctEl.textContent=previous?((dailyPct>=0?"+":"")+dailyPct.toFixed(2)+"%"):"İlk snapshot";
-}\nfunction formatQuoteUpdateTime(){
+}\nfunction formatFxUpdateTime(){
+ const raw=quoteData?.lastRefresh;
+ if(!raw)return "—";
+ const d=new Date(raw);
+ if(Number.isNaN(d.getTime()))return "—";
+ return new Intl.DateTimeFormat("tr-TR",{timeZone:"Europe/Istanbul",hour:"2-digit",minute:"2-digit"}).format(d);
+}
+function localToday(){
+ return new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date());
+}
+function renderLiveMarketStatus(){
+ const rates=quoteData?.fx||{};
+ const fxEl=document.getElementById("liveFxRates");
+ const fxSub=document.getElementById("liveFxSub");
+ if(fxEl)fxEl.textContent="USD "+nfmt(rates.USDTRY||0)+" · EUR "+nfmt(rates.EURTRY||0)+" · GBP "+nfmt(rates.GBPTRY||0);
+ if(fxSub)fxSub.textContent="Döviz.com · son çekim "+formatFxUpdateTime()+" TSİ";
+ const tl=tlrefData||{};
+ const today=localToday(), asOf=String(tl.asOf||"");
+ const rate=Number(tl.grossAnnualRate||0);
+ const net=Number(tl.netAnnualRate||0);
+ const tlEl=document.getElementById("liveTlrefRate"), tlSub=document.getElementById("liveTlrefSub");
+ if(tlEl)tlEl.textContent=rate?("Brüt "+nfmt(rate*100)+"% · Net "+nfmt(net*100)+"%"):"—";
+ if(tlSub){
+   if(asOf===today)tlSub.textContent="Borsa İstanbul · bugün alındı · "+(tl.updatedAt?new Intl.DateTimeFormat("tr-TR",{timeZone:"Europe/Istanbul",hour:"2-digit",minute:"2-digit"}).format(new Date(tl.updatedAt))+" TSİ":"");
+   else tlSub.textContent="Borsa İstanbul · bugün henüz yayımlanmadı · son: "+(asOf||"—");
+ }
+}
+function formatQuoteUpdateTime(){
  const raw=quoteData?.lastRefresh;
  if(!raw)return "—";
  const d=new Date(raw);
@@ -362,7 +391,8 @@ function render(){
  document.getElementById("monthlyTotal").textContent=fmt(c.obligations);
  const quoteAge=quoteData?.lastRefresh?Math.max(0,Date.now()-new Date(quoteData.lastRefresh).getTime()):Infinity;
  const quoteAgeText=Number.isFinite(quoteAge)?Math.floor(quoteAge/60000)+" dk önce":"zaman bilgisi yok";
- document.getElementById("quoteState").textContent="Uzmanpara Son fiyat · Güncelleme: "+formatQuoteUpdateTime()+" TSİ ("+quoteAgeText+")"+(quoteLoadError?" · UYARI: "+quoteLoadError:quoteAge>12*60000?" · UYARI: fiyat verisi 12 dakikadan eski":"")+" · TLREF: Borsa İstanbul · "+(tlrefData?.asOf||"—")+" · Net "+nfmt((tlrefData?.netAnnualRate||0)*100)+"%";
+ document.getElementById("quoteState").textContent="Uzmanpara Son fiyat · "+formatQuoteUpdateTime()+" TSİ ("+quoteAgeText+")"+(quoteLoadError?" · UYARI: "+quoteLoadError:quoteAge>12*60000?" · UYARI: fiyat verisi 12 dakikadan eski":"")+" · Döviz.com · "+formatFxUpdateTime()+" TSİ · TLREF "+(tlrefData?.asOf||"—");
+ renderLiveMarketStatus();
  document.getElementById("footerUpdate").textContent="Son hesaplama: "+new Date().toLocaleString("tr-TR");
 }
 async function boot(){
@@ -417,7 +447,13 @@ async function boot(){
   // Prices are refreshed centrally by GitHub Actions and read from the canonical Worker API.
   const p=await load(POSITIONS_URL,"positions.json",fallbackPositions);
   positions=Array.isArray(p)?p:(p.positions||[]);
-  tlrefData=await load(TLREF_URL,"tlref.json",fallbackTlref);
+  tlrefData=await load(TLREF_URL+"?v="+Date.now(),"tlref.json",fallbackTlref);
+  if(!tlrefData?.asOf||tlrefData.asOf!==localToday()){
+    try{
+      const rr=await fetch(TLREF_URL+"?refresh=1&v="+Date.now(),{cache:"no-store"});
+      if(rr.ok)tlrefData=await rr.json();
+    }catch(_){}
+  }
   historyData=await load(HISTORY_URL,"history.json",historyData);
   document.getElementById("syncState").textContent=quoteLoadError?"Hisse fiyatı bağlantı uyarısı":"Veriler yüklendi";
   render();
@@ -431,7 +467,9 @@ boot().catch(e=>{document.getElementById("syncState").textContent="Veri hatası"
 
 setInterval(async()=>{
   try{
-    quoteData=await fetchLiveQuotes();
+    const rr=await fetch(QUOTES_URL+"?refresh=1&v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});
+    if(rr.ok)quoteData=await rr.json();
+    else quoteData=await fetchLiveQuotes();
     quoteLoadError=null;
     render();renderRealCostMetrics();
     document.getElementById("syncState").textContent="Veriler yüklendi";
@@ -440,6 +478,19 @@ setInterval(async()=>{
     render();
     document.getElementById("syncState").textContent="Hisse fiyatı bağlantı uyarısı";
   }
+},300000);
+setInterval(async()=>{
+  try{
+    const rr=await fetch(TLREF_URL+"?refresh=1&v="+Date.now(),{cache:"no-store"});
+    if(rr.ok){tlrefData=await rr.json();render();renderRealCostMetrics();}
+  }catch(_){}
+},600000);
+setInterval(async()=>{
+  try{
+    quoteData=await fetchLiveQuotes();
+    quoteLoadError=null;
+    render();renderRealCostMetrics();
+  }catch(_){}
 },15000);
 document.getElementById("historyRange").onchange=renderHistory;
 
