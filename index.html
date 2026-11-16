@@ -58,7 +58,7 @@ tr:last-child td{border-bottom:0}
 footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.wrap{padding:19px 12px 34px}.top{display:block}h1{font-size:27px}.topright{margin-top:12px}.hero{padding:18px}.heroTotal{font-size:34px}.grid{gap:8px}.card{padding:13px}.cardvalue{font-size:20px}.section{padding:13px}.liability{grid-template-columns:1fr 1fr}.liability>div:last-child{grid-column:1/-1}table{min-width:650px}}
-.historyChart{height:310px;position:relative;overflow:hidden;pointer-events:none}.historyChart svg{width:100%;height:100%;display:block}.chartGrid{stroke:#263b55;stroke-width:1}.chartAxis{fill:#8fa3bb;font-size:10px}.chartLine{fill:none;stroke-width:2.5;vector-effect:non-scaling-stroke}.chartDot{stroke:#101e30;stroke-width:2}.chartLegend{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px;position:relative;z-index:9999;isolation:isolate;pointer-events:auto}.chartLegend a{position:relative;z-index:10000;pointer-events:auto;touch-action:manipulation;cursor:pointer;padding:6px 9px;font-size:10px;background:#13243a;border:1px solid #2c4664;border-radius:7px;color:var(--text);text-decoration:none}.chartLegend a.active{background:#2f6ea5 !important;border-color:#8fc7ff !important;color:#fff !important;box-shadow:0 0 0 1px rgba(143,199,255,.25),0 3px 10px rgba(0,0,0,.18);font-weight:600}.chartMeta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:8px}.chartEmpty{height:100%;display:grid;place-items:center;color:var(--muted);font-size:12px}.historySelect{border:1px solid #365577;background:#1b3654;color:var(--text);border-radius:8px;padding:7px 9px;font:inherit;font-size:11px}@media(max-width:560px){.historyChart{height:260px}}.benchmarkGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:11px}.metricCard{background:#13243a;border:1px solid var(--line);border-radius:11px;padding:12px}.metricCard span{display:block;color:var(--muted);font-size:10px}.metricCard strong{display:block;font-size:18px;margin-top:3px}.metricCard small{display:block;color:var(--muted);font-size:9px;margin-top:2px}@media(max-width:560px){.benchmarkGrid{grid-template-columns:1fr}}</style>
+.historyChart{height:310px;position:relative;overflow:hidden;pointer-events:none}.historyChart svg{width:100%;height:100%;display:block}.chartGrid{stroke:#263b55;stroke-width:1}.chartAxis{fill:#8fa3bb;font-size:10px}.chartLine{fill:none;stroke-width:2.5;vector-effect:non-scaling-stroke}.chartDot{stroke:#101e30;stroke-width:2}.chartLegend{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px;position:relative;z-index:9999;isolation:isolate;pointer-events:auto}.chartLegend a{position:relative;z-index:10000;pointer-events:auto;touch-action:manipulation;cursor:pointer;padding:6px 9px;font-size:10px;background:#13243a;border:1px solid #2c4664;border-radius:7px;color:var(--text);text-decoration:none}.chartLegend a.active,.chartLegend a[data-active="true"]{background:#2f6ea5 !important;border-color:#8fc7ff !important;color:#fff !important;box-shadow:0 0 0 1px rgba(143,199,255,.25),0 3px 10px rgba(0,0,0,.18);font-weight:700 !important}.chartMeta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;margin-top:8px}.chartEmpty{height:100%;display:grid;place-items:center;color:var(--muted);font-size:12px}.historySelect{border:1px solid #365577;background:#1b3654;color:var(--text);border-radius:8px;padding:7px 9px;font:inherit;font-size:11px}@media(max-width:560px){.historyChart{height:260px}}.benchmarkGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:11px}.metricCard{background:#13243a;border:1px solid var(--line);border-radius:11px;padding:12px}.metricCard span{display:block;color:var(--muted);font-size:10px}.metricCard strong{display:block;font-size:18px;margin-top:3px}.metricCard small{display:block;color:var(--muted);font-size:9px;margin-top:2px}@media(max-width:560px){.benchmarkGrid{grid-template-columns:1fr}}</style>
 </head>
 <body>
 <main class="wrap">
@@ -204,22 +204,35 @@ function setHistorySeries(series){
  legend.querySelectorAll("a[data-series]").forEach(b=>{
    const active=b.dataset.series===series;
    b.classList.toggle("active",active);
-   b.style.backgroundColor=active?"#2f6ea5":"#13243a";
-   b.style.borderColor=active?"#8fc7ff":"#2c4664";
-   b.style.color=active?"#ffffff":"var(--text)";
-   b.style.fontWeight=active?"700":"400";
+   b.dataset.active=active?"true":"false";
+   b.setAttribute("aria-pressed",active?"true":"false");
+   b.style.setProperty("background-color",active?"#2f6ea5":"#13243a","important");
+   b.style.setProperty("border-color",active?"#8fc7ff":"#2c4664","important");
+   b.style.setProperty("color",active?"#ffffff":"#edf4fc","important");
+   b.style.setProperty("font-weight",active?"700":"400","important");
  });
  const status=document.getElementById("historyDailyPct");
  if(status) status.textContent="Seçim: "+(legend.querySelector('a[data-series="'+series+'"]')?.textContent||series);
  renderHistory();
  return false;
 }
+function bindHistorySeries(){
+ const legend=document.getElementById("historyLegend");
+ if(!legend)return;
+ legend.addEventListener("click",function(e){
+   const link=e.target.closest("a[data-series]");
+   if(!link)return;
+   e.preventDefault();
+   e.stopPropagation();
+   setHistorySeries(link.dataset.series);
+ });
+}
 function initHistorySeries(){
  const hash=location.hash.replace("#history-","");
  const allowed=["total","stocks","try","cashFx","bankFx"];
  setHistorySeries(allowed.includes(hash)?hash:"total");
 }
-window.addEventListener("hashchange",initHistorySeries);
+window.addEventListener("hashchange",initHistorySeries);\nbindHistorySeries();
 
 function renderHistory(){
  const el=document.getElementById("historyChart"),legend=document.getElementById("historyLegend");
@@ -234,7 +247,12 @@ function renderHistory(){
   ["bankFx","Banka Döviz","var(--purple)"]
  ];
  legend.dataset.activeSeries=legend.dataset.activeSeries||"total";
- legend.querySelectorAll("a[data-series]").forEach(b=>b.classList.toggle("active",b.dataset.series===legend.dataset.activeSeries));
+ legend.querySelectorAll("a[data-series]").forEach(b=>{
+  const active=b.dataset.series===legend.dataset.activeSeries;
+  b.classList.toggle("active",active);
+  b.dataset.active=active?"true":"false";
+  b.setAttribute("aria-pressed",active?"true":"false");
+});
  if(!rows.length){el.innerHTML='<div class="chartEmpty">Henüz geçmiş veri yok.</div>';return}
  const active=legend.dataset.activeSeries||"total";
  const vals=rows.map(r=>active==="portfolio"?(Number(r.stocks||0)+Number(r.funds||0)):Number(r[active]||0));
