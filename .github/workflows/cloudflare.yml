@@ -2,7 +2,7 @@ name: Deploy Bakiye to Cloudflare
 on:
   push:
     branches: [main]
-    paths: ["index.html","data/**","worker/**","wrangler.jsonc",".github/workflows/cloudflare.yml","scripts/**"]
+    paths: ["index.html","data/**","worker/**","wrangler.jsonc",".github/workflows/**","scripts/**"]
   workflow_dispatch:
   schedule:
     - cron: "*/5 * * * *"
