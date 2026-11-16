@@ -156,30 +156,9 @@ function csvRows(text){
  if(cell.length||row.length){row.push(cell);out.push(row)}return out;
 }
 function realCostPerUnitForPosition(p){
- const base=Number(p.avgCost)||0;
- const start=p.realCostBaseDate||tlrefData?.asOf||new Date().toISOString().slice(0,10);
- const end=new Date().toISOString().slice(0,10);
- const history=Array.isArray(tlrefData?.historical)?tlrefData.historical:[];
- if(!base||!start||!end||!history.length)return base;
- const byDate=new Map(history.map(x=>[x.date,Number(x.rate)]));
- const firstRate=Number(history[0]?.rate)||0;
- if(!firstRate)return base;
- let value=base;
- let d=new Date(start+"T00:00:00Z");
- const endMs=Date.parse(end+"T00:00:00Z");
- while(d.getTime()<endMs){
-  const key=d.toISOString().slice(0,10);
-  let rate=byDate.get(key);
-  if(rate==null){
-   for(let i=history.length-1;i>=0;i--){
-    if(history[i].date<=key){rate=Number(history[i].rate);break}
-   }
-   if(rate==null)rate=firstRate;
-  }
-  value*=1+(rate*(1-(tlrefData?.stopaj??0.175)))/365;
-  d.setUTCDate(d.getUTCDate()+1);
- }
- return value;
+  // GitHub Actions updates p.realCost once per day using the TLREF series.
+  // The frontend displays that stored daily value; it does not guess a purchase date.
+  return Number(p.realCost ?? p.avgCost) || 0;
 }
 function calc(){
  const quotes={...(quoteData?.quotes||{})};
