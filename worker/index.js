@@ -122,7 +122,7 @@ function out(v,s=200){return new Response(JSON.stringify(v),{status:s,headers:H}
 export default{
  async fetch(req,env){const u=new URL(req.url);
   if(u.pathname==="/api/quotes"){
-    // Browser reads the canonical 5-minute R2 snapshot. Live fetching is performed only by GitHub Actions.\n    const v=await read(env,"quotes.json","/data/quotes.json");return v?out(v):out({error:"quotes_not_ready"},503)
+    // Canonical latest quote snapshot. The explicit /api/quotes?refresh=1 route is intentionally unsupported in the browser.\n    const v=await read(env,"quotes.json","/data/quotes.json");return v?out(v):out({error:"quotes_not_ready"},503)
   }
   if(u.pathname==="/api/tlref"){
     // TLREF is single-writer data: GitHub Actions publishes the canonical
