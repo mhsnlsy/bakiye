@@ -122,10 +122,7 @@ function out(v,s=200){return new Response(JSON.stringify(v),{status:s,headers:H}
 export default{
  async fetch(req,env){const u=new URL(req.url);
   if(u.pathname==="/api/quotes"){
-    if(u.searchParams.get("refresh")==="1"){
-      try{return out(await liveQuotes(env))}catch(e){return out({error:String(e?.message||e)},502)}
-    }
-    const v=await read(env,"quotes.json","/data/quotes.json");return v?out(v):out({error:"quotes_not_ready"},503)
+    // Browser reads the canonical 5-minute R2 snapshot. Live fetching is performed only by GitHub Actions.\n    const v=await read(env,"quotes.json","/data/quotes.json");return v?out(v):out({error:"quotes_not_ready"},503)
   }
   if(u.pathname==="/api/tlref"){
     // TLREF is single-writer data: GitHub Actions publishes the canonical
