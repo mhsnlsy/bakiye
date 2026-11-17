@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import json
-import urllib.request
 from datetime import date, datetime, timezone
-from html.parser import HTMLParser
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -13,56 +11,8 @@ START_DATE = "2025-08-24"
 ISTANBUL = ZoneInfo("Europe/Istanbul")
 
 
-class TLREFTableParser(HTMLParser):
-    """Read the live rows under the page's #tlref-data table body."""
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self.target_tag = None
-        self.target_depth = 0
-        self.rows = []
-        self.row = None
-        self.cell = None
-
-    def handle_starttag(self, tag, attrs):
-        attributes = {key.lower(): value for key, value in attrs}
-        if self.target_depth == 0:
-            if attributes.get("id") == "tlref-data":
-                self.target_tag = tag.lower()
-                self.target_depth = 1
-            return
-
-        tag = tag.lower()
-        if tag == self.target_tag:
-            self.target_depth += 1
-        elif tag == "tr":
-            self.row = []
-        elif tag == "td" and self.row is not None:
-            self.cell = []
-
-    def handle_data(self, data):
-        if self.cell is not None:
-            self.cell.append(data)
-
-    def handle_endtag(self, tag):
-        if self.target_depth == 0:
-            return
-        tag = tag.lower()
-        if tag == "td" and self.cell is not None and self.row is not None:
-            self.row.append(" ".join("".join(self.cell).split()))
-            self.cell = None
-        elif tag == "tr" and self.row is not None:
-            if self.row:
-                self.rows.append(self.row)
-            self.row = None
-
-        if tag == self.target_tag:
-            self.target_depth -= 1
-            if self.target_depth == 0:
-                self.target_tag = None
-
-
 def parse_rate(text):
-    value = text.replace("%", "").replace("\\xa0", "").replace(" ", "").strip()
+    value = text.replace("%", "").replace(chr(160), "").replace(" ", "").strip()
     if "," in value:
         value = value.replace(".", "").replace(",", ".")
     rate = float(value)
@@ -72,24 +22,37 @@ def parse_rate(text):
 
 
 def fetch_latest_bist_row():
-    request = urllib.request.Request(
-        BIST_URL,
-        headers={
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8",
-            "Cache-Control": "no-cache",
-            "Pragma": "no-cache",
-        },
-    )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        charset = response.headers.get_content_charset() or "utf-8"
-        html = response.read().decode(charset, errors="replace")
+    # The #tlref-data rows are rendered by the page's JavaScript.
+    # Use the same selector visible in the live page DOM.
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError as exc:
+        raise RuntimeError("Playwright is not installed in the workflow environment.") from exc
 
-    parser = TLREFTableParser()
-    parser.feed(html)
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        try:
+            page = browser.new_page(locale="tr-TR")
+            page.set_default_timeout(30000)
+            page.goto(BIST_URL, wait_until="domcontentloaded", timeout=60000)
+            rows_locator = page.locator("#tlref-data > tr")
+            try:
+                rows_locator.first.wait_for(state="attached", timeout=30000)
+            except Exception:
+                # Keep a fallback in case Borsa İstanbul changes the immediate
+                # child level while retaining the same table body ID.
+                rows_locator = page.locator("#tlref-data tr")
+                rows_locator.first.wait_for(state="attached", timeout=15000)
+
+            rows = rows_locator.evaluate_all(
+                "(rows) => rows.map(row => "
+                "Array.from(row.querySelectorAll('td')).map(cell => cell.innerText.trim()))"
+            )
+        finally:
+            browser.close()
+
     parsed = []
-    for cells in parser.rows:
+    for cells in rows:
         if len(cells) < 2:
             continue
         try:
@@ -101,8 +64,8 @@ def fetch_latest_bist_row():
 
     if not parsed:
         raise RuntimeError(
-            "Borsa İstanbul page did not expose rows under #tlref-data; "
-            "the page may have changed or the table may be client-rendered."
+            "The live Borsa İstanbul page loaded, but no date/rate rows were found "
+            "under #tlref-data."
         )
     return max(parsed, key=lambda item: item[0])
 
@@ -182,14 +145,14 @@ def main():
         or previous.get("source") != payload["source"]
         or previous.get("sourceUrl") != BIST_URL
     )
-    if changed:
-        payload["updatedAt"] = now.isoformat().replace("+00:00", "Z")
-        payload["fetchedAt"] = now.isoformat().replace("+00:00", "Z")
-    else:
-        payload["updatedAt"] = previous.get("updatedAt") or now.isoformat().replace("+00:00", "Z")
-        payload["fetchedAt"] = previous.get("fetchedAt") or payload["updatedAt"]
+    stamp = now.isoformat().replace("+00:00", "Z")
+    payload["updatedAt"] = stamp if changed else (previous.get("updatedAt") or stamp)
+    payload["fetchedAt"] = stamp if changed else (previous.get("fetchedAt") or stamp)
 
-    OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+    OUT.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + chr(10),
+        encoding="utf-8",
+    )
     status = "today's BIST row confirmed" if payload["todayAvailable"] else "latest saved row retained; today's row not yet available"
     if fetch_warning:
         print("WARNING: " + fetch_warning)
