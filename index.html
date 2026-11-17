@@ -59,7 +59,10 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){
 .wrap{padding:19px 12px 34px}.top{display:block}h1{font-size:27px}.topright{margin-top:12px}.hero{padding:18px}.heroTotal{font-size:34px}.grid{gap:8px}.card{padding:13px}.cardvalue{font-size:20px}.section{padding:13px}.liability{grid-template-columns:1fr 1fr}.liability>div:last-child{grid-column:1/-1}
-.tablewrap{display:block;width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:auto;touch-action:pan-x}
+/* Global scroll policy: every page region must allow vertical page scrolling. */
+html,body{overflow-x:hidden;overflow-y:auto!important;overscroll-behavior-y:auto!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch}
+*,*::before,*::after{scroll-behavior:auto}
+.tablewrap{display:block;width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:auto;touch-action:pan-x pan-y!important;overscroll-behavior-x:contain;overscroll-behavior-y:auto}
 .tablewrap::-webkit-scrollbar{height:8px}
 .tablewrap::-webkit-scrollbar-track{background:#13243a;border-radius:8px}
 .tablewrap::-webkit-scrollbar-thumb{background:#60758d;border-radius:8px}
