@@ -170,7 +170,7 @@ function nfmt(n){return new Intl.NumberFormat("tr-TR",{minimumFractionDigits:2,m
 function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closingHistoryData={};
 window.pnlMode="nominal";
-async function api(path){const r=await fetch(path+"?v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}});if(!r.ok)throw Error(path+" HTTP "+r.status);return r.json()}
+async function api(path){const sep=path.includes("?")?"&":"?";const r=await fetch(path+sep+"v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}});if(!r.ok)throw Error(path+" HTTP "+r.status);return r.json()}
 async function loadData(){
  const results=await Promise.allSettled([api("/api/balance"),api("/api/quotes?refresh=1"),api("/api/positions"),api("/api/history"),api("/api/tlref"),api("/api/closing-history")]);
  const value=(i,fallback)=>results[i].status==="fulfilled"?results[i].value:fallback;
@@ -191,7 +191,7 @@ function calc(){
  const rows=positions.map(p=>{
   const qty=Number(p.qty)||0, avg=Number(p.avgCost)||0, real=Number(p.realCost)||avg, price=Number(q[p.symbol]||p.snapshotPrice||0);
   const market=price*qty,cost=avg*qty,rp=market-real*qty,np=market-cost;
-  const prevClose=Number(prev?.prices?.[p.symbol]||0); const dailyPct=prevClose?((price-prevClose)/prevClose*100):null; const dp=prevClose?(price-prevClose)*qty:null; stocks+=market;realPnl+=rp;nominalPnl+=np;dailyPnl+=Number(dp)||0;positionCount+=qty;tlrefAdded+=(Number(p.tlrefCostAdded)||0)*qty;
+  let prevClose=Number(prev?.prices?.[p.symbol]||0); const sourceDailyPct=Number((quoteData.dailyPct||{})[p.symbol]); if(!prevClose&&Number.isFinite(sourceDailyPct)&&sourceDailyPct!==-100&&price>0){prevClose=price/(1+sourceDailyPct/100);} const dailyPct=prevClose?((price-prevClose)/prevClose*100):null; const dp=prevClose?(price-prevClose)*qty:null; stocks+=market;realPnl+=rp;nominalPnl+=np;dailyPnl+=Number(dp)||0;positionCount+=qty;tlrefAdded+=(Number(p.tlrefCostAdded)||0)*qty;
   return {p,qty,avg,real,price,market,rp,np,dp,dailyPct,nominalPct:cost?np/cost*100:0,dailyPnlPct:dailyPct,realPct:cost?rp/cost*100:0};
  });
  const a=balanceData.accounts||{};
