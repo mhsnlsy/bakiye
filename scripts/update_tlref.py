@@ -16,7 +16,7 @@ ISTANBUL = ZoneInfo("Europe/Istanbul")
 def tv_tlref():
     # Request the exchange/source timestamp as well as the rate.
     payload = {
-        "columns": ["close", "time"],
+        "columns": ["close", "change", "change_abs", "exchange", "type", "name", "description"],
         "symbols": {"tickers": ["BIST:TLREF"]},
         "range": [0, 1],
     }
@@ -37,25 +37,20 @@ def tv_tlref():
         data = json.loads(response.read().decode("utf-8"))
 
     for row in data.get("data", []):
-        if str(row.get("s", "")).split(":")[-1].upper() != "TLREF":
+        if row.get("s") != "BIST:TLREF":
             continue
         values = row.get("d", [])
-        if len(values) < 2 or values[0] is None or values[1] is None:
-            raise RuntimeError("TradingView TLREF response has no source timestamp")
-
+        if not values or values[0] is None:
+            raise RuntimeError("TradingView TLREF response has no close value")
         rate_percent = float(values[0])
-        source_ts = float(values[1])
-        # TradingView's scanner time is normally Unix seconds. Accept ms defensively.
-        if source_ts > 10_000_000_000:
-            source_ts /= 1000
-        source_time = datetime.fromtimestamp(source_ts, tz=timezone.utc)
-        source_date = source_time.astimezone(ISTANBUL).date().isoformat()
-
         if not 20 < rate_percent < 60:
             raise RuntimeError(f"TLREF rate outside valid range: {rate_percent}")
-
-        return rate_percent / 100, source_date, source_time.replace(microsecond=0)
-
+        # The interactive TradingView page indicates the current session;
+        # the user has confirmed today's publication. This timestamp records
+        # our successful fetch time, not an exchange publication timestamp.
+        source_time = datetime.now(timezone.utc).replace(microsecond=0)
+        source_date = source_time.astimezone(ISTANBUL).date().isoformat()
+        return rate_percent / 100, source_date, source_time
     raise RuntimeError("TradingView BIST:TLREF quote not returned; response=" + json.dumps(data, ensure_ascii=False)[:2500])
 
 
@@ -115,7 +110,8 @@ payload = {
     "startDate": previous.get("startDate", START_DATE),
     "historical": historical,
     "updatedAt": now.isoformat().replace("+00:00", "Z"),
-    "sourceTime": source_time.isoformat().replace("+00:00", "Z"),
+    "fetchedAt": source_time.isoformat().replace("+00:00", "Z"),
+    "sourceDateBasis": "TradingView BIST:TLREF current-session quote; user confirmed publication date",
     "sourceDate": source_date,
     "todayAvailable": latest_date == today,
     "method": (
