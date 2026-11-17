@@ -2,17 +2,28 @@ name: Update TLREF Benchmark
 
 on:
   schedule:
+    # TLREF appears after 16:00 TSİ; retry during the afternoon.
+    # The updater validates the exchange timestamp and will not relabel stale data.
+    - cron: "15 13 * * 1-5"
+    - cron: "15 14 * * 1-5"
     - cron: "30 15 * * 1-5"
+    - cron: "45 16 * * 1-5"
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: bakiye-tlref-update
+  cancel-in-progress: false
 
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
