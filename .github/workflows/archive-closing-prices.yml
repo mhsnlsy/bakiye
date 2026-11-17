@@ -6,7 +6,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: bakiye-stock-closing-archive
+  # Closing archive and 5-minute live quote refresh both write quotes.json.
+  # They must share one writer queue so an archive cannot overwrite a newer quote.
+  group: bakiye-live-quotes
   cancel-in-progress: false
 
 jobs:
