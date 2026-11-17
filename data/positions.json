@@ -5,9 +5,11 @@
     "type": "stock",
     "qty": 14,
     "avgCost": 246.52,
-    "realCost": 322.8813,
-    "tlrefCostAdded": 76.3613,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCost": 323.1428,
+    "tlrefCostAdded": 76.6228,
+    "realCostUpdatedAt": "2026-11-17",
+    "dailyTlrefCostAdded": 0.2615,
+    "dailyTlrefCostUpdatedAt": "2026-11-17"
   },
   {
     "symbol": "KARSN",
@@ -15,9 +17,11 @@
     "type": "stock",
     "qty": 888,
     "avgCost": 8.74,
-    "realCost": 9.2275,
-    "tlrefCostAdded": 0.4875,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCost": 9.235,
+    "tlrefCostAdded": 0.495,
+    "realCostUpdatedAt": "2026-11-17",
+    "dailyTlrefCostAdded": 0.0075,
+    "dailyTlrefCostUpdatedAt": "2026-11-17"
   },
   {
     "symbol": "THYAO",
@@ -25,9 +29,11 @@
     "type": "stock",
     "qty": 65,
     "avgCost": 285.04,
-    "realCost": 344.6689,
-    "tlrefCostAdded": 59.6289,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCost": 344.948,
+    "tlrefCostAdded": 59.908,
+    "realCostUpdatedAt": "2026-11-17",
+    "dailyTlrefCostAdded": 0.2791,
+    "dailyTlrefCostUpdatedAt": "2026-11-17"
   },
   {
     "symbol": "CGCAM",
@@ -35,9 +41,11 @@
     "type": "stock",
     "qty": 668,
     "avgCost": 26.85,
-    "realCost": 31.0351,
-    "tlrefCostAdded": 4.1851,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCost": 31.0602,
+    "tlrefCostAdded": 4.2102,
+    "realCostUpdatedAt": "2026-11-17",
+    "dailyTlrefCostAdded": 0.0251,
+    "dailyTlrefCostUpdatedAt": "2026-11-17"
   },
   {
     "symbol": "SISE",
@@ -45,9 +53,11 @@
     "type": "stock",
     "qty": 168,
     "avgCost": 39.94,
-    "realCost": 43.0048,
-    "tlrefCostAdded": 3.0648,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCost": 43.0396,
+    "tlrefCostAdded": 3.0996,
+    "realCostUpdatedAt": "2026-11-17",
+    "dailyTlrefCostAdded": 0.0348,
+    "dailyTlrefCostUpdatedAt": "2026-11-17"
   },
   {
     "symbol": "ZPLIB.F",
@@ -55,8 +65,10 @@
     "type": "stock",
     "qty": 83,
     "avgCost": 177.92,
-    "realCost": 202.0635,
-    "tlrefCostAdded": 24.1435,
-    "realCostUpdatedAt": "2026-11-16"
+    "realCost": 202.2271,
+    "tlrefCostAdded": 24.3071,
+    "realCostUpdatedAt": "2026-11-17",
+    "dailyTlrefCostAdded": 0.1636,
+    "dailyTlrefCostUpdatedAt": "2026-11-17"
   }
 ]
