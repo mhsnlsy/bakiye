@@ -74,7 +74,7 @@ footer{margin-top:19px;color:#8294aa;font-size:10px;display:flex;justify-content
 /* Global scroll policy: every page region must allow vertical page scrolling. */
 html,body{overflow-x:hidden;overflow-y:auto!important;overscroll-behavior-y:auto!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch}
 *,*::before,*::after{scroll-behavior:auto}
-.tablewrap{display:block;width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:auto;touch-action:pan-x pan-y!important;overscroll-behavior-x:contain;overscroll-behavior-y:auto}
+.portfolioDesktopTable{display:none!important}.tablewrap{display:block;width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:auto;touch-action:pan-x pan-y!important;overscroll-behavior-x:contain;overscroll-behavior-y:auto}
 .tablewrap::-webkit-scrollbar{height:8px}
 .tablewrap::-webkit-scrollbar-track{background:#13243a;border-radius:8px}
 .tablewrap::-webkit-scrollbar-thumb{background:#60758d;border-radius:8px}
@@ -248,11 +248,11 @@ function render(){
  return '<tr><td><span class="ticker">'+safe(r.p.symbol)+'</span><span class="subline">'+safe(r.p.name)+' · Hisse</span></td><td>'+nfmt(r.qty)+'</td><td>'+fmt(r.avg)+'</td><td>'+fmt(r.real)+'</td><td>'+(r.price==null?"Güncel değil":fmt(r.price))+'</td><td>'+(r.market==null?"—":fmt(r.market))+'</td><td class="'+(pnl==null?"":(pnl>=0?"good":"bad"))+'">'+(pnl==null?"Güncel değil":fmt(pnl))+'</td><td class="'+((pnlPct??0)>=0?"good":"bad")+'">'+(pnlPct==null?"—":nfmt(pnlPct)+"%")+'</td><td class="'+(r.rp==null?"":(r.rp>=0?"good":"bad"))+'">'+(r.rp==null?"—":fmt(r.rp))+'</td><td class="'+(r.realPct>=0?"good":"bad")+'">'+nfmt(r.realPct)+'%</td></tr>';
 }).join("");
  const mobileCards=document.getElementById("mobilePortfolioCards");
- const quoteAgeMin=quoteData.lastRefresh?((Date.now()-new Date(quoteData.lastRefresh).getTime())/60000):Infinity;
- const quoteFresh=Number.isFinite(quoteAgeMin)&&quoteAgeMin<=20;
+ const mobileQuoteAgeMin=quoteData.lastRefresh?((Date.now()-new Date(quoteData.lastRefresh).getTime())/60000):Infinity;
+ const mobileQuoteFresh=Number.isFinite(mobileQuoteAgeMin)&&mobileQuoteAgeMin<=20;
  mobileCards.innerHTML=x.rows.map(r=>{
    const daily=window.pnlMode==="daily"; const pnl=daily?r.dp:r.np; const pnlPct=daily?r.dailyPnlPct:r.nominalPct;
-   const priceText=r.price==null?"Güncel değil":fmt(r.price); const stale=r.price==null||!quoteFresh;
+   const priceText=r.price==null?"Güncel değil":fmt(r.price); const stale=r.price==null||!mobileQuoteFresh;
    const ts=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—";
    return '<article class="mobilePortfolioCard"><div class="mobilePortfolioTop"><div><div class="mobilePortfolioTicker">'+safe(r.p.symbol)+'</div><div class="mobilePortfolioName">'+safe(r.p.name)+'</div></div><div><div class="mobilePortfolioPrice">'+priceText+'</div><div class="mobilePortfolioTime">Uzmanpara · '+ts+' TSİ</div></div></div><div class="mobilePortfolioGrid"><div class="mobileMetric"><span>Adet</span><strong>'+nfmt(r.qty)+'</strong></div><div class="mobileMetric"><span>Ort. maliyet</span><strong>'+fmt(r.avg)+'</strong></div><div class="mobileMetric"><span>Piyasa değeri</span><strong>'+(r.market==null?"—":fmt(r.market))+'</strong></div><div class="mobileMetric"><span>'+(daily?"Günlük K/Z":"Nominal K/Z")+'</span><strong class="'+(pnl==null?"":(pnl>=0?"good":"bad"))+'">'+(pnl==null?"Güncel değil":fmt(pnl))+'</strong></div><div class="mobileMetric"><span>'+(daily?"Günlük %":"Nominal %")+'</span><strong>'+(pnlPct==null?"—":nfmt(pnlPct)+"%")+'</strong></div><div class="mobileMetric"><span>Reel K/Z</span><strong class="'+(r.rp==null?"":(r.rp>=0?"good":"bad"))+'">'+(r.rp==null?"—":fmt(r.rp))+'</strong></div></div>'+(stale?'<div class="mobilePortfolioStale">⚠ Son fiyat güncel değil. Yeni Uzmanpara verisi alınana kadar eski kapanış kullanılmıyor.</div>':"")+'</article>';
  }).join("");
