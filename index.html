@@ -140,8 +140,15 @@ let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closing
 window.pnlMode="nominal";
 async function api(path){const r=await fetch(path+"?v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}});if(!r.ok)throw Error(path+" HTTP "+r.status);return r.json()}
 async function loadData(){
- const [b,q,p,h,t,c]=await Promise.all([api("/api/balance"),api("/api/quotes"),api("/api/positions"),api("/api/history"),api("/api/tlref"),api("/api/closing-history")]);
- balanceData=b;quoteData=q;positions=Array.isArray(p)?p:[];historyData=h||{};tlrefData=t||{};closingHistoryData=c||{};
+ const results=await Promise.allSettled([api("/api/balance"),api("/api/quotes"),api("/api/positions"),api("/api/history"),api("/api/tlref"),api("/api/closing-history")]);
+ const value=(i,fallback)=>results[i].status==="fulfilled"?results[i].value:fallback;
+ results.forEach((r,i)=>{if(r.status==="rejected")console.warn("Bakiye API",i,r.reason)});
+ balanceData=value(0,{accounts:{},monthlyObligations:{}});
+ quoteData=value(1,{quotes:{},fx:{}});
+ positions=Array.isArray(value(2,[]))?value(2,[]):[];
+ historyData=value(3,{snapshots:[]})||{};
+ tlrefData=value(4,{})||{};
+ closingHistoryData=value(5,{entries:[]})||{};
 }
 function calc(){
  const rates=quoteData.fx||{}, q=quoteData.quotes||{};
@@ -236,7 +243,15 @@ function renderHistory(){
  document.getElementById("historyDailyPct").textContent=lp==null?"İlk snapshot":(lp>=0?"+":"")+nfmt(lp)+"%";
 }
 async function boot(){
- try{await loadData();render();renderHistory()}catch(e){console.error("Bakiye veri akışı:",e);document.getElementById("syncState").textContent="Veri alınamadı"}
+ try{
+   await loadData();
+   render();
+   renderHistory();
+   document.getElementById("syncState").textContent="Canlı veri";
+ }catch(e){
+   console.error("Bakiye veri akışı:",e);
+   document.getElementById("syncState").textContent="Veri alınamadı";
+ }
 }
 boot();
 setInterval(boot,60000);
