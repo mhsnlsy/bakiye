@@ -16,17 +16,7 @@ ISTANBUL = ZoneInfo("Europe/Istanbul")
 def tv_tlref():
     # Request the exchange/source timestamp as well as the rate.
     payload = {
-        "columns": [
-            "close",
-            "time",
-            "update_mode",
-            "change",
-            "change_abs",
-            "exchange",
-            "type",
-            "name",
-            "description",
-        ],
+        "columns": ["close", "time"],
         "symbols": {"tickers": ["BIST:TLREF"]},
         "range": [0, 1],
     }
@@ -47,7 +37,7 @@ def tv_tlref():
         data = json.loads(response.read().decode("utf-8"))
 
     for row in data.get("data", []):
-        if row.get("s") != "BIST:TLREF":
+        if str(row.get("s", "")).split(":")[-1].upper() != "TLREF":
             continue
         values = row.get("d", [])
         if len(values) < 2 or values[0] is None or values[1] is None:
@@ -66,7 +56,7 @@ def tv_tlref():
 
         return rate_percent / 100, source_date, source_time.replace(microsecond=0)
 
-    raise RuntimeError("TradingView BIST:TLREF symbol not found")
+    raise RuntimeError("TradingView BIST:TLREF quote not returned; response=" + json.dumps(data, ensure_ascii=False)[:2500])
 
 
 now = datetime.now(timezone.utc).replace(microsecond=0)
