@@ -1,133 +1,204 @@
 #!/usr/bin/env python3
 import json
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-TV_URL = "https://tr.tradingview.com/symbols/BIST-TLREF/"
-TV_SCAN_URL = "https://scanner.tradingview.com/turkey/scan"
+BIST_URL = "https://www.borsaistanbul.com/endeksler/tlref"
 OUT = Path("data/tlref.json")
 STOPAJ = 0.175
 START_DATE = "2025-08-24"
 ISTANBUL = ZoneInfo("Europe/Istanbul")
 
 
-def tv_tlref():
-    # Request the exchange/source timestamp as well as the rate.
-    payload = {
-        "columns": ["close", "change", "change_abs", "exchange", "type", "name", "description"],
-        "symbols": {"tickers": ["BIST:TLREF"]},
-        "range": [0, 1],
-    }
-    req = urllib.request.Request(
-        TV_SCAN_URL,
-        data=json.dumps(payload).encode("utf-8"),
+class TLREFTableParser(HTMLParser):
+    """Read the live rows under the page's #tlref-data table body."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.target_tag = None
+        self.target_depth = 0
+        self.rows = []
+        self.row = None
+        self.cell = None
+
+    def handle_starttag(self, tag, attrs):
+        attributes = {key.lower(): value for key, value in attrs}
+        if self.target_depth == 0:
+            if attributes.get("id") == "tlref-data":
+                self.target_tag = tag.lower()
+                self.target_depth = 1
+            return
+
+        tag = tag.lower()
+        if tag == self.target_tag:
+            self.target_depth += 1
+        elif tag == "tr":
+            self.row = []
+        elif tag == "td" and self.row is not None:
+            self.cell = []
+
+    def handle_data(self, data):
+        if self.cell is not None:
+            self.cell.append(data)
+
+    def handle_endtag(self, tag):
+        if self.target_depth == 0:
+            return
+        tag = tag.lower()
+        if tag == "td" and self.cell is not None and self.row is not None:
+            self.row.append(" ".join("".join(self.cell).split()))
+            self.cell = None
+        elif tag == "tr" and self.row is not None:
+            if self.row:
+                self.rows.append(self.row)
+            self.row = None
+
+        if tag == self.target_tag:
+            self.target_depth -= 1
+            if self.target_depth == 0:
+                self.target_tag = None
+
+
+def parse_rate(text):
+    value = text.replace("%", "").replace("\\xa0", "").replace(" ", "").strip()
+    if "," in value:
+        value = value.replace(".", "").replace(",", ".")
+    rate = float(value)
+    if not 20 < rate < 60:
+        raise ValueError(f"TLREF rate outside valid range: {rate}")
+    return rate / 100
+
+
+def fetch_latest_bist_row():
+    request = urllib.request.Request(
+        BIST_URL,
         headers={
-            "Content-Type": "text/plain;charset=UTF-8",
-            "Accept": "application/json",
-            "Origin": "https://www.tradingview.com",
-            "Referer": TV_URL,
-            "User-Agent": "Mozilla/5.0",
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8",
             "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
         },
-        method="POST",
     )
-    with urllib.request.urlopen(req, timeout=30) as response:
-        data = json.loads(response.read().decode("utf-8"))
+    with urllib.request.urlopen(request, timeout=30) as response:
+        charset = response.headers.get_content_charset() or "utf-8"
+        html = response.read().decode(charset, errors="replace")
 
-    for row in data.get("data", []):
-        if row.get("s") != "BIST:TLREF":
+    parser = TLREFTableParser()
+    parser.feed(html)
+    parsed = []
+    for cells in parser.rows:
+        if len(cells) < 2:
             continue
-        values = row.get("d", [])
-        if not values or values[0] is None:
-            raise RuntimeError("TradingView TLREF response has no close value")
-        rate_percent = float(values[0])
-        if not 20 < rate_percent < 60:
-            raise RuntimeError(f"TLREF rate outside valid range: {rate_percent}")
-        # The interactive TradingView page indicates the current session;
-        # the user has confirmed today's publication. This timestamp records
-        # our successful fetch time, not an exchange publication timestamp.
-        source_time = datetime.now(timezone.utc).replace(microsecond=0)
-        source_date = source_time.astimezone(ISTANBUL).date().isoformat()
-        return rate_percent / 100, source_date, source_time
-    raise RuntimeError("TradingView BIST:TLREF quote not returned; response=" + json.dumps(data, ensure_ascii=False)[:2500])
+        try:
+            row_date = datetime.strptime(cells[0], "%d.%m.%Y").date()
+            row_rate = parse_rate(cells[1])
+        except (ValueError, TypeError):
+            continue
+        parsed.append((row_date, row_rate))
+
+    if not parsed:
+        raise RuntimeError(
+            "Borsa İstanbul page did not expose rows under #tlref-data; "
+            "the page may have changed or the table may be client-rendered."
+        )
+    return max(parsed, key=lambda item: item[0])
 
 
-now = datetime.now(timezone.utc).replace(microsecond=0)
-today = now.astimezone(ISTANBUL).date().isoformat()
-rate, source_date, source_time = tv_tlref()
+def main():
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    today = now.astimezone(ISTANBUL).date()
+    previous = {}
+    if OUT.exists():
+        try:
+            previous = json.loads(OUT.read_text(encoding="utf-8"))
+        except Exception as exc:
+            raise RuntimeError(f"Existing TLREF archive cannot be read safely: {exc}") from exc
 
-previous = {}
-if OUT.exists():
+    history = {
+        item["date"]: float(item["rate"])
+        for item in previous.get("historical", [])
+        if item.get("date") and item.get("rate") is not None
+    }
+    previous_as_of = previous.get("asOf")
+    if previous_as_of and previous.get("grossAnnualRate") is not None:
+        history.setdefault(previous_as_of, float(previous["grossAnnualRate"]))
+    latest_existing_date = max(history) if history else None
+
+    fetch_warning = None
     try:
-        previous = json.loads(OUT.read_text(encoding="utf-8"))
+        source_date, rate = fetch_latest_bist_row()
+        source_date = source_date.isoformat()
+        if date.fromisoformat(source_date) > today:
+            raise RuntimeError(f"Borsa İstanbul TLREF date is in the future: {source_date}")
+        if latest_existing_date and source_date < latest_existing_date:
+            fetch_warning = (
+                f"Source table is older than saved data ({source_date} < {latest_existing_date}); "
+                "saved data retained."
+            )
+        else:
+            history[source_date] = rate
+            print(f"Borsa İstanbul TLREF row: {source_date} {rate * 100:.4f}%")
     except Exception as exc:
-        raise RuntimeError(f"Existing TLREF archive cannot be read safely: {exc}") from exc
+        fetch_warning = f"Could not refresh from Borsa İstanbul: {exc}; saved data retained."
 
-historical_map = {
-    item["date"]: float(item["rate"])
-    for item in previous.get("historical", [])
-    if item.get("date") and item.get("rate") is not None
-}
-previous_as_of = previous.get("asOf")
-if previous_as_of:
-    previous_rate = previous.get("grossAnnualRate")
-    if previous_rate is not None:
-        historical_map.setdefault(previous_as_of, float(previous_rate))
+    if not history:
+        raise RuntimeError(fetch_warning or "No TLREF history available.")
 
-latest_existing_date = max(historical_map) if historical_map else None
+    historical = [
+        {"date": day, "rate": history[day]}
+        for day in sorted(history)
+    ]
+    latest = historical[-1]
+    latest_date = latest["date"]
+    latest_rate = float(latest["rate"])
+    net = latest_rate * (1 - STOPAJ)
 
-# Never stamp yesterday's delayed quote with today's date.
-if source_date > today:
-    raise RuntimeError(
-        f"TradingView timestamp is in the future: {source_date}; local date is {today}"
+    payload = {
+        "source": "Borsa İstanbul TLREF",
+        "sourceUrl": BIST_URL,
+        "asOf": latest_date,
+        "grossAnnualRate": latest_rate,
+        "stopaj": STOPAJ,
+        "netAnnualRate": net,
+        "startDate": previous.get("startDate", START_DATE),
+        "historical": historical,
+        "updatedAt": previous.get("updatedAt"),
+        "fetchedAt": previous.get("fetchedAt"),
+        "sourceDateBasis": "Borsa İstanbul TLREF tablosundaki #tlref-data satırının tarihi",
+        "sourceDate": latest_date,
+        "todayAvailable": latest_date == today.isoformat(),
+        "method": (
+            "Günlük net TLREF fırsat maliyeti; Borsa İstanbul'un yayımladığı brüt TLREF "
+            "%17,5 stopaj sonrası netleştirilir ve günlük bileşiklenir."
+        ),
+    }
+
+    changed = (
+        previous.get("asOf") != latest_date
+        or previous.get("grossAnnualRate") != latest_rate
+        or previous.get("source") != payload["source"]
+        or previous.get("sourceUrl") != BIST_URL
+    )
+    if changed:
+        payload["updatedAt"] = now.isoformat().replace("+00:00", "Z")
+        payload["fetchedAt"] = now.isoformat().replace("+00:00", "Z")
+    else:
+        payload["updatedAt"] = previous.get("updatedAt") or now.isoformat().replace("+00:00", "Z")
+        payload["fetchedAt"] = previous.get("fetchedAt") or payload["updatedAt"]
+
+    OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+    status = "today's BIST row confirmed" if payload["todayAvailable"] else "latest saved row retained; today's row not yet available"
+    if fetch_warning:
+        print("WARNING: " + fetch_warning)
+    print(
+        f"TLREF source=Borsa İstanbul as_of={latest_date} "
+        f"gross={latest_rate * 100:.4f}% net={net * 100:.4f}% "
+        f"history={len(historical)} rows; {status}"
     )
 
-if latest_existing_date and source_date < latest_existing_date:
-    raise RuntimeError(
-        f"TradingView quote is older than saved TLREF data: "
-        f"source={source_date}, saved={latest_existing_date}"
-    )
 
-historical_map[source_date] = rate
-historical = [
-    {"date": date_key, "rate": historical_map[date_key]}
-    for date_key in sorted(historical_map)
-]
-latest = historical[-1]
-latest_date = latest["date"]
-latest_rate = float(latest["rate"])
-net = latest_rate * (1 - STOPAJ)
-
-payload = {
-    "source": "TradingView BIST:TLREF",
-    "sourceUrl": TV_URL,
-    "asOf": latest_date,
-    "grossAnnualRate": latest_rate,
-    "stopaj": STOPAJ,
-    "netAnnualRate": net,
-    "startDate": previous.get("startDate", START_DATE),
-    "historical": historical,
-    "updatedAt": now.isoformat().replace("+00:00", "Z"),
-    "fetchedAt": source_time.isoformat().replace("+00:00", "Z"),
-    "sourceDateBasis": "TradingView BIST:TLREF current-session quote; user confirmed publication date",
-    "sourceDate": source_date,
-    "todayAvailable": latest_date == today,
-    "method": (
-        "Günlük net TLREF fırsat maliyeti; TradingView BIST:TLREF üzerinden "
-        "brüt TLREF, %17,5 stopaj sonrası netleştirilir ve günlük bileşiklenir."
-    ),
-}
-OUT.write_text(
-    json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
-    encoding="utf-8",
-)
-
-status = "bugünkü veri doğrulandı" if latest_date == today else "bugünkü oran henüz kaynakta yok; son doğrulanmış veri korundu"
-print(
-    f"TradingView BIST:TLREF source_date={source_date} "
-    f"source_time={payload['sourceTime']} rate={rate * 100:.4f}% "
-    f"net={net * 100:.4f}% as_of={latest_date}; {status}; "
-    f"{len(historical)} kayıt"
-)
+if __name__ == "__main__":
+    main()
