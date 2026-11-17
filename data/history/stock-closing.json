@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "retentionDays": 30,
+  "updatedAt": "2026-11-16T15:25:06Z",
+  "entries": [
+    {
+      "date": "2026-11-16",
+      "capturedAt": "2026-11-16T15:25:06Z",
+      "source": "Uzmanpara geçmiş kapanış",
+      "sourceUrl": "https://uzmanpara.milliyet.com.tr/borsa/gecmis-kapanislar/",
+      "prices": {
+        "TAVHL": 304.0,
+        "KARSN": 7.92,
+        "THYAO": 323.5,
+        "CGCAM": 20.02,
+        "SISE": 34.84,
+        "ZPLIB.F": 199.25
+      }
+    }
+  ]
+}
