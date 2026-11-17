@@ -45,6 +45,21 @@ async function get(u){
 }
 async function read(env,k,path){let x=await env.BAKIYE_DATA.get(k);if(x){const s=await x.text();return s?JSON.parse(s):null}let r=await env.ASSETS.fetch(new Request("https://assets.local"+path));return r.ok?await r.json():null}
 async function put(env,k,v){await env.BAKIYE_DATA.put(k,JSON.stringify(v,null,2))}
+async function liveQuotes(env){
+ const old=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
+ const q={...old.quotes},f={...old.fx},missing=[],errors=[];
+ const [mr,fr]=await Promise.allSettled([get(STOCK_SOURCE),get(FX)]);
+ const stockMissing=[];
+ if(mr.status==="fulfilled"){
+   for(const s of STOCKS){const p=stock(mr.value,SOURCE_SYMBOL[s]||s);if(p!=null&&p>0)q[s]=p;else {missing.push(s);stockMissing.push(s)}}
+ }else errors.push("Uzmanpara: "+String(mr.reason?.message||mr.reason));
+ if(mr.status!=="fulfilled"||stockMissing.length)throw Error("Uzmanpara fiyatları eksik: "+stockMissing.join(", "));
+ if(fr.status==="fulfilled"){
+   for(const c of FXC){const p=fx(fr.value,c);if(p!=null)f[c+"TRY"]=p;else missing.push(c+"TRY")}
+ }else errors.push("Döviz.com: "+String(fr.reason?.message||fr.reason));
+ const now=new Date().toISOString();
+ return {...old,source:"Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:STOCK_SOURCE,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,fx:f,missing,errors,sourceStatus:{uzmanpara:mr.status,doviz:fr.status,refreshMethod:"Worker live fetch"}};
+}
 async function quotes(env){
  const old=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
  const q={...old.quotes},f={...old.fx},missing=[],errors=[];
@@ -108,7 +123,7 @@ export default{
  async fetch(req,env){const u=new URL(req.url);
   if(u.pathname==="/api/quotes"){
     if(u.searchParams.get("refresh")==="1"){
-      try{return out(await quotes(env))}catch(e){return out({error:String(e?.message||e)},502)}
+      try{return out(await liveQuotes(env))}catch(e){return out({error:String(e?.message||e)},502)}
     }
     const v=await read(env,"quotes.json","/data/quotes.json");return v?out(v):out({error:"quotes_not_ready"},503)
   }
