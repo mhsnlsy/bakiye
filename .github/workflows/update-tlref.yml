@@ -7,8 +7,7 @@ on:
       - "scripts/update_tlref.py"
       - ".github/workflows/update-tlref.yml"
   schedule:
-    # TLREF appears after 16:00 TSİ; retry during the afternoon.
-    # The updater validates the exchange timestamp and will not relabel stale data.
+    # Borsa İstanbul daily TLREF data is published after 16:00 TSİ.
     - cron: "15 13 * * 1-5"
     - cron: "15 14 * * 1-5"
     - cron: "30 15 * * 1-5"
@@ -25,13 +24,18 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.12"
+      - name: Install browser for dynamic BIST data
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
       - name: Fetch latest TLREF
         run: python scripts/update_tlref.py
       - name: Calculate daily real costs
