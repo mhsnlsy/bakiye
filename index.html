@@ -156,9 +156,9 @@ table thead{display:table-header-group!important}
  <div class="sourceRow"><span class="state" id="quoteState">Uzmanpara · canlı hisse fiyatı</span><span class="small">Reel K/Z: TLREF referansı, %17,5 stopaj sonrası · Fiyatlar güncellendikçe yeniden hesaplanır.</span></div>
  <div class="benchmarkGrid">
   <div class="metricCard"><span>Canlı döviz kurları</span><strong id="liveFxRates" style="font-size:13px;letter-spacing:0">USD — · EUR — · GBP —</strong><small id="liveFxSub">Döviz.com · güncelleme —</small></div>
-  <div class="metricCard"><span>TLREF · bugün</span><strong id="liveTlrefRate">—</strong><small id="liveTlrefSub">Borsa İstanbul · kontrol ediliyor…</small></div>
-  <div class="metricCard"><span>TLREF kaynaklı ek reel maliyet</span><strong id="tlrefAdded">₺0,00</strong><small id="tlrefAddedSub">Bugünkü portföy maliyeti farkı</small></div>
-  <div class="metricCard"><span>Günlük reel maliyet değişimi</span><strong id="dailyRealCostChange">₺0,00</strong><small id="dailyRealCostSub">İlk gün: referans oluşturuldu</small></div>
+  <div class="metricCard"><span>TLREF · son açıklanan</span><strong id="liveTlrefRate">—</strong><small id="liveTlrefSub">Borsa İstanbul · kontrol ediliyor…</small></div>
+  <div class="metricCard"><span>Birikmiş TLREF reel maliyeti</span><strong id="tlrefAdded">₺0,00</strong><small id="tlrefAddedSub">Bugünkü portföy maliyeti farkı</small></div>
+  <div class="metricCard"><span>Son TLREF güncellemesindeki maliyet artışı</span><strong id="dailyRealCostChange">₺0,00</strong><small id="dailyRealCostSub">İlk gün: referans oluşturuldu</small></div>
 </div>
  <div class="notice" id="priceNotice">Hisse fiyatları yalnızca Uzmanpara Son fiyat kaynağından alınır. Uzmanpara verisi yaklaşık 15 dakika gecikmeli olabilir; son başarılı çekim zamanı fiyatın yanında zorunlu olarak gösterilir.</div>
 </section>
@@ -218,7 +218,7 @@ function calc(){
   const qty=Number(p.qty)||0, avg=Number(p.avgCost)||0, real=Number(p.realCost)||avg, livePrice=Number(q[p.symbol]); const price=Number.isFinite(livePrice)&&livePrice>0?livePrice:null;
   const market=price==null?null:price*qty,cost=avg*qty,rp=market==null?null:market-real*qty,np=market==null?null:market-cost;
   let prevClose=Number(prev?.prices?.[p.symbol]||0); const sourceDailyPct=Number((quoteData.dailyPct||{})[p.symbol]); if(!prevClose&&Number.isFinite(sourceDailyPct)&&sourceDailyPct!==-100&&price>0){prevClose=price/(1+sourceDailyPct/100);} const dailyPct=(price!=null&&prevClose)?((price-prevClose)/prevClose*100):null; const dp=(price!=null&&prevClose)?(price-prevClose)*qty:null; stocks+=Number(market)||0;realPnl+=Number(rp)||0;nominalPnl+=Number(np)||0;dailyPnl+=Number(dp)||0;positionCount+=qty;tlrefAdded+=(Number(p.tlrefCostAdded)||0)*qty;
-  return {p,qty,avg,real,price,market,rp,np,dp,dailyPct,nominalPct:cost?np/cost*100:0,dailyPnlPct:dailyPct,realPct:cost?rp/cost*100:0};
+  return {p,qty,avg,real,price,market,rp,np,dp,dailyPct,nominalPct:cost?np/cost*100:0,dailyPnlPct:dailyPct,realPct:(real*qty)?rp/(real*qty)*100:0};
  });
  const a=balanceData.accounts||{};
  const tryVal=Object.values(a).filter(x=>x.category==="try").reduce((s,x)=>s+(Number(x.value)||0),0);
@@ -248,7 +248,8 @@ function render(){
  document.getElementById("portfolioPnLPct").textContent=nfmt((x.rows.reduce((s,r)=>s+r.avg*r.qty,0)?x.nominalPnl/x.rows.reduce((s,r)=>s+r.avg*r.qty,0)*100:0))+"%";
  document.getElementById("portfolioRealPnL").textContent=fmt(x.realPnl);
  const originalCost=x.rows.reduce((s,r)=>s+r.avg*r.qty,0);
- document.getElementById("portfolioRealPnLPct").textContent=nfmt(originalCost?x.realPnl/originalCost*100:0)+"%";
+ const realCostTotal=x.rows.reduce((s,r)=>s+r.real*r.qty,0);
+ document.getElementById("portfolioRealPnLPct").textContent=nfmt(realCostTotal?x.realPnl/realCostTotal*100:0)+"%";
  document.getElementById("pnlHeader").textContent=window.pnlMode==="daily"?"Günlük K/Z":"Nominal K/Z";
  document.getElementById("pnlPctHeader").textContent=window.pnlMode==="daily"?"Günlük %":"Nominal %";
  document.getElementById("nominalModeBtn").textContent=window.pnlMode==="daily"?"Nominal":"Günlük";
@@ -273,14 +274,21 @@ function render(){
  const fx=x.rates;
  document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
  document.getElementById("liveFxSub").textContent="Döviz.com · "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—");
- const tr=Number(tlrefData.grossAnnualRate||0)*100;
- document.getElementById("liveTlrefRate").textContent=tr?nfmt(tr)+"%":"—";
- document.getElementById("liveTlrefSub").textContent=tlrefData.source||"Borsa İstanbul TLREF";
+ const grossTlref=Number(tlrefData.grossAnnualRate||0)*100;
+ const netTlref=Number(tlrefData.netAnnualRate||0)*100;
+ const tlrefDate=tlrefData.asOf?new Date(tlrefData.asOf+"T12:00:00Z").toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul"}):"tarih yok";
+ document.getElementById("liveTlrefRate").textContent=grossTlref?"Brüt %"+nfmt(grossTlref)+" · Net %"+nfmt(netTlref):"—";
+ document.getElementById("liveTlrefSub").textContent=(tlrefData.source||"Borsa İstanbul TLREF")+" · veri tarihi "+tlrefDate;
  document.getElementById("tlrefAdded").textContent=fmt(x.tlrefAdded);
- const snaps=historyData.snapshots||[];
- const today=snaps[snaps.length-1];
- document.getElementById("dailyRealCostChange").textContent=fmt(Number(today?.tlrefCostAdded)||x.tlrefAdded);
- document.getElementById("dailyRealCostSub").textContent=today?.date?today.date+" snapshot":"Bugünkü TLREF maliyeti";
+ const snaps=Array.isArray(historyData.snapshots)?historyData.snapshots:[];
+ const istanbulToday=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date());
+ const positionDailyReady=x.rows.length>0&&x.rows.every(r=>r.p.dailyTlrefCostUpdatedAt===istanbulToday);
+ const positionDailyDelta=x.rows.reduce((sum,r)=>sum+(Number(r.p.dailyTlrefCostAdded)||0)*r.qty,0);
+ const latestSnapshot=snaps.filter(s=>s.date&&s.date<=istanbulToday).sort((a,b)=>a.date.localeCompare(b.date)).at(-1);
+ const snapshotDailyDelta=latestSnapshot?(latestSnapshot.tlrefDailyCostAdded??latestSnapshot.tlrefCostAdded):null;
+ const dailyRealCostValue=positionDailyReady?positionDailyDelta:(snapshotDailyDelta==null?null:Number(snapshotDailyDelta));
+ document.getElementById("dailyRealCostChange").textContent=dailyRealCostValue==null?"—":fmt(dailyRealCostValue);
+ document.getElementById("dailyRealCostSub").textContent=positionDailyReady?"Hesap tarihi: "+istanbulToday:(latestSnapshot?.date?"Son kayıt: "+latestSnapshot.date:"Günlük kayıt henüz yok");
  document.getElementById("asOfLabel").textContent="Değerleme "+(balanceData.asOf||new Date().toLocaleDateString("tr-TR"));
  document.getElementById("footerMeta").textContent="Son fiyat güncelleme: "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul"}):"—");
  const quoteTime=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—";

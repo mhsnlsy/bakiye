@@ -7,7 +7,7 @@
   "snapshots": [
     {
       "date": "2026-11-15",
-      "total": 456606.74,
+      "total": 458009.87,
       "stocks": 68080.69,
       "funds": 0,
       "try": 138000,
@@ -18,11 +18,13 @@
       "tlrefCostAdded": 0,
       "tlrefAsOf": "2026-11-13",
       "tlrefGrossAnnualRate": 0.356334,
-      "tlrefNetAnnualRate": 0.29367555
+      "tlrefNetAnnualRate": 0.29367555,
+      "tlrefDailyCostAdded": 0,
+      "tlrefDailyCostAvailable": false
     },
     {
       "date": "2026-11-16",
-      "total": 457941.36,
+      "total": 458009.87,
       "stocks": 68080.69,
       "funds": 0,
       "try": 138000,
@@ -35,7 +37,12 @@
       "tlrefGrossAnnualRate": 0.358313,
       "tlrefNetAnnualRate": 0.295608225,
       "capturedAt": "2026-11-16T15:40:00Z",
-      "snapshotTime": "18:40 Europe/Istanbul"
+      "snapshotTime": "18:40 Europe/Istanbul",
+      "tlrefDailyCostAdded": 64.6133,
+      "tlrefDailyCostAvailable": true,
+      "nominalCostTotal": 69153.08,
+      "realCostTotal": 79845.36,
+      "tlrefCumulativeCostAdded": 10692.28
     }
   ]
 }

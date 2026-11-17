@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json, re, urllib.request
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 TV_URL = "https://tr.tradingview.com/symbols/BIST-TLREF/"
@@ -37,7 +38,7 @@ def tv_tlref():
                 return rate / 100
     raise RuntimeError("TradingView BIST:TLREF verisi bulunamadı")
 
-today=datetime.now().astimezone().date().isoformat()
+today=datetime.now(ZoneInfo("Europe/Istanbul")).date().isoformat()
 rate=tv_tlref()
 
 previous=[]
