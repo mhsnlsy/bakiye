@@ -216,9 +216,14 @@ function calc(){
  let stocks=0,realPnl=0,nominalPnl=0,dailyPnl=0,positionCount=0,tlrefAdded=0;
  const rows=positions.map(p=>{
   const qty=Number(p.qty)||0, avg=Number(p.avgCost)||0, real=Number(p.realCost)||avg, livePrice=Number(q[p.symbol]); const price=Number.isFinite(livePrice)&&livePrice>0?livePrice:null;
-  const market=price==null?null:price*qty,cost=avg*qty,rp=market==null?null:market-real*qty,np=market==null?null:market-cost;
-  let prevClose=Number(prev?.prices?.[p.symbol]||0); const sourceDailyPct=Number((quoteData.dailyPct||{})[p.symbol]); if(!prevClose&&Number.isFinite(sourceDailyPct)&&sourceDailyPct!==-100&&price>0){prevClose=price/(1+sourceDailyPct/100);} const dailyPct=(price!=null&&prevClose)?((price-prevClose)/prevClose*100):null; const dp=(price!=null&&prevClose)?(price-prevClose)*qty:null; stocks+=Number(market)||0;realPnl+=Number(rp)||0;nominalPnl+=Number(np)||0;dailyPnl+=Number(dp)||0;positionCount+=qty;tlrefAdded+=(Number(p.tlrefCostAdded)||0)*qty;
-  return {p,qty,avg,real,price,market,rp,np,dp,dailyPct,nominalPct:cost?np/cost*100:0,dailyPnlPct:dailyPct,realPct:(real*qty)?rp/(real*qty)*100:0};
+  const market=price==null?null:price*qty,cost=avg*qty,np=market==null?null:market-cost;
+  // One source of truth: real cost minus nominal average cost.
+  // Ignore separately stored tlrefCostAdded when it has drifted from realCost.
+  const tlrefPerShare=Math.max(0,real-avg);
+  const tlrefImpact=tlrefPerShare*qty;
+  const rp=market==null?null:np-tlrefImpact;
+  let prevClose=Number(prev?.prices?.[p.symbol]||0); const sourceDailyPct=Number((quoteData.dailyPct||{})[p.symbol]); if(!prevClose&&Number.isFinite(sourceDailyPct)&&sourceDailyPct!==-100&&price>0){prevClose=price/(1+sourceDailyPct/100);} const dailyPct=(price!=null&&prevClose)?((price-prevClose)/prevClose*100):null; const dp=(price!=null&&prevClose)?(price-prevClose)*qty:null; stocks+=Number(market)||0;realPnl+=Number(rp)||0;nominalPnl+=Number(np)||0;dailyPnl+=Number(dp)||0;positionCount+=qty;tlrefAdded+=tlrefImpact;
+  return {p,qty,avg,real,price,market,rp,np,dp,dailyPct,tlrefImpact,nominalPct:cost?np/cost*100:0,dailyPnlPct:dailyPct,realPct:(real*qty)?rp/(real*qty)*100:0};
  });
  const a=balanceData.accounts||{};
  const tryVal=Object.values(a).filter(x=>x.category==="try").reduce((s,x)=>s+(Number(x.value)||0),0);
@@ -280,6 +285,7 @@ function render(){
  document.getElementById("liveTlrefRate").textContent=grossTlref?"Brüt %"+nfmt(grossTlref)+" · Net %"+nfmt(netTlref):"—";
  document.getElementById("liveTlrefSub").textContent=(tlrefData.source||"Borsa İstanbul TLREF")+" · veri tarihi "+tlrefDate;
  document.getElementById("tlrefAdded").textContent=fmt(x.tlrefAdded);
+ document.getElementById("tlrefAddedSub").textContent="Nominal K/Z ("+fmt(x.nominalPnl)+") − TLREF ("+fmt(x.tlrefAdded)+") = Reel K/Z ("+fmt(x.realPnl)+")";
  const snaps=Array.isArray(historyData.snapshots)?historyData.snapshots:[];
  const istanbulToday=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date());
  const positionDailyReady=x.rows.length>0&&x.rows.every(r=>r.p.dailyTlrefCostUpdatedAt===istanbulToday);
