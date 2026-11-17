@@ -172,7 +172,7 @@ let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closing
 window.pnlMode="nominal";
 async function api(path){const r=await fetch(path+"?v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}});if(!r.ok)throw Error(path+" HTTP "+r.status);return r.json()}
 async function loadData(){
- const results=await Promise.allSettled([api("/api/balance"),api("/api/quotes"),api("/api/positions"),api("/api/history"),api("/api/tlref"),api("/api/closing-history")]);
+ const results=await Promise.allSettled([api("/api/balance"),api("/api/quotes?refresh=1"),api("/api/positions"),api("/api/history"),api("/api/tlref"),api("/api/closing-history")]);
  const value=(i,fallback)=>results[i].status==="fulfilled"?results[i].value:fallback;
  results.forEach((r,i)=>{if(r.status==="rejected")console.warn("Bakiye API",i,r.reason)});
  balanceData=value(0,{accounts:{},monthlyObligations:{}});
