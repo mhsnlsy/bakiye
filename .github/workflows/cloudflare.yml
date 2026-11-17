@@ -117,10 +117,27 @@ jobs:
           import json, time, urllib.request
           with open("/tmp/verify-quotes.json", encoding="utf-8") as f:
               expected=json.load(f)
-          url="https://bakiye.muhsin-ulusoy.workers.dev/api/quotes?verify="+str(time.time_ns())
-          req=urllib.request.Request(url, headers={"Cache-Control":"no-cache","Pragma":"no-cache","User-Agent":"Bakiye-Quote-Verification/1.0"})
-          with urllib.request.urlopen(req, timeout=20) as response:
-              actual=json.load(response)
+          urls=[
+            "https://bakiye.muhsin-ulusoy.workers.dev/api/quotes?verify="+str(time.time_ns()),
+            "https://bakiye.muhsin-ulusoy.workers.dev/api/quotes?refresh=1&verify="+str(time.time_ns())
+          ]
+          actual=None
+          last_error=None
+          for url in urls:
+              try:
+                  req=urllib.request.Request(url, headers={"Cache-Control":"no-cache","Pragma":"no-cache","User-Agent":"Bakiye-Quote-Verification/1.0"})
+                  with urllib.request.urlopen(req, timeout=20) as response:
+                      if response.status != 200:
+                          raise RuntimeError("unexpected HTTP "+str(response.status))
+                      candidate=json.load(response)
+                  if not isinstance(candidate.get("quotes"), dict):
+                      raise RuntimeError("quotes object missing")
+                  actual=candidate
+                  break
+              except Exception as exc:
+                  last_error=exc
+          if actual is None:
+              raise SystemExit("Public Worker quote API failed: "+str(last_error))
           assert actual.get("lastRefresh")==expected.get("lastRefresh"), (actual.get("lastRefresh"),expected.get("lastRefresh"))
           for symbol, value in expected["quotes"].items():
               assert float(actual["quotes"][symbol])==float(value), (symbol,actual["quotes"].get(symbol),value)
