@@ -1,6 +1,11 @@
 name: Update TLREF Benchmark
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/update_tlref.py"
+      - ".github/workflows/update-tlref.yml"
   schedule:
     # TLREF appears after 16:00 TSİ; retry during the afternoon.
     # The updater validates the exchange timestamp and will not relabel stale data.
