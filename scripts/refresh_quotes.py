@@ -2,7 +2,7 @@ import json, re, html, os, sys, urllib.request
 from html.parser import HTMLParser
 from datetime import datetime, timezone
 
-STOCK_SOURCE = "https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum"
+STOCK_SOURCE = "https://uzmanpara.milliyet.com.tr/canli-borsa/bist-TUM-hisseleri/"
 STOCKS = ["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"]
 SOURCE_SYMBOL = {"ZPLIB.F":"ZPLIB"}
 FX_SOURCE = "https://kur.doviz.com/"
@@ -39,7 +39,7 @@ def fetch(url, retries=3):
     last_err = None
     for attempt in range(1, retries+1):
         try:
-            req = urllib.request.Request(url, headers=headers)
+            req = urllib.request.Request(url + ("&" if "?" in url else "?") + "_ts=" + str(int(datetime.now(timezone.utc).timestamp()*1000)), headers=headers)
             with urllib.request.urlopen(req, timeout=25) as r:
                 return r.read().decode("utf-8", "ignore")
         except Exception as e:
