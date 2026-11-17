@@ -70,7 +70,7 @@ jobs:
       group: bakiye-live-quotes
       cancel-in-progress: false
     needs: deploy
-    if: github.event_name == 'schedule' || needs.deploy.result == 'success'
+    if: always() && (github.event_name == 'schedule' || needs.deploy.result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: read
