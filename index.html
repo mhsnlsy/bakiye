@@ -110,9 +110,31 @@ table thead{display:table-header-group!important}
   .mobilePortfolioHeader { display: none !important; }
 }
 
+
+/* Prevent hard-coded HTML snapshot values flashing before API data arrives. */
+body:not([data-app-ready="true"]) .wrap{visibility:hidden}
+#initialLoadScreen{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:radial-gradient(900px 500px at 0% -8%,#1b3654 0,transparent 65%),radial-gradient(800px 420px at 100% 0%,#182b42 0,transparent 64%),#091321}
+body[data-app-ready="true"] #initialLoadScreen{display:none}
+.bootCard{width:min(100%,360px);padding:27px 24px;border:1px solid #294664;border-radius:18px;background:rgba(16,30,48,.96);text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.28)}
+.bootBrand{font-size:11px;letter-spacing:.2em;font-weight:800;color:#8ab5ff}
+.bootSpinner{width:26px;height:26px;margin:22px auto 15px;border:3px solid #294664;border-top-color:#8ab5ff;border-radius:50%;animation:bootSpin .8s linear infinite}
+.bootStatus{display:block;font-size:14px;color:#edf4fc}
+.bootHint{margin:7px 0 0;color:#9aabc0;font-size:11px}
+#bootRetry{margin-top:17px}
+@keyframes bootSpin{to{transform:rotate(360deg)}}
+
 </style>
 </head>
-<body>
+<body data-app-ready="false">
+<div id="initialLoadScreen" role="status" aria-live="polite">
+ <div class="bootCard">
+  <div class="bootBrand">BAKİYE</div>
+  <div class="bootSpinner" aria-hidden="true"></div>
+  <strong class="bootStatus" id="bootStatus">Güncel veriler yükleniyor</strong>
+  <p class="bootHint">Bakiye, fiyat ve portföy verileri alınıyor.</p>
+  <button id="bootRetry" type="button" hidden>Tekrar dene</button>
+ </div>
+</div>
 <main class="wrap">
 <header class="top">
  <div><div class="eyebrow">PERSONAL BALANCE SHEET</div><h1>Bakiye</h1><div class="sub">Bütün varlıkların tek ekranda. Hisseler ve diğer varlıklar birlikte.</div></div>
@@ -196,17 +218,39 @@ function nfmt(n){return new Intl.NumberFormat("tr-TR",{minimumFractionDigits:2,m
 function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closingHistoryData={};
 window.pnlMode="nominal";
-async function api(path){const sep=path.includes("?")?"&":"?";const r=await fetch(path+sep+"v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}});if(!r.ok)throw Error(path+" HTTP "+r.status);return r.json()}
+async function api(path){
+ const sep=path.includes("?")?"&":"?";
+ const r=await fetch(path+sep+"v="+Date.now(),{
+  cache:"no-store",
+  headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}
+ });
+ if(!r.ok)throw Error(path+" HTTP "+r.status);
+ return r.json();
+}
 async function loadData(){
- const results=await Promise.allSettled([api("/api/balance"),api("/api/quotes"),api("/api/positions"),api("/api/history"),api("/api/tlref"),api("/api/closing-history")]);
- const value=(i,fallback)=>results[i].status==="fulfilled"?results[i].value:fallback;
- results.forEach((r,i)=>{if(r.status==="rejected")console.warn("Bakiye API",i,r.reason)});
- balanceData=value(0,{accounts:{},monthlyObligations:{}});
- quoteData=value(1,{quotes:{},fx:{}});
- positions=Array.isArray(value(2,[]))?value(2,[]):[];
- historyData=value(3,{snapshots:[]})||{};
- tlrefData=value(4,{})||{};
- closingHistoryData=value(5,{entries:[]})||{};
+ // Only replace the current snapshot after every endpoint succeeds.
+ // A partial failure must never reset working data to empty defaults.
+ const [nextBalance,nextQuotes,nextPositions,nextHistory,nextTlref,nextClosing]=await Promise.all([
+  api("/api/balance"),
+  api("/api/quotes"),
+  api("/api/positions"),
+  api("/api/history"),
+  api("/api/tlref"),
+  api("/api/closing-history")
+ ]);
+ if(!nextBalance||typeof nextBalance!=="object")throw Error("/api/balance geçersiz yanıt");
+ if(!nextQuotes||!nextQuotes.quotes||typeof nextQuotes.quotes!=="object")throw Error("/api/quotes geçersiz yanıt");
+ if(!Array.isArray(nextPositions)||!nextPositions.length)throw Error("/api/positions boş veya geçersiz");
+ if(!nextTlref||!nextTlref.asOf||!Number.isFinite(Number(nextTlref.grossAnnualRate)))throw Error("/api/tlref geçersiz yanıt");
+ if(!nextHistory||!Array.isArray(nextHistory.snapshots))throw Error("/api/history geçersiz yanıt");
+ if(!nextClosing||!Array.isArray(nextClosing.entries))throw Error("/api/closing-history geçersiz yanıt");
+
+ balanceData=nextBalance;
+ quoteData=nextQuotes;
+ positions=nextPositions;
+ historyData=nextHistory;
+ tlrefData=nextTlref;
+ closingHistoryData=nextClosing;
 }
 function calc(){
  const rates=quoteData.fx||{}, q=quoteData.quotes||{};
@@ -334,20 +378,43 @@ function renderHistory(){
  const lp=prev&&Number(prev[historySeries])?((Number(last[historySeries])-Number(prev[historySeries]))/Number(prev[historySeries])*100):null;
  document.getElementById("historyDailyPct").textContent=lp==null?"İlk snapshot":(lp>=0?"+":"")+nfmt(lp)+"%";
 }
-async function boot(){
- try{
+let bootInFlight=null;
+function boot(){
+ if(bootInFlight)return bootInFlight;
+ const alreadyReady=document.body.dataset.appReady==="true";
+ bootInFlight=(async()=>{
+  try{
+   if(!alreadyReady){
+    document.getElementById("bootStatus").textContent="Güncel veriler yükleniyor";
+    document.getElementById("bootRetry").hidden=true;
+   }else{
+    document.getElementById("syncState").textContent="Güncelleniyor…";
+   }
    await loadData();
    render();
    renderHistory();
+   document.body.dataset.appReady="true";
    document.getElementById("syncState").textContent="Canlı veri";
- }catch(e){
+   document.getElementById("bootRetry").hidden=true;
+  }catch(e){
    console.error("Bakiye veri akışı:",e);
-   document.getElementById("syncState").textContent="Veri alınamadı";
- }
+   if(!alreadyReady){
+    document.getElementById("bootStatus").textContent="Veriler yüklenemedi";
+    document.querySelector(".bootHint").textContent="Bağlantı kurulamadı. Yeniden deneyebilirsin.";
+    document.getElementById("bootRetry").hidden=false;
+   }else{
+    document.getElementById("syncState").textContent="Güncelleme başarısız · son veri korunuyor";
+   }
+  }finally{
+   bootInFlight=null;
+  }
+ })();
+ return bootInFlight;
 }
 boot();
 setInterval(boot,60000);
 document.getElementById("refreshBtn").addEventListener("click",boot);
+document.getElementById("bootRetry").addEventListener("click",boot);
 document.getElementById("nominalModeBtn").addEventListener("click",()=>{window.pnlMode=window.pnlMode==="nominal"?"daily":"nominal";render()});
 document.getElementById("historyRange").addEventListener("change",renderHistory);
 setHistorySeries("total");
