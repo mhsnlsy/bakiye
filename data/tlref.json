@@ -212,6 +212,6 @@
   "fetchedAt": "2026-11-17T15:38:34.766Z",
   "sourceDateBasis": "Borsa İstanbul TLREF tablosundaki #tlref-data satırının tarihi",
   "sourceDate": "2026-11-17",
-  "todayAvailable": true,
+  "todayAvailable": false,
   "method": "Günlük net TLREF fırsat maliyeti; Borsa İstanbul'un yayımladığı brüt TLREF %17,5 stopaj sonrası netleştirilir ve günlük bileşiklenir."
 }
