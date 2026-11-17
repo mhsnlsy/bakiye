@@ -6,7 +6,6 @@
   "stopaj": 0.175,
   "netAnnualRate": 0.29534504999999994,
   "startDate": "2025-08-24",
-  "method": "Günlük net TLREF fırsat maliyeti; Borsa İstanbul'un yayımladığı brüt TLREF oranından %17,5 stopaj düşülür ve günlük bileşiklenir.",
   "historical": [
     {
       "date": "2026-08-24",
@@ -210,8 +209,9 @@
     }
   ],
   "updatedAt": "2026-11-17T15:38:34.766Z",
-  "todayAvailable": true,
   "fetchedAt": "2026-11-17T15:38:34.766Z",
   "sourceDateBasis": "Borsa İstanbul TLREF tablosundaki #tlref-data satırının tarihi",
-  "sourceDate": "2026-11-17"
+  "sourceDate": "2026-11-17",
+  "todayAvailable": true,
+  "method": "Günlük net TLREF fırsat maliyeti; Borsa İstanbul'un yayımladığı brüt TLREF %17,5 stopaj sonrası netleştirilir ve günlük bileşiklenir."
 }
