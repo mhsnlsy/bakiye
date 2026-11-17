@@ -44,5 +44,7 @@
       "realCostTotal": 79845.36,
       "tlrefCumulativeCostAdded": 10692.28
     }
-  ]
+  ],
+  "totalsReconciledAt": "2026-11-17T17:29:00+03:00",
+  "totalFormula": "sum(stocks,funds,try,cashFx,bankFx,gold,receivable)"
 }
