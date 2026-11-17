@@ -14,11 +14,23 @@ function stock(h,s){
  const rows=cells(h);
  for(const r of rows){
    const i=r.findIndex(x=>x.trim().toUpperCase()===s);
+   if(i>=0){
+     for(let j=i+1;j<r.length;j++){const p=num(r[j]);if(p!=null)return p}
+   }
+ }
+ const t=text(h);
+ const e=s.replace(/[.*+?^()|[\\]\\\\]/g,"\\\\function stock(h,s){
+ const rows=cells(h);
+ for(const r of rows){
+   const i=r.findIndex(x=>x.trim().toUpperCase()===s);
    if(i>=0&&r[i+1]){const p=num(r[i+1]);if(p!=null)return p}
  }
  const t=text(h);
  const e=s.replace(/[.*+?^()|[\]\\]/g,"\\$&");
  const m=t.match(new RegExp("(?:^|\\s)"+e+"\\s+([0-9]+(?:[.,][0-9]+)?)","i"));
+ return m?num(m[1]):null;
+}");
+ const m=t.match(new RegExp("(?:^|\\\\s)"+e+"\\\\s+(?:\\\\|\\\\s*)?([0-9]+(?:[.,][0-9]+)?)","i"));
  return m?num(m[1]):null;
 }
 function fx(h,c){
