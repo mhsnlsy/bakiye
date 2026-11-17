@@ -1,15 +1,15 @@
 {
   "source": "Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",
-  "sourceUrl": "https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum",
+  "sourceUrl": "https://uzmanpara.milliyet.com.tr/canli-borsa/bist-TUM-hisseleri/",
   "asOf": "2026-11-16",
   "currency": "TRY",
   "quotes": {
-    "TAVHL": 304,
-    "KARSN": 7.92,
-    "THYAO": 323.5,
-    "CGCAM": 20.02,
-    "SISE": 34.84,
-    "ZPLIB.F": 199.25
+    "TAVHL": 306.75,
+    "KARSN": 7.9,
+    "THYAO": 327.25,
+    "CGCAM": 20.36,
+    "SISE": 34.88,
+    "ZPLIB.F": 201.1
   },
   "fxSourceUrl": "https://kur.doviz.com/",
   "fx": {
@@ -17,5 +17,15 @@
     "EURTRY": 55.4999,
     "GBPTRY": 66.492
   },
-  "lastRefresh": "2026-11-16T15:25:06.304321Z"
+  "lastRefresh": "2026-11-16T15:25:06.304321Z",
+  "dailyPct": {
+    "TAVHL": 0.9046052631578948,
+    "KARSN": -0.2525252525252471,
+    "THYAO": 1.1591962905718702,
+    "CGCAM": 1.6983016983016976,
+    "SISE": 0.11481056257175414,
+    "ZPLIB.F": 0.9284818067754049
+  },
+  "errors": [],
+  "missing": []
 }
