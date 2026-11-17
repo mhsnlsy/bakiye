@@ -185,7 +185,7 @@ let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closing
 window.pnlMode="nominal";
 async function api(path){const sep=path.includes("?")?"&":"?";const r=await fetch(path+sep+"v="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}});if(!r.ok)throw Error(path+" HTTP "+r.status);return r.json()}
 async function loadData(){
- const results=await Promise.allSettled([api("/api/balance"),api("/api/quotes?refresh=1"),api("/api/positions"),api("/api/history"),api("/api/tlref"),api("/api/closing-history")]);
+ const results=await Promise.allSettled([api("/api/balance"),api("/api/quotes"),api("/api/positions"),api("/api/history"),api("/api/tlref"),api("/api/closing-history")]);
  const value=(i,fallback)=>results[i].status==="fulfilled"?results[i].value:fallback;
  results.forEach((r,i)=>{if(r.status==="rejected")console.warn("Bakiye API",i,r.reason)});
  balanceData=value(0,{accounts:{},monthlyObligations:{}});
@@ -256,7 +256,7 @@ function render(){
    const ts=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—";
    return '<article class="mobilePortfolioCard"><div class="mobilePortfolioTop"><div><div class="mobilePortfolioTicker">'+safe(r.p.symbol)+'</div><div class="mobilePortfolioName">'+safe(r.p.name)+'</div></div><div><div class="mobilePortfolioPrice">'+priceText+'</div><div class="mobilePortfolioTime">Uzmanpara · '+ts+' TSİ</div></div></div><div class="mobilePortfolioGrid"><div class="mobileMetric"><span>Adet</span><strong>'+nfmt(r.qty)+'</strong></div><div class="mobileMetric"><span>Ort. maliyet</span><strong>'+fmt(r.avg)+'</strong></div><div class="mobileMetric"><span>Piyasa değeri</span><strong>'+(r.market==null?"—":fmt(r.market))+'</strong></div><div class="mobileMetric"><span>'+(daily?"Günlük K/Z":"Nominal K/Z")+'</span><strong class="'+(pnl==null?"":(pnl>=0?"good":"bad"))+'">'+(pnl==null?"Güncel değil":fmt(pnl))+'</strong></div><div class="mobileMetric"><span>'+(daily?"Günlük %":"Nominal %")+'</span><strong>'+(pnlPct==null?"—":nfmt(pnlPct)+"%")+'</strong></div><div class="mobileMetric"><span>Reel K/Z</span><strong class="'+(r.rp==null?"":(r.rp>=0?"good":"bad"))+'">'+(r.rp==null?"—":fmt(r.rp))+'</strong></div></div>'+(stale?'<div class="mobilePortfolioStale">⚠ Son fiyat güncel değil. Yeni Uzmanpara verisi alınana kadar eski kapanış kullanılmıyor.</div>':"")+'</article>';
  }).join("");
- mobileCards.style.display="grid";
+ mobileCards.style.display="";
  const fx=x.rates;
  document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
  document.getElementById("liveFxSub").textContent="Döviz.com · "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—");
@@ -276,7 +276,7 @@ function render(){
  document.getElementById("quoteState").textContent=quoteFresh?"Uzmanpara · son fiyat · "+quoteTime+" TSİ":"Uzmanpara · SON FİYAT GÜNCEL DEĞİL · "+quoteTime+" TSİ";
  document.getElementById("quoteState").className="state "+(quoteFresh?"good":"bad");
  document.getElementById("quoteSourceLabel").textContent="Uzmanpara · son fiyat · "+quoteTime+" TSİ";
- document.getElementById("syncState").textContent="Canlı veri";
+ document.getElementById("syncState").textContent=quoteFresh?"Canlı veri":"Veri bekleniyor";
 }
 
 let historySeries="total";
