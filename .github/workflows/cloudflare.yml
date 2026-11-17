@@ -7,12 +7,11 @@ on:
   schedule:
     - cron: "*/5 * * * *"
 
-concurrency:
-  group: bakiye-cloudflare
-  cancel-in-progress: true
-
 jobs:
   deploy:
+    concurrency:
+      group: bakiye-deploy
+      cancel-in-progress: true
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     permissions: {contents: read}
@@ -55,8 +54,11 @@ jobs:
           npx wrangler@latest r2 object put bakiye-data/positions.json --file=data/positions.json --content-type=application/json --remote
 
   refresh-quotes:
+    concurrency:
+      group: bakiye-live-quotes
+      cancel-in-progress: false
     needs: deploy
-    if: always() && (github.event_name == 'schedule' || needs.deploy.result == 'success')
+    if: github.event_name == 'schedule' || needs.deploy.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
