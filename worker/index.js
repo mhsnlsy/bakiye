@@ -1,4 +1,4 @@
-const STOCK_SOURCE="https://uzmanpara.milliyet.com.tr/canli-borsa/?endex=xutum";
+const STOCK_SOURCE="https://uzmanpara.milliyet.com.tr/canli-borsa/";
 const FX="https://kur.doviz.com/";
 const TLREF="https://www.borsaistanbul.com/endeksler/tlref";
 const TLREF_FALLBACK="https://borsa.doviz.com/endeksler/tlref-turk-lirasi-gecelik-referans-faiz-orani/tarihsel-veri";
