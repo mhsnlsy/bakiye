@@ -12,24 +12,28 @@ function text(h){return h.replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<s
 function cells(h){return [...h.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>[...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(x=>text(x[1])).filter(Boolean)).filter(r=>r.length)}
 function stock(h,s){
  const rows=cells(h);
+ const target=String(s).trim().toUpperCase();
  for(const r of rows){
-   const i=r.findIndex(x=>x.trim().toUpperCase()===s);
+   const i=r.findIndex(x=>x.trim().toUpperCase()===target);
    if(i>=0){
      for(let j=i+1;j<r.length;j++){const p=num(r[j]);if(p!=null)return p}
    }
  }
  const t=text(h);
- const e=s.replace(/\\./g,"\\\\.");
- const m=t.match(new RegExp("(?:^|\\\\s)"+e+"\\\\s+(?:\\\\|\\\\s*)?([0-9]+(?:[.,][0-9]+)?)","i"));
+ const m=t.match(new RegExp("(?:^|\\s)"+target.replace(/[.*+?^()|[\\]\\\\]/g,"\\\\$&")+"\\s+([0-9]+(?:[.,][0-9]+)?)","i"));
  return m?num(m[1]):null;
 }
 function fx(h,c){
  const rows=cells(h);
+ const target=String(c).trim().toUpperCase();
  for(const r of rows){
-   const i=r.findIndex(x=>x.toUpperCase().startsWith(c+" "));
-   if(i>=0&&r[i+1]){const p=num(r[i+1]);if(p!=null)return p}
+   const i=r.findIndex(x=>x.trim().toUpperCase().startsWith(target+" "));
+   if(i>=0){
+     for(let j=i+1;j<r.length;j++){const p=num(r[j]);if(p!=null)return p}
+   }
  }
- const t=text(h),m=t.match(new RegExp("(?:^|\\s)"+c+"(?:\\s+[^|]{0,50})?\\s*\\|\\s*([0-9]+(?:[.,][0-9]+)?)","i"));
+ const t=text(h);
+ const m=t.match(new RegExp("(?:^|\\s)"+target+"(?:\\s+[^|]{0,50})?\\s*\\|\\s*([0-9]+(?:[.,][0-9]+)?)","i"));
  return m?num(m[1]):null;
 }
 function tl(h){let a=[],seen=new Set(),m,r=/(\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?:\\|\\s*)?([0-9]{2,3}[.,]\\d{4})/g,t=text(h);while((m=r.exec(t))){let d=m[1].split(".").reverse().join("-");if(!seen.has(d)){seen.add(d);a.push({date:d,rate:num(m[2])/100})}}return a.sort((a,b)=>a.date.localeCompare(b.date))}
