@@ -32,13 +32,13 @@
       "capturedAt": "2026-11-18T19:36:50+03:00",
       "snapshotTime": "18:40 Europe/Istanbul",
       "stocks": 67638.2,
-      "funds": 0.0,
-      "try": 83000.0,
+      "funds": 0,
+      "try": 83000,
       "cashFx": 104668.97,
       "bankFx": 136133.69,
       "gold": 10308.77,
-      "receivable": 0.0,
-      "total": 401749.63,
+      "receivable": 0,
+      "total": 417888.64,
       "realCostTotal": 79974.67,
       "nominalCostTotal": 69153.08,
       "tlrefCostAdded": 64.65,
@@ -49,9 +49,10 @@
       "tlrefGrossAnnualRate": 0.35700000000000004,
       "tlrefNetAnnualRate": 0.29452500000000004,
       "quoteLastRefresh": "2026-11-18T16:36:39.627Z",
-      "quoteSource": "OYAK Yatırım"
+      "quoteSource": "OYAK Yatırım",
+      "bnc": 16139.01
     }
   ],
   "totalsReconciledAt": "2026-11-17T17:29:00+03:00",
-  "totalFormula": "sum(stocks,funds,try,cashFx,bankFx,gold,receivable)"
+  "totalFormula": "sum(stocks,funds,try,bnc,cashFx,bankFx,gold,receivable)"
 }
