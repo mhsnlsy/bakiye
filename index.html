@@ -248,7 +248,7 @@ async function api(path){
  const sep=path.includes("?")?"&":"?";
  const url=API_BASE+path+sep+"v="+Date.now();
  try{
-  const r=await fetch(url,{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});
+  const r=await fetch(url,{cache:"no-store",mode:"cors"});
   if(r.ok)return r.json();
  }catch(_){}
  const staticPath=STATIC_MAP[path];
