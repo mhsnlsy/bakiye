@@ -71,7 +71,8 @@
     },
     "yapiKrediCreditCard": {
       "label": "Yapı Kredi kredi kartı",
-      "value": null
+      "value": null,
+      "note": "Güncel borç bilinmiyor"
     },
     "summary": {
       "paidThisMonth": 58000,
