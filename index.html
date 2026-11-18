@@ -510,7 +510,7 @@ function render(){
   ["Nakit","TL / Banka",fmt(Number(aa.nakit?.value)||0),true]
  ];
  document.getElementById("accountsBody").innerHTML=accountRows.map(r=>'<tr><td>'+r[0]+(r[4]?'<span class="subline">'+r[4]+'</span>':'')+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td class="'+(r[3]?"good":"")+'">'+(r[3]?"Dahil":"Hisseler/fonlarda sayıldı")+'</td></tr>').join("");
- document.getElementById("goldAccountGrams").textContent=nfmt(Number(balanceData.accounts?.nkolayAltin?.grams)||0)+" g"; document.getElementById("goldAccountValue").textContent=goldAccountText; document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
+ document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
  document.getElementById("liveFxSub").textContent="Döviz.com · "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—");
  const grossTlref=Number(tlrefData.grossAnnualRate||0)*100;
  const netTlref=Number(tlrefData.netAnnualRate||0)*100;
