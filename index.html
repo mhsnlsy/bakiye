@@ -504,7 +504,7 @@ function boot(){
  return bootInFlight;
 }
 boot();
-setInterval(boot,60000);
+setInterval(boot,120000);
 document.getElementById("refreshBtn").addEventListener("click",boot);
 document.getElementById("bootRetry").addEventListener("click",boot);
 document.getElementById("nominalModeBtn").addEventListener("click",()=>{window.pnlMode=window.pnlMode==="nominal"?"daily":"nominal";render()});
