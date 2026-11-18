@@ -16,7 +16,7 @@ function goldQuote(h){
  const rows=[...h.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map(x=>x[1]);
  const row=rows.find(x=>/data-socket-key=["']gram-altin["']/i.test(x))||h;
  const cells=[...row.matchAll(/<td\b([^>]*)>([\s\S]*?)<\/td>/gi)];
- const bid=cells.find(x=>/data-socket-key=["']gram-altin["']/i.test(x[1])&&/data-socket-attr=["'](?:bid|b)["']/i.test(x[1]));
+ const bid=cells.find(x=>/data-socket-key=["']gram-altin["']/i.test(x[1])&&/data-socket-attr=["'](?:sell|s)["']/i.test(x[1]));
  if(!bid)return {price:null,time:null};
  const price=num(text(bid[2]));
  const time=(row.match(/\b(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?\b/)||[])[0]||null;
