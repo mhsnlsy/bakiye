@@ -395,13 +395,12 @@ function calc(){
  // total from those same components. This guarantees the hero total equals
  // the sum of the cards the user sees.
  stocks=round2(stocks);
- const tryVal2=round2(tryVal), cashFx2=round2(cashFx), bankFx2=round2(bankFx), gold2=round2(gold), receivable2=round2(receivable);
+ const tryVal2=round2(tryVal), bncVal2=round2(bncVal), cashFx2=round2(cashFx), bankFx2=round2(bankFx), gold2=round2(gold), receivable2=round2(receivable);
  const total=round2(stocks+tryVal2+bncVal2+cashFx2+bankFx2+gold2+receivable2);
  const paidObligations=round2(Number(balanceData.monthlyObligations?.summary?.paidThisMonth)||0);
  const remainingObligations=balanceData.monthlyObligations?.summary?.remainingThisMonth;
  const obligations=balanceData.monthlyObligations?.summary?.totalMonthly;
-const bncVal2=round2(bncVal);
- return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryVal2,bncVal:bncVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,goldPrice,goldPriceStatus,goldPriceSource:quoteData.goldPriceSource||"Gram altın",goldPriceTime:quoteData.goldPriceTime||null,receivable:receivable2,total,paidObligations,remainingObligations,obligations,net:round2(total-obligations),rates};
+return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryVal2,bncVal:bncVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,goldPrice,goldPriceStatus,goldPriceSource:quoteData.goldPriceSource||"Gram altın",goldPriceTime:quoteData.goldPriceTime||null,receivable:receivable2,total,paidObligations,remainingObligations,obligations,net:round2(total-obligations),rates};
 }
 function prevClosingBase(x){ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[]; const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()); const prev=entries.filter(e=>e.date&&e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1); return prev?x.rows.reduce((s,r)=>s+(Number(prev.prices?.[r.p.symbol])||0)*r.qty,0):0; }
 function render(){
