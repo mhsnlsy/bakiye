@@ -5,11 +5,11 @@
     "type": "stock",
     "qty": 14,
     "avgCost": 246.52,
-    "realCost": 323.4043,
-    "tlrefCostAdded": 76.8843,
-    "realCostUpdatedAt": "2026-11-18",
-    "dailyTlrefCostAdded": 0.2615,
-    "dailyTlrefCostUpdatedAt": "2026-11-18"
+    "realCost": 323.6653,
+    "tlrefCostAdded": 77.1453,
+    "realCostUpdatedAt": "2026-11-19",
+    "dailyTlrefCostAdded": 0.261,
+    "dailyTlrefCostUpdatedAt": "2026-11-19"
   },
   {
     "symbol": "KARSN",
@@ -17,11 +17,11 @@
     "type": "stock",
     "qty": 888,
     "avgCost": 8.74,
-    "realCost": 9.2425,
-    "tlrefCostAdded": 0.5025,
-    "realCostUpdatedAt": "2026-11-18",
+    "realCost": 9.25,
+    "tlrefCostAdded": 0.51,
+    "realCostUpdatedAt": "2026-11-19",
     "dailyTlrefCostAdded": 0.0075,
-    "dailyTlrefCostUpdatedAt": "2026-11-18"
+    "dailyTlrefCostUpdatedAt": "2026-11-19"
   },
   {
     "symbol": "THYAO",
@@ -29,11 +29,11 @@
     "type": "stock",
     "qty": 65,
     "avgCost": 285.04,
-    "realCost": 345.2271,
-    "tlrefCostAdded": 60.1871,
-    "realCostUpdatedAt": "2026-11-18",
-    "dailyTlrefCostAdded": 0.2791,
-    "dailyTlrefCostUpdatedAt": "2026-11-18"
+    "realCost": 345.5057,
+    "tlrefCostAdded": 60.4657,
+    "realCostUpdatedAt": "2026-11-19",
+    "dailyTlrefCostAdded": 0.2786,
+    "dailyTlrefCostUpdatedAt": "2026-11-19"
   },
   {
     "symbol": "CGCAM",
@@ -41,11 +41,11 @@
     "type": "stock",
     "qty": 668,
     "avgCost": 26.85,
-    "realCost": 31.0853,
-    "tlrefCostAdded": 4.2353,
-    "realCostUpdatedAt": "2026-11-18",
+    "realCost": 31.1104,
+    "tlrefCostAdded": 4.2604,
+    "realCostUpdatedAt": "2026-11-19",
     "dailyTlrefCostAdded": 0.0251,
-    "dailyTlrefCostUpdatedAt": "2026-11-18"
+    "dailyTlrefCostUpdatedAt": "2026-11-19"
   },
   {
     "symbol": "SISE",
@@ -53,11 +53,11 @@
     "type": "stock",
     "qty": 168,
     "avgCost": 39.94,
-    "realCost": 43.0744,
-    "tlrefCostAdded": 3.1344,
-    "realCostUpdatedAt": "2026-11-18",
+    "realCost": 43.1092,
+    "tlrefCostAdded": 3.1692,
+    "realCostUpdatedAt": "2026-11-19",
     "dailyTlrefCostAdded": 0.0348,
-    "dailyTlrefCostUpdatedAt": "2026-11-18"
+    "dailyTlrefCostUpdatedAt": "2026-11-19"
   },
   {
     "symbol": "ZPLIB.F",
@@ -65,10 +65,10 @@
     "type": "stock",
     "qty": 83,
     "avgCost": 177.92,
-    "realCost": 202.3907,
-    "tlrefCostAdded": 24.4707,
-    "realCostUpdatedAt": "2026-11-18",
-    "dailyTlrefCostAdded": 0.1636,
-    "dailyTlrefCostUpdatedAt": "2026-11-18"
+    "realCost": 202.554,
+    "tlrefCostAdded": 24.634,
+    "realCostUpdatedAt": "2026-11-19",
+    "dailyTlrefCostAdded": 0.1633,
+    "dailyTlrefCostUpdatedAt": "2026-11-19"
   }
 ]
