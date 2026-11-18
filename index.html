@@ -412,6 +412,14 @@ function render(){
  document.getElementById("portfolioPnL").textContent=fmt(x.nominalPnl);
  document.getElementById("portfolioPnLPct").textContent=nfmt((x.rows.reduce((s,r)=>s+r.avg*r.qty,0)?x.nominalPnl/x.rows.reduce((s,r)=>s+r.avg*r.qty,0)*100:0))+"%";
  document.getElementById("portfolioRealPnL").textContent=fmt(x.realPnl);
+ // Keep the mobile portfolio summary synchronized with the live table.
+ // These elements previously retained the hard-coded HTML snapshot totals.
+ const mobileTotalEl=document.getElementById("mobilePortfolioTotal");
+ const mobilePnlEl=document.getElementById("mobilePortfolioPnL");
+ const mobileRealPnlEl=document.getElementById("mobilePortfolioRealPnL");
+ if(mobileTotalEl) mobileTotalEl.textContent=fmt(x.stocks);
+ if(mobilePnlEl) mobilePnlEl.textContent=fmt(window.pnlMode==="daily"?x.dailyPnl:x.nominalPnl);
+ if(mobileRealPnlEl) mobileRealPnlEl.textContent=fmt(x.realPnl);
  const originalCost=x.rows.reduce((s,r)=>s+r.avg*r.qty,0);
  const realCostTotal=x.rows.reduce((s,r)=>s+r.real*r.qty,0);
  document.getElementById("portfolioRealPnLPct").textContent=nfmt(realCostTotal?x.realPnl/realCostTotal*100:0)+"%";
