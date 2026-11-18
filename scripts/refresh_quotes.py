@@ -49,33 +49,41 @@ def clean_html(source):
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", source)).strip()
 
 def parse_oyak_stock(source, symbol):
-    # Prefer a row/cell containing the ticker, then take the first numeric
-    # value after it. If the page is card-based, fall back to the "Son" label.
+    # OYAK detail pages expose the "Hisse Detayları" table as:
+    # Son | Fark | Değişim | Alış | Satış | ... | Saat
+    # Match the exact row and take its first numeric cell, not an arbitrary
+    # "Son" occurrence elsewhere in the page.
     decoded = html.unescape(source or "")
-    rows = re.findall(r"<tr[^>]*>([\s\S]*?)</tr>", decoded, flags=re.I)
+    rows = re.findall(r"<tr[^>]*>([\\s\\S]*?)</tr>", decoded, flags=re.I)
     for row_html in rows:
-        cells = [clean_html(x) for x in re.findall(r"<t[dh][^>]*>([\s\S]*?)</t[dh]>", row_html, flags=re.I)]
+        cells = [clean_html(x) for x in re.findall(r"<t[dh][^>]*>([\\s\\S]*?)</t[dh]>", row_html, flags=re.I)]
         cells = [x for x in cells if x]
-        if any(x.upper() == symbol.upper() for x in cells):
-            i = next(i for i,x in enumerate(cells) if x.upper() == symbol.upper())
-            for candidate in cells[i+1:]:
-                v = number(candidate)
-                if v is not None and v > 0:
-                    return v, None
-
+        upper = [x.strip().upper() for x in cells]
+        # Header may be rendered in a separate row; use the row whose first
+        # cell is a valid price and whose last cell is a clock time.
+        if len(cells) >= 8 and re.fullmatch(r"\\d{2}:\\d{2}:\\d{2}", cells[-1].strip()):
+            price = number(cells[0])
+            if price is not None and price > 0:
+                return price, cells[-1].strip()
     text = clean_html(decoded)
-    patterns = [
-        rf"\b{re.escape(symbol)}\b\s+([0-9]+(?:[.,][0-9]+)?)",
-        r"\bSon\b\s*[:：]?\s*([0-9]+(?:[.,][0-9]+)?)",
-        r"\bSon Fiyat\b\s*[:：]?\s*([0-9]+(?:[.,][0-9]+)?)",
-    ]
-    for pattern in patterns:
+    # Search for the explicit row header followed by its first value. This
+    # avoids accidentally capturing percentage or historical figures.
+    m = re.search(r"Son\\s+Fark\\s+Değişim\\s+Alış\\s+Satış\\s+Taban\\s+Tavan\\s+Saat\\s+([0-9]+(?:[.,][0-9]+)?)\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+(\\d{2}:\\d{2}:\\d{2})", text, re.I)
+    if m:
+        value = number(m.group(1))
+        if value is not None and value > 0:
+            return value, m.group(2)
+    # Some OYAK responses are server-rendered with a label/value pair.
+    for pattern in [
+        r"\\bSon\\b\\s*[:：]\\s*([0-9]+(?:[.,][0-9]+)?)",
+        r"\\bSon Fiyat\\b\\s*[:：]\\s*([0-9]+(?:[.,][0-9]+)?)",
+    ]:
         m = re.search(pattern, text, re.I)
         if m:
-            v = number(m.group(1))
-            if v is not None and v > 0:
-                tm = re.search(r"\b(\d{2}:\d{2}:\d{2})\b", text)
-                return v, tm.group(1) if tm else None
+            value = number(m.group(1))
+            if value is not None and value > 0:
+                tm = re.search(r"\\b(\\d{2}:\\d{2}:\\d{2})\\b", text)
+                return value, tm.group(1) if tm else None
     return None, None
 
 def parse_fx(source):
