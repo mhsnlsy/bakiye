@@ -28,6 +28,8 @@ jobs:
           python-version: "3.x"
 
       - name: Record daily 18:40 snapshot
+        env:
+          FORCE_SNAPSHOT: "1"
         run: python scripts/update_balance_history.py
 
       - name: Commit history
