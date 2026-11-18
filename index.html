@@ -31,7 +31,7 @@ button:hover,.btn:hover{background:#244768}
 .cardlabel{color:var(--muted);font-size:12px}
 .cardicon{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#203851;color:#c1d8f4;font-size:15px}
 .cardvalue{font-size:24px;font-weight:760;letter-spacing:-.04em;margin-top:8px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.cardfoot{font-size:11px;color:var(--muted);margin-top:3px}
+.cardfoot{font-size:11px;color:var(--muted);margin-top:3px}.fxCalc{font-size:9px;color:#8298b1;margin-top:5px;line-height:1.35;white-space:normal}.fxCalc strong{color:#b9cbe0;font-weight:650}
 .section{border:1px solid var(--line);border-radius:16px;background:rgba(15,28,44,.92);padding:17px;margin-top:14px}
 .sectionhead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:13px}
 h2{font-size:16px;margin:0;letter-spacing:-.025em}
@@ -156,7 +156,7 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
  <article class="card"><div class="cardhead"><span class="cardlabel">Hisseler</span><span class="cardicon">↗</span></div><div class="cardvalue" id="stocksValue">₺68.080,69</div><div class="cardfoot" id="stocksSub">6 hisse pozisyonu</div></article>
  <article class="card" id="fundsCard" style="display:none"><div class="cardhead"><span class="cardlabel">Yatırım fonları</span><span class="cardicon">◈</span></div><div class="cardvalue" id="fundsValue">₺0,00</div><div class="cardfoot">Midas portföyündeki fon pozisyonları</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Banka & TL bakiyeleri</span><span class="cardicon">₺</span></div><div class="cardvalue" id="tryValue">₺138.000,00</div><div class="cardfoot">N Kolay · Enpara · BNC · Nakit</div></article>
- <article class="card"><div class="cardhead"><span class="cardlabel">Nakit Döviz</span><span class="cardicon">＄</span></div><div class="cardvalue" id="cashFxValue">₺104.712,95</div><div class="cardfoot" id="cashFxSub">USD · EUR · GBP</div></article><article class="card"><div class="cardhead"><span class="cardlabel">Banka Döviz</span><span class="cardicon">€</span></div><div class="cardvalue" id="bankFxValue">₺136.577,23</div><div class="cardfoot" id="bankFxSub">EUR</div></article>
+ <article class="card"><div class="cardhead"><span class="cardlabel">Nakit Döviz</span><span class="cardicon">＄</span></div><div class="cardvalue" id="cashFxValue">₺104.712,95</div><div class="cardfoot" id="cashFxSub">USD · EUR · GBP</div><div class="fxCalc" id="cashFxCalc">Güncel alış kurlarıyla hesaplanıyor</div></article><article class="card"><div class="cardhead"><span class="cardlabel">Banka Döviz</span><span class="cardicon">€</span></div><div class="cardvalue" id="bankFxValue">₺136.577,23</div><div class="cardfoot" id="bankFxSub">EUR</div><div class="fxCalc" id="bankFxCalc">Güncel alış kuruyla hesaplanıyor</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Altın</span><span class="cardicon">◇</span></div><div class="cardvalue goldtext" id="goldValue">₺10.504,23</div><div class="cardfoot" id="goldSub">1,70 g · Doviz.com · Gram Altın</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Tahmini alacaklar</span><span class="cardicon">＋</span></div><div class="cardvalue" id="receivableValue">₺0,00</div><div class="cardfoot">Henüz tahsil edilmemiş tutarlar</div></article>
 </div>
@@ -339,6 +339,15 @@ function calc(){
  const tryVal=Object.values(a).filter(x=>x.category==="try").reduce((s,x)=>s+(Number(x.value)||0),0);
  const fxVal=(id)=>{const x=a[id]||{};return Object.entries(x.currencies||{}).reduce((s,[code,qty])=>s+(Number(qty)||0)*(Number(rates[code+"TRY"])||0),0)};
  const cashFx=fxVal("doviz"),bankFx=fxVal("bankaDoviz");
+ function fxCalcText(id,rates){
+  const x=a[id]||{}, parts=Object.entries(x.currencies||{}).map(([code,qty])=>{
+   const n=Number(qty)||0, rate=Number(rates[code+"TRY"])||0;
+   return n+" "+code+" × "+rate.toLocaleString("tr-TR",{minimumFractionDigits:4,maximumFractionDigits:4});
+  });
+  const value=fxVal(id);
+  return parts.length ? parts.join(" + ")+" = "+fmt(value) : "Döviz miktarı yok";
+ }
+
  const goldGrams=Number(a.nkolayAltin?.grams ?? balanceData.gold?.grams ?? 0)||0;
  const goldPrice=Number(q.goldGramTRY)||Number(balanceData.gold?.gramPriceSnapshot)||0;
  const gold=goldGrams*goldPrice; const receivable=Number(a.tahminiAlacak?.value)||0;
@@ -382,6 +391,7 @@ function render(){
  document.getElementById("tryValue").textContent=fmt(x.tryVal);
  document.getElementById("cashFxValue").textContent=fmt(x.cashFx);
  document.getElementById("bankFxValue").textContent=fmt(x.bankFx);
+ const cashFxCalcEl=document.getElementById("cashFxCalc"); if(cashFxCalcEl) cashFxCalcEl.textContent=fxCalcText("doviz",fx); const bankFxCalcEl=document.getElementById("bankFxCalc"); if(bankFxCalcEl) bankFxCalcEl.textContent=fxCalcText("bankaDoviz",fx);
  document.getElementById("goldValue").textContent=fmt(x.gold); document.getElementById("goldSub").textContent=nfmt(Number(balanceData.accounts?.nkolayAltin?.grams||balanceData.gold?.grams||0))+" g · Doviz.com · Gram Altın";
  document.getElementById("receivableValue").textContent=fmt(x.receivable);
  document.getElementById("portfolioTotal").textContent=fmt(x.stocks);
