@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "provider": "OYAK Yatırım",
+  "stocks": {
+    "TAVHL": null,
+    "KARSN": null,
+    "THYAO": null,
+    "CGCAM": null,
+    "SISE": null,
+    "ZPLIB.F": "https://www.oyakyatirim.com.tr/hisse-detay/ZPLIB"
+  }
+}
