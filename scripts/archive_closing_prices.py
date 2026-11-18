@@ -1,18 +1,8 @@
-import json, os, urllib.request
+import json
 from datetime import datetime, timezone
 
 ARCHIVE="/tmp/stock-closing-history.json"
-R2_KEY="history/stock-closing.json"
 SYMBOLS=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"]
-
-def get(url):
-    req=urllib.request.Request(url, headers={
-        "User-Agent":"Mozilla/5.0",
-        "Accept":"application/json",
-        "Cache-Control":"no-cache"
-    })
-    with urllib.request.urlopen(req, timeout=20) as r:
-        return json.load(r)
 
 def main():
     with open("/tmp/quotes.json", encoding="utf-8") as f:
@@ -28,8 +18,9 @@ def main():
     entry={
         "date":date,
         "capturedAt":now.isoformat().replace("+00:00","Z"),
-        "source":q.get("source","Uzmanpara"),
+        "source":q.get("source","OYAK Yatırım"),
         "sourceUrl":q.get("sourceUrl",""),
+        "stockSourceUrls":q.get("stockSourceUrls",{}),
         "prices":{s:float(prices[s]) for s in SYMBOLS}
     }
 
@@ -44,13 +35,7 @@ def main():
     entries.sort(key=lambda e:e.get("date",""))
     entries=entries[-30:]
 
-    archive={
-        "version":1,
-        "retentionDays":30,
-        "updatedAt":now.isoformat().replace("+00:00","Z"),
-        "entries":entries
-    }
-
+    archive={"version":1,"retentionDays":30,"updatedAt":now.isoformat().replace("+00:00","Z"),"entries":entries}
     with open(ARCHIVE,"w",encoding="utf-8") as f:
         json.dump(archive,f,ensure_ascii=False,indent=2)
 
