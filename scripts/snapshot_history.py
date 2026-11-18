@@ -70,11 +70,11 @@ def main():
 
     cash_fx = fx_value("doviz")
     bank_fx = fx_value("bankaDoviz")
-    gold = sum(
-        float(x.get("value", 0) or 0)
-        for x in accounts.values()
-        if x.get("category") == "gold"
-    )
+    gold_grams = float((accounts.get("nkolayAltin") or {}).get("grams", 0) or 0)
+    gold_gram_price = float(quotes.get("goldGramTRY", 0) or 0)
+    if gold_grams <= 0 or gold_gram_price <= 0:
+        raise SystemExit("Snapshot refused; missing live Doviz.com gram gold price or gold grams")
+    gold = round(gold_grams * gold_gram_price, 2)
     receivable = sum(
         float(x.get("value", 0) or 0)
         for x in accounts.values()
