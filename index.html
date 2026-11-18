@@ -469,18 +469,29 @@ function render(){
  const quoteAttempt=quoteData.lastAttempt||quoteData.lastRefresh||null;
  const quoteTime=quoteAttempt?new Date(quoteAttempt).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:"Europe/Istanbul"}):"—";
  const quoteDate=quoteAttempt?new Date(quoteAttempt).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Europe/Istanbul"}):"—";
+ const lastSuccessTime=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul"}):"henüz yok";
+ const lastSuccessClock=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:"Europe/Istanbul"}):"—";
  const staleCount=x.rows.filter(r=>r.price==null||r.quoteStale).length;
  const quoteFreshnessEl=document.getElementById("quoteFreshness");
  const quoteFreshnessAgeEl=document.getElementById("quoteFreshnessAge");
  const quoteFreshnessStatusEl=document.getElementById("quoteFreshnessStatus");
- const lastSuccessTime=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul"}):"henüz yok";
- if(quoteFreshnessAgeEl) quoteFreshnessAgeEl.textContent=" · Son deneme: "+(quoteAttempt?quoteDate+" "+quoteTime+" TSİ":"—")+" · Son başarılı tam çekim: "+lastSuccessTime;
  const quoteFresh=staleCount===0&&x.rows.length===6;
+ // Never leave the freshness banner on the hard-coded "Veri zamanı bekleniyor"
+ // text when live OYAK data has already arrived.
+ if(quoteFreshnessAgeEl){
+   quoteFreshnessAgeEl.textContent=quoteData.lastRefresh
+     ? " · Son başarılı çekim: "+lastSuccessTime+" TSİ · OYAK fiyat saati: "+((quoteData.quoteTimes&&Object.values(quoteData.quoteTimes)[0])||"—")+" TSİ"
+     : " · Alınma zamanı: —";
+ }
+ if(quoteFreshnessStatusEl){
+   quoteFreshnessStatusEl.textContent=quoteFresh
+     ? "6/6 güncel · Son çekim: "+(quoteData.lastRefresh?quoteDate+" "+lastSuccessClock+" TSİ":"—")
+     : "Veri alınamadı · "+staleCount+" hissenin son başarılı OYAK fiyatı gösteriliyor";
+ }
  document.getElementById("quoteState").textContent=quoteFresh?"OYAK Yatırım · 6/6 hisse güncel":"OYAK Yatırım · VERİ ALINAMADI · "+staleCount+" hissenin son fiyatı eski";
  document.getElementById("quoteState").className="state "+(quoteFresh?"good":"bad");
- document.getElementById("quoteSourceLabel").textContent="OYAK Yatırım · "+(quoteFresh?"6/6 güncel":"Eski fiyat işaretli");
+ document.getElementById("quoteSourceLabel").textContent="OYAK Yatırım · "+(quoteFresh?(quoteData.lastRefresh?"Son çekim "+lastSuccessClock+" TSİ":"6/6 güncel"):"Eski fiyat işaretli");
  if(quoteFreshnessEl) quoteFreshnessEl.classList.toggle("stale",!quoteFresh);
- if(quoteFreshnessStatusEl) quoteFreshnessStatusEl.textContent=quoteFresh?"6/6 hissenin fiyatı OYAK kaynağından alındı":"Veri alınamadı · "+staleCount+" hissenin son başarılı OYAK fiyatı gösteriliyor";
  document.getElementById("syncState").textContent=quoteFresh?"OYAK verisi güncel":"Bazı fiyatlar eski";
 }
 
