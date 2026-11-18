@@ -127,14 +127,16 @@ async function tlref(env){
 }
 function out(v,s=200){return new Response(JSON.stringify(v),{status:s,headers:H})}
 export default{
- async fetch(req,env){const u=new URL(req.url);
+ async fetch(req,env,ctx){const u=new URL(req.url);
   if(u.pathname==="/api/quotes"){
     // Always try to obtain a fresh market snapshot when the dashboard asks for
     // quotes. R2 remains the fallback so a temporary upstream failure never
     // makes the whole dashboard unavailable.
     try{
       const v=await liveQuotes(env);
-      await put(env,"quotes.json",v);
+      // Persisting the snapshot is best-effort. A transient R2 write error
+      // must never turn a successfully fetched live quote into stale fallback data.
+      ctx.waitUntil(put(env,"quotes.json",v).catch(()=>{}));
       return out(v);
     }catch(e){
       const cached=await read(env,"quotes.json","/data/quotes.json");
