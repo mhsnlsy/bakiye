@@ -1,5 +1,5 @@
 const FX="https://kur.doviz.com/";
-const GOLD_URL="https://altin.doviz.com/";
+const GOLD_URL="https://altin.doviz.com/serbest-piyasa/gram-altin";
 const TLREF="https://www.borsaistanbul.com/endeksler/tlref";
 const TLREF_FALLBACK="https://borsa.doviz.com/endeksler/tlref-turk-lirasi-gecelik-referans-faiz-orani/tarihsel-veri";
 const STOCKS=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
@@ -94,9 +94,9 @@ async function liveQuotes(env){
    const parsed=goldQuote(fr[1].value);
    if(parsed.price!=null){
     newGoldPrice=parsed.price;goldPriceTime=parsed.time||new Date(now).toLocaleTimeString("tr-TR",{timeZone:"Europe/Istanbul",hour:"2-digit",minute:"2-digit",second:"2-digit"});goldPriceFetchedAt=now;
-   }else goldPriceError="Döviz.com Gram Altın alış fiyatı HTML içinden ayrıştırılamadı";
+   }else goldPriceError="Döviz.com Gram Altın satış fiyatı HTML içinden ayrıştırılamadı";
   }else goldPriceError="Döviz.com altın sayfası: "+String(fr[1].reason?.message||fr[1].reason||"istek başarısız");
-  const oldGoldOk=old.goldPriceSource==="Döviz.com · Gram Altın alış"&&Number.isFinite(Number(old.goldGramTRY))&&Number(old.goldGramTRY)>0;
+  const oldGoldOk=old.goldPriceSource==="Döviz.com · Gram Altın satış"&&Number.isFinite(Number(old.goldGramTRY))&&Number(old.goldGramTRY)>0;
  const goldGramTRY=newGoldPrice??(oldGoldOk?Number(old.goldGramTRY):null);
  const goldPriceStatus=newGoldPrice!=null?"fresh":(goldGramTRY!=null?"stale":"unavailable");
  if(goldPriceError)errors.push(goldPriceError);
@@ -106,7 +106,7 @@ async function liveQuotes(env){
  const newestFetch=Object.values(quoteFetchedAt).filter(x=>x&&Number.isFinite(Date.parse(x))).sort().at(-1)||null;
  const fxMissing=FXC.filter(c=>!Number.isFinite(Number(f[c+"TRY"]))||Number(f[c+"TRY"])<=0);
  const status={oyak:allFresh?"fulfilled":(fulfilled>0?"partial":"failed"),doviz:fxStatus,refreshMethod:"Cloudflare Worker Cron · every 2 minutes"};
- return {...old,source:"OYAK Yatırım",sourceUrl:"OYAK Yatırım",stockSourceUrls:pages,fxSourceUrl:FX,goldPriceSource:"Döviz.com · Gram Altın alış",goldPriceUrl:GOLD_URL,goldGramTRY,goldPriceTime:goldPriceTime||(oldGoldOk?old.goldPriceTime||null:null),goldPriceFetchedAt:goldPriceFetchedAt||(oldGoldOk?old.goldPriceFetchedAt||null:null),goldPriceStatus,goldPriceError,asOf:allFresh?now.slice(0,10):(oldIsOyak?old.asOf||"":""),lastRefresh:newestFetch||lastComplete,lastSuccessfulRefresh:lastComplete,fxUpdatedAt,fxSourceUsed,lastAttempt:now,quotes:q,quoteTimes,quoteFetchedAt,quoteStatusBySymbol,fx:f,missing:[...missing,...fxMissing],errors,sourceStatus:{...status,gold:goldPriceStatus,staleCount:STOCKS.filter(s=>quoteStatusBySymbol[s]?.status!=="fresh").length}};
+ return {...old,source:"OYAK Yatırım",sourceUrl:"OYAK Yatırım",stockSourceUrls:pages,fxSourceUrl:FX,goldPriceSource:"Döviz.com · Gram Altın satış",goldPriceUrl:GOLD_URL,goldGramTRY,goldPriceTime:goldPriceTime||(oldGoldOk?old.goldPriceTime||null:null),goldPriceFetchedAt:goldPriceFetchedAt||(oldGoldOk?old.goldPriceFetchedAt||null:null),goldPriceStatus,goldPriceError,asOf:allFresh?now.slice(0,10):(oldIsOyak?old.asOf||"":""),lastRefresh:newestFetch||lastComplete,lastSuccessfulRefresh:lastComplete,fxUpdatedAt,fxSourceUsed,lastAttempt:now,quotes:q,quoteTimes,quoteFetchedAt,quoteStatusBySymbol,fx:f,missing:[...missing,...fxMissing],errors,sourceStatus:{...status,gold:goldPriceStatus,staleCount:STOCKS.filter(s=>quoteStatusBySymbol[s]?.status!=="fresh").length}};
 }
 function tlrefCostAddedForPosition(p,tl){const base=Number(p.avgCost)||0,start=p.realCostBaseDate||p.purchaseDate||null,end=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()),history=Array.isArray(tl?.historical)?tl.historical:[];if(!base||!start||!end||!history.length||start>=end)return 0;const byDate=new Map(history.map(x=>[x.date,Number(x.rate)])),firstRate=Number(history[0]?.rate)||0;if(!firstRate)return 0;let value=base,d=new Date(start+"T00:00:00Z");const endMs=Date.parse(end+"T00:00:00Z");while(d.getTime()<endMs){const key=d.toISOString().slice(0,10);let rate=byDate.get(key);if(rate==null){for(let i=history.length-1;i>=0;i--){if(history[i].date<=key){rate=Number(history[i].rate);break}}if(rate==null)rate=firstRate}value*=1+(rate*(1-(Number(tl?.stopaj??.175))))/365;d.setUTCDate(d.getUTCDate()+1)}return Math.max(0,value-base)}
 async function tlref(env,ctx){
