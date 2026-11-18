@@ -157,14 +157,6 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
     <strong>Toplam varlık kontrolü</strong>
     <span id="totalCheckStatus">Hesaplanıyor…</span>
   </div>
-  <div class="totalCheckRows">
-    <div><span>Hisseler</span><strong id="checkStocks">₺0,00</strong></div>
-    <div><span>Banka & TL</span><strong id="checkTry">₺0,00</strong></div>
-    <div><span>Nakit döviz</span><strong id="checkCashFx">₺0,00</strong></div>
-    <div><span>Banka döviz</span><strong id="checkBankFx">₺0,00</strong></div>
-    <div><span>Altın</span><strong id="checkGold">₺0,00</strong></div>
-    <div><span>Tahmini alacak</span><strong id="checkReceivable">₺0,00</strong></div>
-  </div>
   <div class="totalCheckSum">
     <span>Kalemlerin toplamı</span><strong id="checkSum">₺0,00</strong>
   </div>
@@ -424,11 +416,6 @@ function render(){
  // Total-varlık audit: the displayed hero total must equal the sum of the
  // same rounded components shown in the asset cards. Midas is intentionally
  // excluded because it is only the account/container of the stock positions.
- const checkItems=[
-   ["checkStocks",x.stocks],["checkTry",x.tryVal],["checkCashFx",x.cashFx],
-   ["checkBankFx",x.bankFx],["checkGold",x.gold],["checkReceivable",x.receivable]
- ];
- checkItems.forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.textContent=fmt(v)});
  const checkSum=round2(x.stocks+x.tryVal+x.cashFx+x.bankFx+x.gold+x.receivable);
  const checkSumEl=document.getElementById("checkSum"); if(checkSumEl)checkSumEl.textContent=fmt(checkSum);
  const checkStatusEl=document.getElementById("totalCheckStatus");
