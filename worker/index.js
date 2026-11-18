@@ -27,7 +27,7 @@ function stockQuote(h,s){
 }
 function fx(h,c){const rows=cells(h),target=String(c).trim().toUpperCase();for(const r of rows){const i=r.findIndex(x=>x.trim().toUpperCase().startsWith(target+" "));if(i>=0){for(let j=i+1;j<r.length;j++){const p=num(r[j]);if(p!=null)return p}}}const t=text(h),m=t.match(new RegExp("\\b"+target+"\\s+[^0-9]{1,80}?([0-9]+(?:[.,][0-9]+)?)","i"));return m?num(m[1]):null}
 function tl(h){let a=[],seen=new Set(),m,r=/(\d{2}\.\d{2}\.\d{4})\s+(?:\|\s*)?([0-9]{2,3}[.,]\d{4})/g,t=text(h);while((m=r.exec(t))){let d=m[1].split(".").reverse().join("-");if(!seen.has(d)){seen.add(d);a.push({date:d,rate:num(m[2])/100})}}return a.sort((a,b)=>a.date.localeCompare(b.date))}
-async function get(u,retries=2){const bust=(u.includes("?")?"&":"?")+"_ts="+Date.now();const headers={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36","Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8","Accept-Language":"tr-TR,tr;q=0.9,en;q=0.8","Cache-Control":"no-cache","Pragma":"no-cache"};let lastErr;for(let i=0;i<=retries;i++){try{const r=await fetch(u+bust,{cf:{cacheTtl:0,cacheEverything:false},headers,cache:"no-store",signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error(u+" HTTP "+r.status);return await r.text()}catch(e){lastErr=e;if(i<retries)await new Promise(res=>setTimeout(res,800*(i+1)))}}throw lastErr}
+async function get(u,retries=2){const headers={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36","Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8","Accept-Language":"tr-TR,tr;q=0.9,en;q=0.8","Cache-Control":"no-cache","Pragma":"no-cache","Referer":"https://www.oyakyatirim.com.tr/"};let lastErr;for(let i=0;i<=retries;i++){try{const bust=(u.includes("?")?"&":"?")+"_ts="+Date.now()+"_"+i;const r=await fetch(u+bust,{cf:{cacheTtl:0,cacheEverything:false},headers,cache:"no-store",redirect:"follow",signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error(u+" HTTP "+r.status);return await r.text()}catch(e){lastErr=e;if(i<retries)await new Promise(res=>setTimeout(res,800*(i+1)))}}throw lastErr}
 async function read(env,k,path){let x=await env.BAKIYE_DATA.get(k);if(x){const s=await x.text();return s?JSON.parse(s):null}let r=await env.ASSETS.fetch(new Request("https://assets.local"+path));return r.ok?await r.json():null}
 async function put(env,k,v){await env.BAKIYE_DATA.put(k,JSON.stringify(v,null,2))}
 async function stockSources(env){return await read(env,"stock-sources.json","/data/stock-sources.json")||{stocks:{}}}
@@ -43,7 +43,7 @@ async function liveQuotes(env){
  for(const s of STOCKS){if(Number.isFinite(Number(q[s]))&&Number(q[s])>0&&!quoteFetchedAt[s])quoteFetchedAt[s]=old.lastRefresh||null;}
  const quoteStatusBySymbol=oldIsOyak?{...(old.quoteStatusBySymbol||{})}:{};
  const missing=[],errors=[],now=new Date().toISOString();
- const results=await Promise.allSettled(STOCKS.map(s=>pages[s]?get(pages[s]):Promise.reject(new Error("OYAK URL eksik"))));
+ const results=await Promise.allSettled(STOCKS.map(async s=>{if(!pages[s])throw new Error("OYAK URL eksik");const urls=[pages[s],pages[s].replace("https://www.oyakyatirim.com.tr/","https://oyakyatirim.com.tr/")];let lastErr;for(const u of urls){try{return await get(u)}catch(e){lastErr=e}}throw lastErr||new Error("OYAK isteği başarısız")}));
  let fulfilled=0;
  for(let i=0;i<STOCKS.length;i++){
    const s=STOCKS[i],r=results[i];
