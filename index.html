@@ -251,6 +251,19 @@ function fxCalcText(id,rates){
  return parts.length?parts.join(" + ")+" = "+fmt(value):"Döviz miktarı yok";
 }
 function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function mergeHistoryData(current,incoming){
+ const left=current&&Array.isArray(current.snapshots)?current:{snapshots:[]};
+ const right=incoming&&Array.isArray(incoming.snapshots)?incoming:{snapshots:[]};
+ const leftTime=Date.parse(left.updatedAt||"")||0;
+ const rightTime=Date.parse(right.updatedAt||"")||0;
+ const older=leftTime<=rightTime?left:right;
+ const newer=leftTime<=rightTime?right:left;
+ const rows=new Map();
+ for(const item of (older.snapshots||[]))if(item&&item.date)rows.set(item.date,item);
+ for(const item of (newer.snapshots||[]))if(item&&item.date)rows.set(item.date,item);
+ const snapshots=[...rows.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-700);
+ return {...older,...newer,snapshots,retentionDays:700,startDate:snapshots[0]?.date||newer.startDate||older.startDate||null};
+}
 let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closingHistoryData={};
 window.pnlMode="nominal";
 const API_BASE="https://bakiye.muhsin-ulusoy.workers.dev";
@@ -311,7 +324,7 @@ async function loadData(){
   if(b2.status==="fulfilled"&&b2.value&&typeof b2.value==="object")balanceData=b2.value;
   if(q2.status==="fulfilled"&&q2.value&&q2.value.quotes)quoteData=q2.value;
   if(p2.status==="fulfilled"&&Array.isArray(p2.value)&&p2.value.length)positions=p2.value;
-  if(h2.status==="fulfilled"&&h2.value&&Array.isArray(h2.value.snapshots))historyData=h2.value;
+  if(h2.status==="fulfilled"&&h2.value&&Array.isArray(h2.value.snapshots))historyData=mergeHistoryData(historyData,h2.value);
   if(t2.status==="fulfilled"&&t2.value&&t2.value.asOf)tlrefData=t2.value;
   if(c2.status==="fulfilled"&&c2.value&&Array.isArray(c2.value.entries))closingHistoryData=c2.value;
   renderBenchmarkCards();
@@ -547,7 +560,7 @@ function renderHistory(){
  const el=document.getElementById("historyChart"), snaps=Array.isArray(historyData.snapshots)?historyData.snapshots.slice():[];
  const days=Number(document.getElementById("historyRange").value)||30;
  const filtered=snaps.sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-days);
- if(!filtered.length){el.innerHTML='<div class="chartEmpty">Geçmiş veri biriktikçe grafik oluşacak.</div>';return}
+ if(!filtered.length){el.innerHTML='<div class="chartEmpty">Henüz 18:40 snapshotı kaydedilmedi.</div>';document.getElementById("historyStart").textContent="Başlangıç: —";document.getElementById("historyEnd").textContent="Son kayıt: —";document.getElementById("historyDailyPct").textContent="İlk snapshot bekleniyor";return}
  const W=1100,H=300,L=48,R=20,T=18,B=34,iw=W-L-R,ih=H-T-B;
  const vals=filtered.map(s=>Number(s[historySeries])||0);
  const min=Math.min(...vals),max=Math.max(...vals),span=max-min||Math.max(max*0.02,1);
