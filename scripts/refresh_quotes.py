@@ -7,6 +7,7 @@ STOCKS = ["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"]
 SOURCE_SYMBOL = {"ZPLIB.F":"ZPLIB"}
 FX_SOURCE = "https://kur.doviz.com/"
 FXC = ["USD","EUR","GBP"]
+GOLD_SOURCE = "https://www.doviz.com/"
 
 class TableParser(HTMLParser):
     def __init__(self):
@@ -55,6 +56,22 @@ def number(s):
     if "," in s: s=s.replace(".","").replace(",",".")
     try: return float(s)
     except: return None
+
+def parse_gold(source):
+    plain=re.sub(r"\\s+"," ",re.sub(r"<[^>]+>"," ",source))
+    # Doviz.com serbest piyasa tablosundaki Gram Altın satırı.
+    m=re.search(r"Gram\\s+Altın\\s+([0-9]+(?:[.,][0-9]+)?)\\s+%?",plain,re.I)
+    if m:
+        return number(m.group(1))
+    # HTML yapısı değişirse tablo satırı içinden yakala.
+    p=TableParser(); p.feed(source)
+    for row in p.rows:
+        cells=[x.strip() for x in row]
+        for i,cell in enumerate(cells):
+            if re.fullmatch(r"Gram\\s+Altın",cell,re.I) and i+1<len(row):
+                v=number(row[i+1])
+                if v is not None: return v
+    return None
 
 def parse_fx(source):
     p=TableParser(); p.feed(source)
@@ -113,6 +130,9 @@ def main():
         raise SystemExit("Uzmanpara parse failed; missing: "+",".join(missing))
     fx_source=fetch(FX_SOURCE)
     fx=parse_fx(fx_source)
+    gold_gram_try=parse_gold(fx_source)
+    if gold_gram_try is None or gold_gram_try <= 0:
+        raise SystemExit("Döviz.com parse failed; missing Gram Altın")
     fx_missing=[c for c in FXC if c+"TRY" not in fx]
     if fx_missing:
         raise SystemExit("D\u00f6viz.com parse failed; missing: "+",".join(fx_missing)+"TRY")
@@ -123,6 +143,8 @@ def main():
     q["quotes"].update(prices)
     q["dailyPct"]=daily_pct
     q["fx"].update(fx)
+    q["goldGramTRY"] = round(gold_gram_try, 2)
+    q["goldSource"] = GOLD_SOURCE
     q["missing"]=missing
     q["errors"]=[]
     q["sourceStatus"]={"uzmanpara":"fulfilled","doviz":"fulfilled","refreshMethod":"GitHub Actions direct fetch"}
@@ -130,6 +152,7 @@ def main():
     print("source:",q["source"])
     print("lastRefresh:",q["lastRefresh"])
     print("quotes:",q["quotes"])
+    print("goldGramTRY:",q["goldGramTRY"])
     print("missing:",q["missing"])
     print("errors:",q["errors"])
 
