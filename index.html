@@ -201,13 +201,10 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
 <section class="section">
  <div class="sectionhead"><div><h2>Aylık yükümlülükler</h2><div class="note">Toplam varlıktan ayrı gösterilir; net bakiye hesabında düşülür.</div></div></div>
  <div class="liability">
-  <div class="liabilityItem"><span>Kira</span><strong id="rentValue">₺14.000,00</strong></div>
-  <div class="liabilityItem"><span>Enpara kredi kartı</span><strong id="enparaCardValue">₺0,00</strong></div>
-  <div class="liabilityItem"><span>Yapı Kredi kredi kartı</span><strong id="yapiKrediCardValue">₺20.000,00</strong></div>
-  <div class="liabilityItem"><span>Bu ay ödenen</span><strong id="paidObligationTotal">₺44.000,00</strong></div>
-  <div class="liabilityItem"><span>Kalan</span><strong id="remainingObligationTotal">₺34.000,00</strong></div>
-  <div class="liabilityItem"><span>Toplam aylık</span><strong id="obligationTotal">₺54.000,00</strong></div>
- </div>
+  <div class="liabilityItem"><span>Bu ay ödenen</span><strong id="paidObligationTotal">₺58.000,00</strong></div>
+  <div class="liabilityItem"><span>Şu an kalan</span><strong id="remainingObligationTotal">Belirsiz</strong></div>
+  <div class="liabilityItem"><span>Toplam aylık yükümlülük</span><strong id="obligationTotal">Belirsiz</strong></div>
+ </div></div>
 </section>
 
 <footer>
@@ -346,10 +343,10 @@ function calc(){
  stocks=round2(stocks);
  const tryVal2=round2(tryVal), cashFx2=round2(cashFx), bankFx2=round2(bankFx), gold2=round2(gold), receivable2=round2(receivable);
  const total=round2(stocks+tryVal2+cashFx2+bankFx2+gold2+receivable2);
- const obligations=(Number(balanceData.monthlyObligations?.rent?.value)||0)+(Number(balanceData.monthlyObligations?.enparaCreditCard?.value)||0)+(Number(balanceData.monthlyObligations?.yapiKrediCreditCard?.value)||0); 
- const paidObligations=round2(Number(balanceData.monthlyObligations?.enparaCreditCard?.paidThisMonth)||0);
- const remainingObligations=round2(Math.max(0,obligations-paidObligations));
- return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,receivable:receivable2,total,obligations,net:round2(total-obligations),rates};
+ const paidObligations=round2(Number(balanceData.monthlyObligations?.summary?.paidThisMonth)||0);
+ const remainingObligations=balanceData.monthlyObligations?.summary?.remainingThisMonth;
+ const obligations=balanceData.monthlyObligations?.summary?.totalMonthly;
+return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,receivable:receivable2,total,obligations,net:round2(total-obligations),rates};
 }
 function prevClosingBase(x){ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[]; const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()); const prev=entries.filter(e=>e.date&&e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1); return prev?x.rows.reduce((s,r)=>s+(Number(prev.prices?.[r.p.symbol])||0)*r.qty,0):0; }
 function render(){
@@ -363,10 +360,9 @@ function render(){
  document.getElementById("grandTotal").textContent=fmt(x.total);
  document.getElementById("netTotal").textContent=fmt(x.net);
  document.getElementById("obligationHero").textContent=fmt(x.obligations);
- document.getElementById("enparaCardValue").textContent=fmt(Number(balanceData.monthlyObligations?.enparaCreditCard?.value)||0);
- document.getElementById("yapiKrediCardValue").textContent=fmt(Number(balanceData.monthlyObligations?.yapiKrediCreditCard?.value)||0);
  document.getElementById("paidObligationTotal").textContent=fmt(paidObligations);
- document.getElementById("remainingObligationTotal").textContent=fmt(remainingObligations);
+ document.getElementById("remainingObligationTotal").textContent=remainingObligations==null?"Belirsiz":fmt(remainingObligations);
+ document.getElementById("obligationTotal").textContent=obligations==null?"Belirsiz":fmt(obligations);
  document.getElementById("heroRealPnL").textContent=fmt(x.realPnl);
  document.getElementById("positionCount").textContent=nfmt(x.positionCount)+" lot";
  document.getElementById("stocksValue").textContent=fmt(x.stocks);
