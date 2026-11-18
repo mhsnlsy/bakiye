@@ -32,7 +32,7 @@ button:hover,.btn:hover{background:#244768}
 .cardicon{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#203851;color:#c1d8f4;font-size:15px}
 .cardvalue{font-size:24px;font-weight:760;letter-spacing:-.04em;margin-top:8px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .cardfoot{font-size:11px;color:var(--muted);margin-top:3px}.fxCalc{font-size:9px;color:#8298b1;margin-top:5px;line-height:1.35;white-space:normal}.fxCalc strong{color:#b9cbe0;font-weight:650}
-.section{border:1px solid var(--line);border-radius:16px;background:rgba(15,28,44,.92);padding:17px;margin-top:14px}
+.totalCheck{border:1px solid var(--line);border-radius:14px;background:#0d1c2d;padding:12px 14px;margin-top:12px}.totalCheckHead{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:11px}.totalCheckHead span{font-size:10px;color:var(--muted)}.totalCheckHead span.ok{color:var(--green)}.totalCheckHead span.bad{color:var(--red)}.totalCheckRows{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}.totalCheckRows div{background:#13243a;border:1px solid rgba(38,59,85,.7);border-radius:8px;padding:7px 8px}.totalCheckRows span{display:block;color:var(--muted);font-size:9px}.totalCheckRows strong{display:block;font-size:11px;margin-top:2px}.totalCheckSum{display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}.totalCheckSum strong{color:var(--text);font-size:13px}@media(max-width:560px){.totalCheckRows{grid-template-columns:repeat(2,minmax(0,1fr))}}.section{border:1px solid var(--line);border-radius:16px;background:rgba(15,28,44,.92);padding:17px;margin-top:14px}
 .sectionhead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:13px}
 h2{font-size:16px;margin:0;letter-spacing:-.025em}
 .note{font-size:11px;color:var(--muted);margin-top:3px}
@@ -150,6 +150,24 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
   <div>Reel portföy K/Z<strong id="heroRealPnL">-₺13.103,17</strong></div>
   <div>Toplam pozisyon<strong id="positionCount">1.886 lot</strong></div>
  </div>
+</section>
+
+<section class="totalCheck" id="totalCheck">
+  <div class="totalCheckHead">
+    <strong>Toplam varlık kontrolü</strong>
+    <span id="totalCheckStatus">Hesaplanıyor…</span>
+  </div>
+  <div class="totalCheckRows">
+    <div><span>Hisseler</span><strong id="checkStocks">₺0,00</strong></div>
+    <div><span>Banka & TL</span><strong id="checkTry">₺0,00</strong></div>
+    <div><span>Nakit döviz</span><strong id="checkCashFx">₺0,00</strong></div>
+    <div><span>Banka döviz</span><strong id="checkBankFx">₺0,00</strong></div>
+    <div><span>Altın</span><strong id="checkGold">₺0,00</strong></div>
+    <div><span>Tahmini alacak</span><strong id="checkReceivable">₺0,00</strong></div>
+  </div>
+  <div class="totalCheckSum">
+    <span>Kalemlerin toplamı</span><strong id="checkSum">₺0,00</strong>
+  </div>
 </section>
 
 <div class="grid" id="assetCards">
@@ -388,6 +406,22 @@ function render(){
  
  document.getElementById("grandTotal").textContent=fmt(x.total);
  document.getElementById("netTotal").textContent=fmt(x.net);
+ // Total-varlık audit: the displayed hero total must equal the sum of the
+ // same rounded components shown in the asset cards. Midas is intentionally
+ // excluded because it is only the account/container of the stock positions.
+ const checkItems=[
+   ["checkStocks",x.stocks],["checkTry",x.tryVal],["checkCashFx",x.cashFx],
+   ["checkBankFx",x.bankFx],["checkGold",x.gold],["checkReceivable",x.receivable]
+ ];
+ checkItems.forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.textContent=fmt(v)});
+ const checkSum=round2(x.stocks+x.tryVal+x.cashFx+x.bankFx+x.gold+x.receivable);
+ const checkSumEl=document.getElementById("checkSum"); if(checkSumEl)checkSumEl.textContent=fmt(checkSum);
+ const checkStatusEl=document.getElementById("totalCheckStatus");
+ if(checkStatusEl){
+   const ok=Math.abs(checkSum-x.total)<0.01;
+   checkStatusEl.textContent=ok?"✓ Toplam doğru":"⚠ Toplam ile kalemler uyuşmuyor";
+   checkStatusEl.className=ok?"ok":"bad";
+ }
  document.getElementById("obligationHero").textContent=fmt(x.obligations);
  document.getElementById("paidObligationTotal").textContent=fmt(x.paidObligations);
  document.getElementById("enparaPaidValue").textContent=fmt(Number(balanceData.monthlyObligations?.enparaCreditCard?.paidThisMonth)||0);
