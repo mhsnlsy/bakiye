@@ -17,7 +17,7 @@
     "EURTRY": 55.4999,
     "GBPTRY": 66.492
   },
-  "lastRefresh": "2026-11-16T15:25:06.304321Z",
+  "lastRefresh": "2026-11-18T04:00:00Z",
   "dailyPct": {
     "TAVHL": 0.9046052631578948,
     "KARSN": -0.2525252525252471,
@@ -27,5 +27,7 @@
     "ZPLIB.F": 0.9284818067754049
   },
   "errors": [],
-  "missing": []
+  "missing": [],
+  "goldGramTRY": 6186.58,
+  "goldSource": "https://www.doviz.com/"
 }
