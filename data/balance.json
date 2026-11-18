@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-16",
+  "asOf": "2026-11-18",
   "source": "Manuel girilen bakiye verileri",
   "accounts": {
     "nkolay": {
@@ -9,7 +9,7 @@
     },
     "enpara": {
       "label": "Enpara",
-      "value": 19000,
+      "value": 0,
       "category": "try"
     },
     "doviz": {
