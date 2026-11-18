@@ -29,7 +29,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           npx wrangler@latest r2 object get bakiye-data/quotes.json --file=/tmp/quotes.json --remote
-      - name: Refresh Uzmanpara prices immediately before 18:40 archive
+      - name: Refresh OYAK prices immediately before 18:40 archive
         run: python3 scripts/refresh_quotes.py
       - name: Publish fresh closing source to R2
         env:
