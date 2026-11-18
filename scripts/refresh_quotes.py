@@ -129,33 +129,42 @@ def parse_stock(source):
     p=TableParser(); p.feed(source)
     out={}
     daily_pct={}
+    quote_times={}
     for symbol in STOCKS:
+        source_symbol=SOURCE_SYMBOL.get(symbol,symbol)
         for row in p.rows:
             cells=[x.strip().upper() for x in row]
-            source_symbol=SOURCE_SYMBOL.get(symbol,symbol)
             if source_symbol in cells:
                 i=cells.index(source_symbol)
-                if i+1 < len(row):
-                    v=number(row[i+1])
-                    if v is not None:
-                        out[symbol]=v
-                        if i+2 < len(row):
-                            pct=number(row[i+2])
-                            if pct is not None: daily_pct[symbol]=pct
-                        break
-    plain=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",source))
-    for symbol in STOCKS:
-        if symbol in out: continue
-        source_symbol=SOURCE_SYMBOL.get(symbol,symbol)
-        m=re.search(r"(?:^|\s)"+re.escape(source_symbol)+r"\s+([0-9]+(?:[.,][0-9]+)?)",plain,re.I)
-        if m: out[symbol]=number(m.group(1))
-    return out, daily_pct
+                price=None; pct=None; quote_time=None
+                for candidate in row[i+1:]:
+                    if price is None:
+                        v=number(candidate)
+                        if v is not None:
+                            price=v
+                            continue
+                    if re.fullmatch(r"\\d{2}:\\d{2}:\\d{2}", candidate.strip()):
+                        quote_time=candidate.strip()
+                    elif pct is None:
+                        v=number(candidate)
+                        if v is not None and -100 <= v <= 100:
+                            pct=v
+                if price is not None:
+                    out[symbol]=price
+                    if pct is not None: daily_pct[symbol]=pct
+                    if quote_time: quote_times[symbol]=quote_time
+                    break
+        if symbol not in out:
+            plain=re.sub(r"\\s+"," ",re.sub(r"<[^>]+>"," ",source))
+            m=re.search(r"(?:^|\\s)"+re.escape(source_symbol)+r"\\s+([0-9]+(?:[.,][0-9]+)?)",plain,re.I)
+            if m: out[symbol]=number(m.group(1))
+    return out, daily_pct, quote_times
 
 def main():
     path="/tmp/quotes.json"
     with open(path,encoding="utf-8") as f: q=json.load(f)
     source=fetch(STOCK_SOURCE)
-    prices, daily_pct=parse_stock(source)
+    prices, daily_pct, quote_times=parse_stock(source)
     missing=[s for s in STOCKS if s not in prices]
     if missing:
         raise SystemExit("Uzmanpara parse failed; missing: "+",".join(missing))
@@ -184,6 +193,7 @@ def main():
     q["asOf"]=datetime.now(timezone.utc).date().isoformat()
     q["lastRefresh"]=datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
     q["quotes"].update(prices)
+    q["quoteTimes"]={**q.get("quoteTimes",{}),**quote_times}
     q["dailyPct"]=daily_pct
     q["fx"].update(fx)
     q["goldGramTRY"] = round(gold_gram_try, 2)
