@@ -64,7 +64,9 @@
     },
     "enparaCreditCard": {
       "label": "Enpara kredi kartı",
-      "value": 20000
+      "value": 0,
+      "paidThisMonth": 44000,
+      "note": "Kasım 2026 ödemesi: 44.000 TL ödendi"
     },
     "yapiKrediCreditCard": {
       "label": "Yapı Kredi kredi kartı",
