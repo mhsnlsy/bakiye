@@ -12,16 +12,16 @@ function cells(h){return [...h.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>[
 function stockQuote(h,s){
  const rows=cells(h);
  for(const r of rows){
-   if(r.length>=8 && /^\\d{2}:\\d{2}:\\d{2}$/.test(r[r.length-1].trim())){
+   if(r.length>=8 && /^\d{2}:\d{2}:\d{2}$/.test(r[r.length-1].trim())){
      const price=num(r[0]);
      if(price!=null&&price>0)return {price,time:r[r.length-1].trim()};
    }
  }
  const t=text(h);
- const m=t.match(/Son\\s+Fark\\s+Değişim\\s+Alış\\s+Satış\\s+Taban\\s+Tavan\\s+Saat\\s+([0-9]+(?:[.,][0-9]+)?)\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+(\\d{2}:\\d{2}:\\d{2})/i);
+ const m=t.match(/Son\s+Fark\s+Değişim\s+Alış\s+Satış\s+Taban\s+Tavan\s+Saat\s+([0-9]+(?:[.,][0-9]+)?)\s+[-+0-9.,%]+\s+[-+0-9.,%]+\s+[-+0-9.,%]+\s+[-+0-9.,%]+\s+[-+0-9.,%]+\s+[-+0-9.,%]+\s+(\d{2}:\d{2}:\d{2})/i);
  if(m){const p=num(m[1]);if(p!=null&&p>0)return {price:p,time:m[2]}}
- for(const re of [/\\bSon\\b\\s*[:：]\\s*([0-9]+(?:[.,][0-9]+)?)/i,/\\bSon Fiyat\\b\\s*[:：]\\s*([0-9]+(?:[.,][0-9]+)?)/i]){
-   const x=t.match(re);if(x){const p=num(x[1]);if(p!=null&&p>0)return {price:p,time:(t.match(/\\b(\\d{2}:\\d{2}:\\d{2})\\b/)||[])[1]||null}}
+ for(const re of [/\bSon\b\s*[:：]\s*([0-9]+(?:[.,][0-9]+)?)/i,/\bSon Fiyat\b\s*[:：]\s*([0-9]+(?:[.,][0-9]+)?)/i]){
+   const x=t.match(re);if(x){const p=num(x[1]);if(p!=null&&p>0)return {price:p,time:(t.match(/\b(\d{2}:\d{2}:\d{2})\b/)||[])[1]||null}}
  }
  return {price:null,time:null};
 }
