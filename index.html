@@ -562,9 +562,18 @@ function renderHistory(){
  const vals=filtered.map(s=>Number(s[historySeries])||0);
  const min=Math.min(...vals),max=Math.max(...vals),span=max-min||Math.max(max*0.02,1);
  const lo=min-span*.12,hi=max+span*.12;
+ const rawStep=(hi-lo)/4;
+ const mag=Math.pow(10,Math.floor(Math.log10(rawStep)));
+ const norm=rawStep/mag;
+ const niceBase=norm<=1?1:norm<=2?2:norm<=5?5:10;
+ const step=niceBase*mag;
+ const tickTop=Math.ceil(hi/step)*step;
+ const ticks=[0,1,2,3,4].map(i=>tickTop-i*step);
+ const axisFmt=v=>new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",minimumFractionDigits:0,maximumFractionDigits:0}).format(v);
+ const axisLo=ticks[4],axisHi=ticks[0];
  const x=i=>filtered.length===1?L+iw/2:L+i/(filtered.length-1)*iw;
- const y=v=>T+(hi-v)/(hi-lo)*ih;
- const grid=[0,.25,.5,.75,1].map(t=>{const v=hi-(hi-lo)*t,yy=T+t*ih;return '<line class="chartGrid" x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'"/><text class="chartAxis" x="4" y="'+(yy+3)+'">'+fmt(v)+'</text>'}).join("");
+ const y=v=>T+(axisHi-v)/(axisHi-axisLo)*ih;
+ const grid=ticks.map(v=>{const yy=T+(axisHi-v)/(axisHi-axisLo)*ih;return '<line class="chartGrid" x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'"/><text class="chartAxis" x="4" y="'+(yy+3)+'">'+axisFmt(v)+'</text>'}).join("");
  const path=filtered.map((s,i)=>{
    return (i===0?"M":"L")+x(i).toFixed(1)+" "+y(Number(s[historySeries])||0).toFixed(1);
  }).join(" ");
