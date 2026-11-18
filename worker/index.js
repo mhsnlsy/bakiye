@@ -36,7 +36,7 @@ function fx(h,c){
  const m=t.match(new RegExp("(?:^|\\s)"+target+"(?:\\s+[^|]{0,50})?\\s*\\|\\s*([0-9]+(?:[.,][0-9]+)?)","i"));
  return m?num(m[1]):null;
 }
-function tl(h){let a=[],seen=new Set(),m,r=/(\\d{2}\\.\\d{2}\\.\\d{4})\\s+(?:\\|\\s*)?([0-9]{2,3}[.,]\\d{4})/g,t=text(h);while((m=r.exec(t))){let d=m[1].split(".").reverse().join("-");if(!seen.has(d)){seen.add(d);a.push({date:d,rate:num(m[2])/100})}}return a.sort((a,b)=>a.date.localeCompare(b.date))}
+function tl(h){let a=[],seen=new Set(),m,r=/(\d{2}\.\d{2}\.\d{4})\s+(?:\|\s*)?([0-9]{2,3}[.,]\d{4})/g,t=text(h);while((m=r.exec(t))){let d=m[1].split(".").reverse().join("-");if(!seen.has(d)){seen.add(d);a.push({date:d,rate:num(m[2])/100})}}return a.sort((a,b)=>a.date.localeCompare(b.date))}
 async function get(u){
  const bust=(u.includes("?")?"&":"?")+"_ts="+Date.now();
  const r=await fetch(u+bust,{cf:{cacheTtl:0,cacheEverything:false},headers:{"User-Agent":"Mozilla/5.0 (compatible; BakiyeWorker/1.0)","Accept":"text/html,application/xhtml+xml","Accept-Language":"tr-TR,tr;q=0.9","Cache-Control":"no-cache"},cache:"no-store",signal:AbortSignal.timeout(12000)});
@@ -138,11 +138,14 @@ export default{
     }
   }
   if(u.pathname==="/api/tlref"){
-    // TLREF is single-writer data: GitHub Actions publishes the canonical
-    // TradingView snapshot at 18:30 TSİ. The public API must never refresh
-    // or overwrite R2 on a browser request.
-    const v=await read(env,"tlref.json","/data/tlref.json");
-    return v?out(v):out({error:"tlref_not_ready"},503)
+    // Refresh TLREF on demand. Keep the R2 snapshot as a safe fallback.
+    try{
+      const fresh=await tlref(env);
+      return out(fresh);
+    }catch(e){
+      const v=await read(env,"tlref.json","/data/tlref.json");
+      return v?out({...v,sourceStatus:{refreshMethod:"R2 fallback",liveError:String(e?.message||e)}}):out({error:"tlref_not_ready",message:String(e?.message||e)},503);
+    }
   }
   if(u.pathname==="/api/balance"){const v=await read(env,"balance.json","/data/balance.json");return v?out(v):out({error:"balance_not_ready"},503)}
   if(u.pathname==="/api/positions"){const v=await read(env,"positions.json","/data/positions.json");return v?out(v):out({error:"positions_not_ready"},503)}
