@@ -239,6 +239,7 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
 <script>
 function fmt(n){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
 function nfmt(n){return new Intl.NumberFormat("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
+function round2(v){return Math.round((Number(v)||0)*100)/100}
 function fxCalcText(id,rates){
  const account=(balanceData.accounts||{})[id]||{};
  const entries=Object.entries(account.currencies||{});
@@ -385,7 +386,6 @@ function calc(){
  // Round each displayed asset component to kuruş first, then build the grand
  // total from those same components. This guarantees the hero total equals
  // the sum of the cards the user sees.
- const round2=v=>Math.round((Number(v)||0)*100)/100;
  stocks=round2(stocks);
  const tryVal2=round2(tryVal), cashFx2=round2(cashFx), bankFx2=round2(bankFx), gold2=round2(gold), receivable2=round2(receivable);
  const total=round2(stocks+tryVal2+cashFx2+bankFx2+gold2+receivable2);
