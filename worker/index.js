@@ -26,37 +26,21 @@ function stockQuote(h,s){
    if(i>=0){
      let price=null,time=null;
      for(let j=i+1;j<r.length;j++){
-       if(price==null){const p=num(r[j]);if(p!=null){price=p;continue}}
-       if(/^[0-2]?\\d:[0-5]\\d:[0-5]\\d$/.test(r[j].trim())) time=r[j].trim();
+       if(price==null){
+         const p=num(r[j]);
+         if(p!=null){price=p;continue}
+       }
+       if(/^\\d{2}:\\d{2}:\\d{2}$/.test(r[j].trim())) time=r[j].trim();
      }
      return {price,time};
    }
  }
  const t=text(h);
- const m=t.match(new RegExp("(?:^|\\\\s)"+target.replace(/[.*+?^()|[\\]\\\\]/g,"\\\\function stock(h,s){
- const rows=cells(h);")+"\\\\s+([0-9]+(?:[.,][0-9]+)?)","i"));
+ const m=t.match(new RegExp("(?:^|\\\\s)"+target.replace(/[.*+?^()|[\\]\\\\]/g,"\\\\$&")+"\\\\s+([0-9]+(?:[.,][0-9]+)?)","i"));
  return m?{price:num(m[1]),time:null}:{price:null,time:null};
 }
-function stock(h,s){
- const q=stockQuote(h,s);
- return q.price;
-}
-function stockTime(h,s){
- return stockQuote(h,s).time;
-}
-function stockOld(h,s){
- const rows=cells(h);
- const target=String(s).trim().toUpperCase();
- for(const r of rows){
-   const i=r.findIndex(x=>x.trim().toUpperCase()===target);
-   if(i>=0){
-     for(let j=i+1;j<r.length;j++){const p=num(r[j]);if(p!=null)return p}
-   }
- }
- const t=text(h);
- const m=t.match(new RegExp("(?:^|\\s)"+target.replace(/[.*+?^()|[\\]\\\\]/g,"\\\\$&")+"\\s+([0-9]+(?:[.,][0-9]+)?)","i"));
- return m?num(m[1]):null;
-}
+function stock(h,s){return stockQuote(h,s).price}
+function stockTime(h,s){return stockQuote(h,s).time}
 function fx(h,c){
  const rows=cells(h);
  const target=String(c).trim().toUpperCase();
