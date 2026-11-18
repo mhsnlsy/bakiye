@@ -80,9 +80,9 @@ def main():
         and (now.hour, now.minute) <= SNAPSHOT_WINDOW_END
     )
     if not force and not within_window:
-        raise SystemExit(
-            f"Snapshot skipped: local time is {now:%Y-%m-%d %H:%M} Europe/Istanbul; "
-            "expected 18:35–18:50."
+        print(
+            f"Manual/late snapshot mode: local time is {now:%Y-%m-%d %H:%M} "
+            "Europe/Istanbul; using the current live valuation."
         )
 
     today = now.date().isoformat()
