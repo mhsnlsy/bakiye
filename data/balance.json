@@ -14,7 +14,6 @@
     },
     "doviz": {
       "label": "Döviz",
-      "value": 110000,
       "category": "fx",
       "currencies": {
         "USD": 1427,
@@ -24,16 +23,10 @@
     },
     "bankaDoviz": {
       "label": "Banka döviz",
-      "value": 139000,
       "category": "fx",
       "currencies": {
         "EUR": 2460
       }
-    },
-    "midas": {
-      "label": "Midas",
-      "value": 65000,
-      "category": "brokerage_placeholder"
     },
     "tahminiAlacak": {
       "label": "Tahmini alacak",
@@ -47,7 +40,6 @@
     },
     "nkolayAltin": {
       "label": "N Kolay Altın",
-      "value": 10826.52,
       "category": "gold",
       "grams": 1.7
     },
@@ -79,10 +71,6 @@
       "remainingThisMonth": null,
       "totalMonthly": null
     }
-  },
-  "gold": {
-    "gramPriceSnapshot": 6186.58,
-    "grams": 1.7
   },
   "note": "Bakiye verileri Google Sheets kullanılmadan manuel güncellenir.",
   "fxSource": "Döviz.com serbest piyasa",
