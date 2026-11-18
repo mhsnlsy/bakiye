@@ -58,7 +58,7 @@ def number(s):
     except: return None
 
 def parse_gold(source):
-    plain=re.sub(r"\\s+"," ",re.sub(r"<[^>]+>"," ",source))
+    plain=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",source))
     # Doviz.com serbest piyasa tablosundaki Gram Altın satırı.
     m=re.search(r"Gram\\s+Altın\\s+([0-9]+(?:[.,][0-9]+)?)\\s+%?",plain,re.I)
     if m:
