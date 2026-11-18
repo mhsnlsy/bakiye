@@ -15,7 +15,7 @@ TLREF_FILE = Path("data/tlref.json")
 HISTORY_FILE = Path("data/history.json")
 RETENTION_DAYS = 700
 SNAPSHOT_WINDOW_START = (18, 35)
-SNAPSHOT_WINDOW_END = (18, 50)
+SNAPSHOT_WINDOW_END = (19, 0)
 
 
 def load_json(path):
