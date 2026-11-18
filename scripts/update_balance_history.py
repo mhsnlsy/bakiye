@@ -38,8 +38,8 @@ def api_json(path):
         if response.status != 200:
             raise RuntimeError(f"{path}: HTTP {response.status}")
         payload = json.loads(response.read().decode("utf-8"))
-    if not isinstance(payload, dict):
-        raise RuntimeError(f"{path}: invalid JSON object")
+    if not isinstance(payload, (dict, list)):
+        raise RuntimeError(f"{path}: invalid JSON payload")
     return payload
 
 
