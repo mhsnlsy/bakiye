@@ -2,11 +2,15 @@ name: Record Daily Balance History
 
 on:
   schedule:
-    - cron: "40 15 * * *" # 18:40 Europe/Istanbul (UTC+3)
+    - cron: "40,45,50 15 * * *" # 18:40 plus retry windows in Europe/Istanbul
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: daily-balance-history
+  cancel-in-progress: false
 
 jobs:
   snapshot:
