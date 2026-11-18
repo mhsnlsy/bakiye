@@ -220,8 +220,7 @@ let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closing
 window.pnlMode="nominal";
 async function api(path){
  const sep=path.includes("?")?"&":"?";
- const base=location.pathname.startsWith("/bakiye")?"/bakiye":"";
- const r=await fetch(base+path+sep+"v="+Date.now(),{
+ const r=await fetch(path+sep+"v="+Date.now(),{
   cache:"no-store",
   headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}
  });
