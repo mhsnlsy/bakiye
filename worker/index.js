@@ -1,4 +1,5 @@
 const FX="https://kur.doviz.com/";
+const GOLD_API="https://api.gramhane.com/v1/prices.json";
 const TLREF="https://www.borsaistanbul.com/endeksler/tlref";
 const TLREF_FALLBACK="https://borsa.doviz.com/endeksler/tlref-turk-lirasi-gecelik-referans-faiz-orani/tarihsel-veri";
 const STOCKS=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
@@ -70,7 +71,7 @@ async function liveQuotes(env){
      quoteStatusBySymbol[s]={status:hasOyakPrice?"stale":"unavailable",fetchedAt:quoteFetchedAt[s]||null,error};
    }
  }
- const fr=await Promise.allSettled([get(FX)]);
+ const fr=await Promise.allSettled([get(FX),get(GOLD_API)]);
  let fxStatus="rejected";
  if(fr[0].status==="fulfilled"){fxStatus="fulfilled";for(const c of FXC){const p=fx(fr[0].value,c);if(p!=null)f[c+"TRY"]=p;else errors.push("Döviz.com kur verisi ayrıştırılamadı: "+c)}}
  else errors.push("Döviz.com: "+String(fr[0].reason?.message||fr[0].reason));
@@ -78,13 +79,25 @@ async function liveQuotes(env){
  let fxSourceUsed=fr[0].status==="fulfilled"?"Döviz.com":"önceki değer";
  if(fxNeed.length){try{const xml=await get(TCMB);for(const c of fxNeed){const p=tcmbFx(xml,c);if(p!=null){f[c+"TRY"]=p;fxSourceUsed="TCMB (yedek)"}}}catch(e){errors.push("TCMB yedek kur: "+String(e?.message||e))}}
  if(FXC.every(c=>Number(f[c+"TRY"])>0)&&fxStatus!=="fulfilled")fxStatus=fxSourceUsed.startsWith("TCMB")?"fallback":fxStatus;
+ let newGoldPrice=null,goldPriceTime=null,goldPriceFetchedAt=null,goldPriceError=null;
+ if(fr[1].status==="fulfilled"){
+  try{
+   const gd=JSON.parse(fr[1].value),gp=Number(gd?.kurlar?.ALTIN?.alis);
+   if(gd?.meta?.status==="success"&&Number.isFinite(gp)&&gp>0){
+    newGoldPrice=gp;goldPriceTime=String(gd.meta.tarih||"");goldPriceFetchedAt=now;
+   }else goldPriceError="Gramhane yanıtında geçerli ALTIN alış fiyatı yok";
+  }catch(e){goldPriceError="Gramhane JSON: "+String(e?.message||e)}
+ }else goldPriceError="Gramhane: "+String(fr[1].reason?.message||fr[1].reason||"istek başarısız");
+ const oldGoldOk=old.goldPriceSource==="Gramhane · Gram altın alış"&&Number.isFinite(Number(old.goldGramTRY))&&Number(old.goldGramTRY)>0;
+ const goldGramTRY=newGoldPrice??(oldGoldOk?Number(old.goldGramTRY):null);
+ const goldPriceStatus=newGoldPrice!=null?"fresh":(goldGramTRY!=null?"stale":"unavailable");
  const fxUpdatedAt=FXC.some(c=>Number(f[c+"TRY"])>0)&&(fxStatus==="fulfilled"||fxStatus==="fallback")?now:(old.fxUpdatedAt||null);
  const allFresh=fulfilled===STOCKS.length;
  const lastComplete=allFresh?now:(oldIsOyak?(old.lastSuccessfulRefresh||old.lastRefresh||null):null);
  const newestFetch=Object.values(quoteFetchedAt).filter(x=>x&&Number.isFinite(Date.parse(x))).sort().at(-1)||null;
  const fxMissing=FXC.filter(c=>!Number.isFinite(Number(f[c+"TRY"]))||Number(f[c+"TRY"])<=0);
  const status={oyak:allFresh?"fulfilled":(fulfilled>0?"partial":"failed"),doviz:fxStatus,refreshMethod:"Cloudflare Worker Cron · every 2 minutes"};
- return {...old,source:"OYAK Yatırım",sourceUrl:"OYAK Yatırım",stockSourceUrls:pages,fxSourceUrl:FX,asOf:allFresh?now.slice(0,10):(oldIsOyak?old.asOf||"":""),lastRefresh:newestFetch||lastComplete,lastSuccessfulRefresh:lastComplete,fxUpdatedAt,fxSourceUsed,lastAttempt:now,quotes:q,quoteTimes,quoteFetchedAt,quoteStatusBySymbol,fx:f,missing:[...missing,...fxMissing],errors,sourceStatus:{...status,staleCount:STOCKS.filter(s=>quoteStatusBySymbol[s]?.status!=="fresh").length}};
+ return {...old,source:"OYAK Yatırım",sourceUrl:"OYAK Yatırım",stockSourceUrls:pages,fxSourceUrl:FX,goldPriceSource:"Gramhane · Gram altın alış",goldGramTRY,goldPriceTime:goldPriceTime||(oldGoldOk?old.goldPriceTime||null:null),goldPriceFetchedAt:goldPriceFetchedAt||(oldGoldOk?old.goldPriceFetchedAt||null:null),goldPriceStatus,goldPriceError,asOf:allFresh?now.slice(0,10):(oldIsOyak?old.asOf||"":""),lastRefresh:newestFetch||lastComplete,lastSuccessfulRefresh:lastComplete,fxUpdatedAt,fxSourceUsed,lastAttempt:now,quotes:q,quoteTimes,quoteFetchedAt,quoteStatusBySymbol,fx:f,missing:[...missing,...fxMissing],errors,sourceStatus:{...status,gold:goldPriceStatus,staleCount:STOCKS.filter(s=>quoteStatusBySymbol[s]?.status!=="fresh").length}};
 }
 function tlrefCostAddedForPosition(p,tl){const base=Number(p.avgCost)||0,start=p.realCostBaseDate||p.purchaseDate||null,end=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()),history=Array.isArray(tl?.historical)?tl.historical:[];if(!base||!start||!end||!history.length||start>=end)return 0;const byDate=new Map(history.map(x=>[x.date,Number(x.rate)])),firstRate=Number(history[0]?.rate)||0;if(!firstRate)return 0;let value=base,d=new Date(start+"T00:00:00Z");const endMs=Date.parse(end+"T00:00:00Z");while(d.getTime()<endMs){const key=d.toISOString().slice(0,10);let rate=byDate.get(key);if(rate==null){for(let i=history.length-1;i>=0;i--){if(history[i].date<=key){rate=Number(history[i].rate);break}}if(rate==null)rate=firstRate}value*=1+(rate*(1-(Number(tl?.stopaj??.175))))/365;d.setUTCDate(d.getUTCDate()+1)}return Math.max(0,value-base)}
 async function tlref(env,ctx){
