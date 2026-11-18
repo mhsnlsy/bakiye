@@ -376,6 +376,7 @@ function calc(){
  const a=balanceData.accounts||{};
  const tryVal=Object.values(a).filter(x=>x.category==="try").reduce((s,x)=>s+(Number(x.value)||0),0);
  const fxVal=(id)=>{const x=a[id]||{};return Object.entries(x.currencies||{}).reduce((s,[code,qty])=>s+(Number(qty)||0)*(Number(rates[code+"TRY"])||0),0)};
+ const bncVal=fxVal("bnc");
  const cashFx=fxVal("doviz"),bankFx=fxVal("bankaDoviz");
  function fxCalcText(id,rates){
   const x=a[id]||{}, parts=Object.entries(x.currencies||{}).map(([code,qty])=>{
@@ -399,7 +400,9 @@ function calc(){
  const paidObligations=round2(Number(balanceData.monthlyObligations?.summary?.paidThisMonth)||0);
  const remainingObligations=balanceData.monthlyObligations?.summary?.remainingThisMonth;
  const obligations=balanceData.monthlyObligations?.summary?.totalMonthly;
-return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,goldPrice,goldPriceStatus,goldPriceSource:quoteData.goldPriceSource||"Gram altın",goldPriceTime:quoteData.goldPriceTime||null,receivable:receivable2,total,paidObligations,remainingObligations,obligations,net:round2(total-obligations),rates};
+const bncVal2=round2(bncVal);
+ const tryValTotal=round2(tryVal2-bncVal2+bncVal2);
+ return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryValTotal,bncVal:bncVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,goldPrice,goldPriceStatus,goldPriceSource:quoteData.goldPriceSource||"Gram altın",goldPriceTime:quoteData.goldPriceTime||null,receivable:receivable2,total,paidObligations,remainingObligations,obligations,net:round2(total-obligations),rates};
 }
 function prevClosingBase(x){ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[]; const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()); const prev=entries.filter(e=>e.date&&e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1); return prev?x.rows.reduce((s,r)=>s+(Number(prev.prices?.[r.p.symbol])||0)*r.qty,0):0; }
 function render(){
@@ -492,7 +495,7 @@ function render(){
   ["Döviz","Döviz",fmt(x.cashFx),true,currencyLabel("doviz")],
   ["Banka döviz","Döviz",fmt(x.bankFx),true,currencyLabel("bankaDoviz")],
   ["Midas","Midas (portföy alt kırılımı)",fmt(x.stocks),false],
-  ["BNC","TL / Banka",fmt(Number(aa.bnc?.value)||0),true],
+  ["BNC","USD / Banka",fmt(x.bncVal),true,currencyLabel("bnc")],
   ["N Kolay Altın","Altın",goldAccountText,true,nfmt(Number(aa.nkolayAltin?.grams)||0)+" g"],
   ["Nakit","TL / Banka",fmt(Number(aa.nakit?.value)||0),true]
  ];
