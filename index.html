@@ -187,7 +187,7 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
 
 <section class="section">
  <div class="sectionhead"><div><h2>Banka ve diğer varlıklar</h2><div class="note">Manuel girilen bakiye verileri.</div></div></div>
- <div class="tablewrap"><table><thead><tr><th>Hesap / varlık</th><th>Kategori</th><th>Bakiye</th><th>Toplamda</th></tr></thead><tbody id="accountsBody"><tr><td>N Kolay</td><td>TL / Banka</td><td>₺106.000,00</td><td class="good">Dahil</td></tr><tr><td>Enpara</td><td>TL / Banka</td><td>₺19.000,00</td><td class="good">Dahil</td></tr><tr><td>Döviz<span class="subline">1.427 USD · 495 EUR · 80 GBP</span></td><td>Döviz</td><td>₺104.712,95</td><td class="good">Dahil</td></tr><tr><td>Banka döviz<span class="subline">2.460 EUR</span></td><td>Döviz</td><td>₺136.577,23</td><td class="good">Dahil</td></tr><tr><td>Midas</td><td>Midas (portföy alt kırılımı)</td><td>₺65.000,00</td><td>Hisseler/fonlarda sayıldı</td></tr><tr><td>BNC</td><td>TL / Banka</td><td>₺12.000,00</td><td class="good">Dahil</td></tr><tr><td>N Kolay Altın</td><td>Altın</td><td>₺10.639,00</td><td class="good">Dahil</td></tr><tr><td>Nakit</td><td>TL / Banka</td><td>₺1.000,00</td><td class="good">Dahil</td></tr></tbody></table></div>
+ <div class="tablewrap"><table><thead><tr><th>Hesap / varlık</th><th>Kategori</th><th>Bakiye</th><th>Toplamda</th></tr></thead><tbody id="accountsBody"><tr><td>N Kolay</td><td>TL / Banka</td><td>₺106.000,00</td><td class="good">Dahil</td></tr><tr><td>Enpara</td><td>TL / Banka</td><td>₺19.000,00</td><td class="good">Dahil</td></tr><tr><td>Döviz<span class="subline">1.427 USD · 495 EUR · 80 GBP</span></td><td>Döviz</td><td>₺104.712,95</td><td class="good">Dahil</td></tr><tr><td>Banka döviz<span class="subline">2.460 EUR</span></td><td>Döviz</td><td>₺136.577,23</td><td class="good">Dahil</td></tr><tr><td>Midas</td><td>Midas (portföy alt kırılımı)</td><td>₺65.000,00</td><td>Hisseler/fonlarda sayıldı</td></tr><tr><td>BNC</td><td>TL / Banka</td><td>₺12.000,00</td><td class="good">Dahil</td></tr><tr><td>N Kolay Altın<span class="subline" id="goldAccountGrams">1,75 g</span></td><td>Altın</td><td id="goldAccountValue">₺10.826,52</td><td class="good">Dahil</td></tr><tr><td>Nakit</td><td>TL / Banka</td><td>₺1.000,00</td><td class="good">Dahil</td></tr></tbody></table></div>
  <div class="sourceRow"><span class="state" id="sheetState">Manuel veri · 16.11.2026</span><span class="small">Döviz TL karşılıkları yukarıdaki canlı kurlardan hesaplanır.</span></div>
  <div class="notice" id="midasNote">Midas hesabı, yukarıdaki hisse ve fon pozisyonlarının bulunduğu hesap olarak ele alınır. Ekstredeki Midas bakiyesi ayrıca toplam varlığa eklenmez; böylece aynı yatırım iki kez sayılmaz.</div>
 </section>
@@ -273,7 +273,7 @@ function calc(){
  const tryVal=Object.values(a).filter(x=>x.category==="try").reduce((s,x)=>s+(Number(x.value)||0),0);
  const fxVal=(id)=>{const x=a[id]||{};return Object.entries(x.currencies||{}).reduce((s,[code,qty])=>s+(Number(qty)||0)*(Number(rates[code+"TRY"])||0),0)};
  const cashFx=fxVal("doviz"),bankFx=fxVal("bankaDoviz");
- const gold=Number(a.nkolayAltin?.value)||0,receivable=Number(a.tahminiAlacak?.value)||0;
+ const goldGrams=Number(a.nkolayAltin?.grams ?? balanceData.gold?.grams ?? 0)||0; const goldPrice=Number(q.goldGramTRY)||0; const gold=goldGrams*goldPrice; const receivable=Number(a.tahminiAlacak?.value)||0;
  const total=stocks+tryVal+cashFx+bankFx+gold+receivable;
  const obligations=(Number(a.monthlyObligations?.rent?.value)||0)+(Number(a.monthlyObligations?.creditCard?.value)||0);
  return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal,cashFx,bankFx,gold,receivable,total,obligations,net:total-obligations,rates};
@@ -290,7 +290,7 @@ function render(){
  document.getElementById("tryValue").textContent=fmt(x.tryVal);
  document.getElementById("cashFxValue").textContent=fmt(x.cashFx);
  document.getElementById("bankFxValue").textContent=fmt(x.bankFx);
- document.getElementById("goldValue").textContent=fmt(x.gold);
+ document.getElementById("goldValue").textContent=fmt(x.gold); document.getElementById("goldSub").textContent=nfmt(Number(balanceData.accounts?.nkolayAltin?.grams||balanceData.gold?.grams||0))+" g · Doviz.com · Gram Altın";
  document.getElementById("receivableValue").textContent=fmt(x.receivable);
  document.getElementById("portfolioTotal").textContent=fmt(x.stocks);
  document.getElementById("portfolioPnL").textContent=fmt(x.nominalPnl);
@@ -321,7 +321,7 @@ function render(){
  }).join("");
  mobileCards.style.display="";
  const fx=x.rates;
- document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
+ document.getElementById("goldAccountGrams").textContent=nfmt(Number(balanceData.accounts?.nkolayAltin?.grams||balanceData.gold?.grams||0))+" g"; document.getElementById("goldAccountValue").textContent=fmt(x.gold); document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
  document.getElementById("liveFxSub").textContent="Döviz.com · "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—");
  const grossTlref=Number(tlrefData.grossAnnualRate||0)*100;
  const netTlref=Number(tlrefData.netAnnualRate||0)*100;
