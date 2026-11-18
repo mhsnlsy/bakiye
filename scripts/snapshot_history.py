@@ -123,6 +123,13 @@ def main():
             "snapshots": [],
         }
 
+    # Aynı gün için zaten başarılı bir 18:40 snapshotı varsa ikinci güvenlik
+    # tetikleyicileri mevcut kaydı ezmesin. Böylece gün başına tek gerçek snapshot kalır.
+    existing = [s for s in history.get("snapshots", []) if s.get("date") == today]
+    if existing:
+        print("18:40 snapshot already exists for", today)
+        return
+
     snapshots = [s for s in history.get("snapshots", []) if s.get("date") != today]
     snapshots.append(entry)
     snapshots.sort(key=lambda x: x.get("date", ""))
