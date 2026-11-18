@@ -54,7 +54,7 @@ jobs:
             error: data.goldPriceError
           };
           console.log("Doviz.com gram-gold smoke test:", JSON.stringify(check));
-          if (data.goldPriceSource !== "Döviz.com · Gram Altın alış" ||
+          if (data.goldPriceSource !== "Döviz.com · Gram Altın satış" ||
               data.goldPriceStatus !== "fresh" ||
               !Number.isFinite(Number(data.goldGramTRY)) ||
               Number(data.goldGramTRY) <= 0) {
