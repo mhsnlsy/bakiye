@@ -333,7 +333,10 @@ function calc(){
   const tlrefImpact=tlrefPerShare*qty;
   const rp=market==null?null:np-tlrefImpact;
   let prevClose=Number(prev?.prices?.[p.symbol]||0); const sourceDailyPct=Number((quoteData.dailyPct||{})[p.symbol]); if(!prevClose&&Number.isFinite(sourceDailyPct)&&sourceDailyPct!==-100&&price>0){prevClose=price/(1+sourceDailyPct/100);} const dailyPct=(price!=null&&prevClose)?((price-prevClose)/prevClose*100):null; const dp=(price!=null&&prevClose)?(price-prevClose)*qty:null; stocks+=Number(market)||0;realPnl+=Number(rp)||0;nominalPnl+=Number(np)||0;dailyPnl+=Number(dp)||0;positionCount+=qty;tlrefAdded+=tlrefImpact;
-  return {p,qty,avg,real,price,market,rp,np,dp,dailyPct,tlrefImpact,nominalPct:cost?np/cost*100:0,dailyPnlPct:dailyPct,realPct:(real*qty)?rp/(real*qty)*100:0};
+  const quoteMeta=quoteData.quoteStatusBySymbol?.[p.symbol]||{};
+  const quoteFetchedAt=quoteData.quoteFetchedAt?.[p.symbol]||quoteMeta.fetchedAt||null;
+  const quoteStale=quoteMeta.status?quoteMeta.status!=="fresh":!(quoteFetchedAt&&Number.isFinite(Date.parse(quoteFetchedAt))&&(Date.now()-Date.parse(quoteFetchedAt))<5*60*1000);
+  return {p,qty,avg,real,price,market,rp,np,dp,dailyPct,tlrefImpact,quoteStale,quoteFetchedAt,quoteError:quoteMeta.error||null,nominalPct:cost?np/cost*100:0,dailyPnlPct:dailyPct,realPct:(real*qty)?rp/(real*qty)*100:0};
  });
  const a=balanceData.accounts||{};
  const tryVal=Object.values(a).filter(x=>x.category==="try").reduce((s,x)=>s+(Number(x.value)||0),0);
@@ -455,20 +458,22 @@ function render(){
  document.getElementById("dailyRealCostSub").textContent=positionDailyReady?"Hesap tarihi: "+istanbulToday:(latestSnapshot?.date?"Son kayıt: "+latestSnapshot.date:"Günlük kayıt henüz yok");
 
  document.getElementById("footerMeta").textContent="Son fiyat güncelleme: "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul"}):"—");
- const quoteTime=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:"Europe/Istanbul"}):"—";
- const quoteDate=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Europe/Istanbul"}):"—";
- const quoteAgeMin=quoteData.lastRefresh?((Date.now()-new Date(quoteData.lastRefresh).getTime())/60000):Infinity;
+ const quoteAttempt=quoteData.lastAttempt||quoteData.lastRefresh||null;
+ const quoteTime=quoteAttempt?new Date(quoteAttempt).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:"Europe/Istanbul"}):"—";
+ const quoteDate=quoteAttempt?new Date(quoteAttempt).toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Europe/Istanbul"}):"—";
+ const staleCount=x.rows.filter(r=>r.price==null||r.quoteStale).length;
  const quoteFreshnessEl=document.getElementById("quoteFreshness");
  const quoteFreshnessAgeEl=document.getElementById("quoteFreshnessAge");
  const quoteFreshnessStatusEl=document.getElementById("quoteFreshnessStatus");
- if(quoteFreshnessAgeEl) quoteFreshnessAgeEl.textContent=quoteData.lastRefresh?" · Alınma zamanı: "+quoteDate+" "+quoteTime+" TSİ":" · Alınma zamanı: —";
- const quoteFresh=Number.isFinite(quoteAgeMin)&&quoteAgeMin<=20;
- document.getElementById("quoteState").textContent=quoteFresh?"OYAK Yatırım · son fiyat · "+quoteTime+" TSİ":"OYAK Yatırım · SON FİYAT GÜNCEL DEĞİL · "+quoteTime+" TSİ";
+ const lastSuccessTime=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul"}):"henüz yok";
+ if(quoteFreshnessAgeEl) quoteFreshnessAgeEl.textContent=" · Son deneme: "+(quoteAttempt?quoteDate+" "+quoteTime+" TSİ":"—")+" · Son başarılı tam çekim: "+lastSuccessTime;
+ const quoteFresh=staleCount===0&&x.rows.length===6;
+ document.getElementById("quoteState").textContent=quoteFresh?"OYAK Yatırım · 6/6 hisse güncel":"OYAK Yatırım · VERİ ALINAMADI · "+staleCount+" hissenin son fiyatı eski";
  document.getElementById("quoteState").className="state "+(quoteFresh?"good":"bad");
- document.getElementById("quoteSourceLabel").textContent="OYAK Yatırım · son fiyat · "+quoteTime+" TSİ";
+ document.getElementById("quoteSourceLabel").textContent="OYAK Yatırım · "+(quoteFresh?"6/6 güncel":"Eski fiyat işaretli");
  if(quoteFreshnessEl) quoteFreshnessEl.classList.toggle("stale",!quoteFresh);
- if(quoteFreshnessStatusEl) quoteFreshnessStatusEl.textContent=quoteData.lastRefresh?(quoteFresh?(quoteAgeMin<1?"Az önce alındı":Math.floor(quoteAgeMin)+" dk önce alındı"):(quoteAgeMin<60?Math.floor(quoteAgeMin)+" dk önce alındı":"Güncel değil · "+Math.floor(quoteAgeMin/60)+" sa "+Math.floor(quoteAgeMin%60)+" dk önce alındı")):"Veri zamanı bulunamadı";
- document.getElementById("syncState").textContent=quoteFresh?"Canlı veri":"Veri bekleniyor";
+ if(quoteFreshnessStatusEl) quoteFreshnessStatusEl.textContent=quoteFresh?"6/6 hissenin fiyatı OYAK kaynağından alındı":"Veri alınamadı · "+staleCount+" hissenin son başarılı OYAK fiyatı gösteriliyor";
+ document.getElementById("syncState").textContent=quoteFresh?"OYAK verisi güncel":"Bazı fiyatlar eski";
 }
 
 let historySeries="total";
