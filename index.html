@@ -348,6 +348,9 @@ function calc(){
 }
 function prevClosingBase(x){ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[]; const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()); const prev=entries.filter(e=>e.date&&e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1); return prev?x.rows.reduce((s,r)=>s+(Number(prev.prices?.[r.p.symbol])||0)*r.qty,0):0; }
 function render(){
+ const valuationDate=new Intl.DateTimeFormat("tr-TR",{timeZone:"Europe/Istanbul",day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date());
+ const asOfEl=document.getElementById("asOfLabel");
+ if(asOfEl) asOfEl.textContent="Değerleme "+valuationDate;
  const x=calc();
  const liveDate=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleDateString("en-CA",{timeZone:"Europe/Istanbul"}):null;
  if(liveDate){ const v=document.getElementById("valuationDate"); if(v)v.textContent=liveDate; const f=document.getElementById("footerMeta"); if(f)f.textContent="Son güncelleme: "+new Date(quoteData.lastRefresh).toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul"}); }
@@ -422,7 +425,7 @@ function render(){
  const dailyRealCostValue=positionDailyReady?positionDailyDelta:(snapshotDailyDelta==null?null:Number(snapshotDailyDelta));
  document.getElementById("dailyRealCostChange").textContent=dailyRealCostValue==null?"—":fmt(dailyRealCostValue);
  document.getElementById("dailyRealCostSub").textContent=positionDailyReady?"Hesap tarihi: "+istanbulToday:(latestSnapshot?.date?"Son kayıt: "+latestSnapshot.date:"Günlük kayıt henüz yok");
- const valuationDate=new Intl.DateTimeFormat("tr-TR",{timeZone:"Europe/Istanbul",day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date()); document.getElementById("asOfLabel").textContent="Değerleme "+valuationDate;
+
  document.getElementById("footerMeta").textContent="Son fiyat güncelleme: "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul"}):"—");
  const quoteTime=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—";
  const quoteAgeMin=quoteData.lastRefresh?((Date.now()-new Date(quoteData.lastRefresh).getTime())/60000):Infinity;
