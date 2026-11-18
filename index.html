@@ -157,7 +157,7 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
  <article class="card" id="fundsCard" style="display:none"><div class="cardhead"><span class="cardlabel">Yatırım fonları</span><span class="cardicon">◈</span></div><div class="cardvalue" id="fundsValue">₺0,00</div><div class="cardfoot">Midas portföyündeki fon pozisyonları</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Banka & TL bakiyeleri</span><span class="cardicon">₺</span></div><div class="cardvalue" id="tryValue">₺138.000,00</div><div class="cardfoot">N Kolay · Enpara · BNC · Nakit</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Nakit Döviz</span><span class="cardicon">＄</span></div><div class="cardvalue" id="cashFxValue">₺104.712,95</div><div class="cardfoot" id="cashFxSub">USD · EUR · GBP</div></article><article class="card"><div class="cardhead"><span class="cardlabel">Banka Döviz</span><span class="cardicon">€</span></div><div class="cardvalue" id="bankFxValue">₺136.577,23</div><div class="cardfoot" id="bankFxSub">EUR</div></article>
- <article class="card"><div class="cardhead"><span class="cardlabel">Altın</span><span class="cardicon">◇</span></div><div class="cardvalue goldtext" id="goldValue">₺10.639,00</div><div class="cardfoot" id="goldSub">N Kolay Altın</div></article>
+ <article class="card"><div class="cardhead"><span class="cardlabel">Altın</span><span class="cardicon">◇</span></div><div class="cardvalue goldtext" id="goldValue">₺10.504,23</div><div class="cardfoot" id="goldSub">1,70 g · Doviz.com · Gram Altın</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Tahmini alacaklar</span><span class="cardicon">＋</span></div><div class="cardvalue" id="receivableValue">₺0,00</div><div class="cardfoot">Henüz tahsil edilmemiş tutarlar</div></article>
 </div>
 
@@ -187,7 +187,7 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
 
 <section class="section">
  <div class="sectionhead"><div><h2>Banka ve diğer varlıklar</h2><div class="note">Manuel girilen bakiye verileri.</div></div></div>
- <div class="tablewrap"><table><thead><tr><th>Hesap / varlık</th><th>Kategori</th><th>Bakiye</th><th>Toplamda</th></tr></thead><tbody id="accountsBody"><tr><td>N Kolay</td><td>TL / Banka</td><td>₺106.000,00</td><td class="good">Dahil</td></tr><tr><td>Enpara</td><td>TL / Banka</td><td>₺19.000,00</td><td class="good">Dahil</td></tr><tr><td>Döviz<span class="subline">1.427 USD · 495 EUR · 80 GBP</span></td><td>Döviz</td><td>₺104.712,95</td><td class="good">Dahil</td></tr><tr><td>Banka döviz<span class="subline">2.460 EUR</span></td><td>Döviz</td><td>₺136.577,23</td><td class="good">Dahil</td></tr><tr><td>Midas</td><td>Midas (portföy alt kırılımı)</td><td>₺65.000,00</td><td>Hisseler/fonlarda sayıldı</td></tr><tr><td>BNC</td><td>TL / Banka</td><td>₺12.000,00</td><td class="good">Dahil</td></tr><tr><td>N Kolay Altın<span class="subline" id="goldAccountGrams">1,75 g</span></td><td>Altın</td><td id="goldAccountValue">₺10.826,52</td><td class="good">Dahil</td></tr><tr><td>Nakit</td><td>TL / Banka</td><td>₺1.000,00</td><td class="good">Dahil</td></tr></tbody></table></div>
+ <div class="tablewrap"><table><thead><tr><th>Hesap / varlık</th><th>Kategori</th><th>Bakiye</th><th>Toplamda</th></tr></thead><tbody id="accountsBody"><tr><td>N Kolay</td><td>TL / Banka</td><td>₺106.000,00</td><td class="good">Dahil</td></tr><tr><td>Enpara</td><td>TL / Banka</td><td>₺19.000,00</td><td class="good">Dahil</td></tr><tr><td>Döviz<span class="subline">1.427 USD · 495 EUR · 80 GBP</span></td><td>Döviz</td><td>₺104.712,95</td><td class="good">Dahil</td></tr><tr><td>Banka döviz<span class="subline">2.460 EUR</span></td><td>Döviz</td><td>₺136.577,23</td><td class="good">Dahil</td></tr><tr><td>Midas</td><td>Midas (portföy alt kırılımı)</td><td>₺65.000,00</td><td>Hisseler/fonlarda sayıldı</td></tr><tr><td>BNC</td><td>TL / Banka</td><td>₺12.000,00</td><td class="good">Dahil</td></tr><tr><td>N Kolay Altın<span class="subline" id="goldAccountGrams">1,70 g</span></td><td>Altın</td><td id="goldAccountValue">₺10.504,23</td><td class="good">Dahil</td></tr><tr><td>Nakit</td><td>TL / Banka</td><td>₺1.000,00</td><td class="good">Dahil</td></tr></tbody></table></div>
  <div class="sourceRow"><span class="state" id="sheetState">Manuel veri · 16.11.2026</span><span class="small">Döviz TL karşılıkları yukarıdaki canlı kurlardan hesaplanır.</span></div>
  <div class="notice" id="midasNote">Midas hesabı, yukarıdaki hisse ve fon pozisyonlarının bulunduğu hesap olarak ele alınır. Ekstredeki Midas bakiyesi ayrıca toplam varlığa eklenmez; böylece aynı yatırım iki kez sayılmaz.</div>
 </section>
@@ -209,7 +209,7 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
 
 <footer>
  <div>Bakiye · kişisel varlık takip</div>
- <div id="footerMeta">Son güncelleme: 16.11.2026</div>
+ <div id="footerMeta">Son güncelleme: 18.11.2026</div>
 </footer>
 </main>
 <script>
@@ -273,14 +273,18 @@ function calc(){
  const tryVal=Object.values(a).filter(x=>x.category==="try").reduce((s,x)=>s+(Number(x.value)||0),0);
  const fxVal=(id)=>{const x=a[id]||{};return Object.entries(x.currencies||{}).reduce((s,[code,qty])=>s+(Number(qty)||0)*(Number(rates[code+"TRY"])||0),0)};
  const cashFx=fxVal("doviz"),bankFx=fxVal("bankaDoviz");
- const goldGrams=Number(a.nkolayAltin?.grams ?? balanceData.gold?.grams ?? 0)||0; const goldPrice=Number(q.goldGramTRY)||0; const gold=goldGrams*goldPrice; const receivable=Number(a.tahminiAlacak?.value)||0;
+ const goldGrams=Number(a.nkolayAltin?.grams ?? balanceData.gold?.grams ?? 0)||0;
+ const goldPrice=Number(q.goldGramTRY)||Number(balanceData.gold?.gramPriceSnapshot)||0;
+ const gold=goldGrams*goldPrice; const receivable=Number(a.tahminiAlacak?.value)||0;
  const total=stocks+tryVal+cashFx+bankFx+gold+receivable;
  const obligations=(Number(a.monthlyObligations?.rent?.value)||0)+(Number(a.monthlyObligations?.creditCard?.value)||0);
  return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal,cashFx,bankFx,gold,receivable,total,obligations,net:total-obligations,rates};
 }
 function prevClosingBase(x){ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[]; const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()); const prev=entries.filter(e=>e.date&&e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1); return prev?x.rows.reduce((s,r)=>s+(Number(prev.prices?.[r.p.symbol])||0)*r.qty,0):0; }
 function render(){
- const x=calc();
+ const x=calc();\n const liveDate=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleDateString("en-CA",{timeZone:"Europe/Istanbul"}):null;
+ if(liveDate){ const v=document.getElementById("valuationDate"); if(v)v.textContent=liveDate; const f=document.getElementById("footerMeta"); if(f)f.textContent="Son güncelleme: "+new Date(quoteData.lastRefresh).toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul"}); }
+ 
  document.getElementById("grandTotal").textContent=fmt(x.total);
  document.getElementById("netTotal").textContent=fmt(x.net);
  document.getElementById("obligationHero").textContent=fmt(x.obligations);
