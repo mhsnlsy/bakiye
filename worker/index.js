@@ -18,7 +18,33 @@ const H={"content-type":"application/json;charset=utf-8","cache-control":"no-sto
 function num(v){let s=String(v??"").replace(/[^0-9,.-]/g,"").trim();if(!s)return null;if(s.includes(","))s=s.replace(/\./g,"").replace(",",".");let n=Number(s);return Number.isFinite(n)?n:null}
 function text(h){return h.replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," ").replace(/&nbsp;/gi," ").replace(/&/gi,"&").replace(/\s+/g," ").trim()}
 function cells(h){return [...h.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>[...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(x=>text(x[1])).filter(Boolean)).filter(r=>r.length)}
+function stockQuote(h,s){
+ const rows=cells(h);
+ const target=String(s).trim().toUpperCase();
+ for(const r of rows){
+   const i=r.findIndex(x=>x.trim().toUpperCase()===target);
+   if(i>=0){
+     let price=null,time=null;
+     for(let j=i+1;j<r.length;j++){
+       if(price==null){const p=num(r[j]);if(p!=null){price=p;continue}}
+       if(/^[0-2]?\\d:[0-5]\\d:[0-5]\\d$/.test(r[j].trim())) time=r[j].trim();
+     }
+     return {price,time};
+   }
+ }
+ const t=text(h);
+ const m=t.match(new RegExp("(?:^|\\\\s)"+target.replace(/[.*+?^()|[\\]\\\\]/g,"\\\\function stock(h,s){
+ const rows=cells(h);")+"\\\\s+([0-9]+(?:[.,][0-9]+)?)","i"));
+ return m?{price:num(m[1]),time:null}:{price:null,time:null};
+}
 function stock(h,s){
+ const q=stockQuote(h,s);
+ return q.price;
+}
+function stockTime(h,s){
+ return stockQuote(h,s).time;
+}
+function stockOld(h,s){
  const rows=cells(h);
  const target=String(s).trim().toUpperCase();
  for(const r of rows){
@@ -76,7 +102,7 @@ async function read(env,k,path){let x=await env.BAKIYE_DATA.get(k);if(x){const s
 async function put(env,k,v){await env.BAKIYE_DATA.put(k,JSON.stringify(v,null,2))}
 async function liveQuotes(env){
  const old=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
- const q={...old.quotes},f={...old.fx},missing=[],errors=[];
+ const q={...old.quotes},f={...old.fx},quoteTimes={...(old.quoteTimes||{})},missing=[],errors=[];
  // Fetch each held stock from its dedicated Uzmanpara quote page. The
  // all-BIST page can remain stale even when individual quote pages update.
  const stockResults=await Promise.allSettled(STOCKS.map(s=>get(STOCK_PAGES[s])));
@@ -85,7 +111,7 @@ async function liveQuotes(env){
    const s=STOCKS[i], r=stockResults[i];
    if(r.status==="fulfilled"){
      const p=stock(r.value,SOURCE_SYMBOL[s]||s);
-     if(p!=null&&p>0){q[s]=p;fulfilledStocks++}else missing.push(s);
+     if(p!=null&&p>0){q[s]=p; const qt=stockTime(r.value,SOURCE_SYMBOL[s]||s); if(qt) quoteTimes[s]=qt; fulfilledStocks++}else missing.push(s);
    }else errors.push("Uzmanpara "+s+": "+String(r.reason?.message||r.reason));
  }
  const fr=await Promise.allSettled([get(FX)]);
@@ -97,22 +123,22 @@ async function liveQuotes(env){
  }else errors.push("Döviz.com: "+String(fr[0].reason?.message||fr[0].reason));
  if(!fulfilledStocks)throw Error("Uzmanpara canlı hisse verileri alınamadı");
  const now=new Date().toISOString();
- return {...old,source:"Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:STOCK_SOURCE,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,fx:f,missing,errors,sourceStatus:{uzmanpara:fulfilledStocks===STOCKS.length?"fulfilled":"partial",doviz:fr[0].status,refreshMethod:"Worker live fetch · individual Uzmanpara pages"}};
+ return {...old,source:"Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:STOCK_SOURCE,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,quoteTimes,fx:f,missing,errors,sourceStatus:{uzmanpara:fulfilledStocks===STOCKS.length?"fulfilled":"partial",doviz:fr[0].status,refreshMethod:"Worker live fetch · individual Uzmanpara pages"}};
 }
 async function quotes(env){
  const old=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
- const q={...old.quotes},f={...old.fx},missing=[],errors=[];
+ const q={...old.quotes},f={...old.fx},quoteTimes={...(old.quoteTimes||{})},missing=[],errors=[];
  const [mr,fr]=await Promise.allSettled([get(STOCK_SOURCE),get(FX)]);
  const stockMissing=[];
  if(mr.status==="fulfilled"){
-   for(const s of STOCKS){const p=stock(mr.value,SOURCE_SYMBOL[s]||s);if(p!=null&&p>0)q[s]=p;else {missing.push(s);stockMissing.push(s)}}
+   for(const s of STOCKS){const p=stock(mr.value,SOURCE_SYMBOL[s]||s);if(p!=null&&p>0){q[s]=p;const qt=stockTime(mr.value,SOURCE_SYMBOL[s]||s);if(qt)quoteTimes[s]=qt}else {missing.push(s);stockMissing.push(s)}}
  }else errors.push("Uzmanpara: "+String(mr.reason?.message||mr.reason));
  if(mr.status!=="fulfilled"||stockMissing.length)throw Error("Uzmanpara fiyatları eksik: "+stockMissing.join(", "));
  if(fr.status==="fulfilled"){
    for(const c of FXC){const p=fx(fr.value,c);if(p!=null)f[c+"TRY"]=p;else missing.push(c+"TRY")}
  }else errors.push("Döviz.com: "+String(fr.reason?.message||fr.reason));
  const now=new Date().toISOString();
- const v={...old,source:"Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:STOCK_SOURCE,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,fx:f,missing,errors,sourceStatus:{uzmanpara:mr.status,doviz:fr.status}};
+ const v={...old,source:"Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:STOCK_SOURCE,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,quoteTimes,fx:f,missing,errors,sourceStatus:{uzmanpara:mr.status,doviz:fr.status}};
  await put(env,"quotes.json",v);
  return v;
 }
