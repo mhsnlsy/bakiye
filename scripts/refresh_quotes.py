@@ -101,6 +101,9 @@ def parse_gold(source):
 def parse_fx(source):
     p=TableParser(); p.feed(source)
     out={}
+    # Doviz.com has changed its HTML table structure several times. Prefer
+    # the parsed table, then fall back to the rendered text where the currency
+    # label is followed by Alış/Satış values without literal pipe characters.
     for code in FXC:
         for row in p.rows:
             cells=[x.strip().upper() for x in row]
@@ -112,11 +115,14 @@ def parse_fx(source):
                         break
             if code+"TRY" in out:
                 break
-    plain=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",source))
+    plain=html.unescape(re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",source)))
     for code in FXC:
         if code+"TRY" in out: continue
-        m=re.search(r"(?:^|\s)"+re.escape(code)+r"(?:\s+[^|]{0,50})?\s*\|\s*([0-9]+(?:[.,][0-9]+)?)",plain,re.I)
-        if m: out[code+"TRY"]=number(m.group(1))
+        # Example: "USD Amerikan Doları 50,4118 50,4227 ..."
+        m=re.search(r"\b"+re.escape(code)+r"\s+[^0-9]{1,80}?([0-9]{1,3}(?:[.,][0-9]{3})*(?:,[0-9]+)?|[0-9]+(?:[.,][0-9]+)?)",plain,re.I)
+        if m:
+            v=number(m.group(1))
+            if v is not None: out[code+"TRY"]=v
     return out
 
 def parse_stock(source):
