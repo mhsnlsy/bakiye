@@ -131,7 +131,8 @@ function out(v,s=200){return new Response(JSON.stringify(v),{status:s,headers:H}
 export default{async fetch(req,env,ctx){if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{...H,"access-control-allow-methods":"GET, OPTIONS","access-control-allow-headers":"Cache-Control, Pragma, Content-Type","access-control-max-age":"86400"}});const u=new URL(req.url);if(u.pathname==="/api/quotes"){
  const cached=await read(env,"quotes.json","/data/quotes.json");
  const age=cached?.lastAttempt?Date.now()-Date.parse(cached.lastAttempt):Infinity;
- if(age>=90000){
+ const goldNeedsRefresh=cached?.goldPriceSource!=="Döviz.com · Gram Altın alış";
+ if(age>=90000||goldNeedsRefresh){
    try{const fresh=await liveQuotes(env);ctx.waitUntil(put(env,"quotes.json",fresh).catch(()=>{}));return out(fresh)}
    catch(e){return out(cached||{source:"OYAK Yatırım",sourceUrl:"OYAK Yatırım",quotes:{},fx:{},quoteTimes:{},quoteFetchedAt:{},quoteStatusBySymbol:{},lastRefresh:null,lastAttempt:null,missing:STOCKS,errors:["OYAK verisi henüz alınmadı"],sourceStatus:{oyak:"unavailable",refreshMethod:"Cloudflare Worker · 2 dakika"}})}
  }
