@@ -205,9 +205,9 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
 </section>
 
 <section class="section">
- <div class="sectionhead"><div><h2>Banka ve diğer varlıklar</h2><div class="note">Manuel girilen bakiye verileri.</div></div></div>
- <div class="tablewrap"><table><thead><tr><th>Hesap / varlık</th><th>Kategori</th><th>Bakiye</th><th>Toplamda</th></tr></thead><tbody id="accountsBody"><tr><td>N Kolay</td><td>TL / Banka</td><td>₺106.000,00</td><td class="good">Dahil</td></tr><tr><td>Enpara</td><td>TL / Banka</td><td>₺19.000,00</td><td class="good">Dahil</td></tr><tr><td>Döviz<span class="subline">1.427 USD · 495 EUR · 80 GBP</span></td><td>Döviz</td><td>₺104.712,95</td><td class="good">Dahil</td></tr><tr><td>Banka döviz<span class="subline">2.460 EUR</span></td><td>Döviz</td><td>₺136.577,23</td><td class="good">Dahil</td></tr><tr><td>Midas</td><td>Midas (portföy alt kırılımı)</td><td>₺65.000,00</td><td>Hisseler/fonlarda sayıldı</td></tr><tr><td>BNC</td><td>TL / Banka</td><td>₺12.000,00</td><td class="good">Dahil</td></tr><tr><td>N Kolay Altın<span class="subline" id="goldAccountGrams">1,70 g</span></td><td>Altın</td><td id="goldAccountValue">₺10.504,23</td><td class="good">Dahil</td></tr><tr><td>Nakit</td><td>TL / Banka</td><td>₺1.000,00</td><td class="good">Dahil</td></tr></tbody></table></div>
- <div class="sourceRow"><span class="state" id="sheetState">Manuel veri · 16.11.2026</span><span class="small">Döviz TL karşılıkları yukarıdaki canlı kurlardan hesaplanır.</span></div>
+ <div class="sectionhead"><div><h2>Banka ve diğer varlıklar</h2><div class="note">TL bakiyeler ile döviz ve altın miktarları manuel girilir; TL karşılıkları canlı fiyatlarla hesaplanır. Midas tutarı yatırım portföyünden gelir.</div></div></div>
+  <div class="tablewrap"><table><thead><tr><th>Hesap / varlık</th><th>Kategori</th><th>Bakiye</th><th>Toplamda</th></tr></thead><tbody id="accountsBody"><tr><td colspan="4" class="note">Bakiye verileri yükleniyor…</td></tr></tbody></table></div>
+  <div class="sourceRow"><span class="state" id="sheetState">Manuel bakiye girişi yükleniyor…</span><span class="small">Döviz ve altın TL karşılıkları canlı fiyatlardan hesaplanır.</span></div>
  <div class="notice" id="midasNote">Midas hesabı, yukarıdaki hisse ve fon pozisyonlarının bulunduğu hesap olarak ele alınır. Ekstredeki Midas bakiyesi ayrıca toplam varlığa eklenmez; böylece aynı yatırım iki kez sayılmaz.</div>
 </section>
 
@@ -336,6 +336,7 @@ function renderBenchmarkCards(){
  const hasFx=Number.isFinite(Number(fx.USDTRY))&&Number.isFinite(Number(fx.EURTRY))&&Number.isFinite(Number(fx.GBPTRY));
  const fxEl=document.getElementById("liveFxRates");
  const fxSub=document.getElementById("liveFxSub");
+ const manualDate=balanceData.asOf?new Date(balanceData.asOf+"T12:00:00Z").toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul"}):"tarih yok"; document.getElementById("sheetState").textContent="Manuel bakiye girişi · "+manualDate;
  if(fxEl) fxEl.textContent=hasFx?"USD "+nfmt(fx.USDTRY)+" · EUR "+nfmt(fx.EURTRY)+" · GBP "+nfmt(fx.GBPTRY):"USD — · EUR — · GBP —";
  if(fxSub) fxSub.textContent="Döviz.com · "+(quoteData?.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"veri yok");
 
@@ -393,8 +394,9 @@ function calc(){
   return parts.length ? parts.join(" + ")+" = "+fmt(value) : "Döviz miktarı yok";
  }
 
- const goldGrams=Number(a.nkolayAltin?.grams ?? balanceData.gold?.grams ?? 0)||0;
- const goldPrice=Number(q.goldGramTRY)||Number(balanceData.gold?.gramPriceSnapshot)||0;
+ const goldGrams=Number(a.nkolayAltin?.grams)||0;
+ const goldPrice=Number(q.goldGramTRY)||0;
+ const goldPriceStatus=quoteData.goldPriceStatus||"unavailable";
  const gold=goldGrams*goldPrice; const receivable=Number(a.tahminiAlacak?.value)||0;
  // Round each displayed asset component to kuruş first, then build the grand
  // total from those same components. This guarantees the hero total equals
@@ -405,7 +407,7 @@ function calc(){
  const paidObligations=round2(Number(balanceData.monthlyObligations?.summary?.paidThisMonth)||0);
  const remainingObligations=balanceData.monthlyObligations?.summary?.remainingThisMonth;
  const obligations=balanceData.monthlyObligations?.summary?.totalMonthly;
-return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,receivable:receivable2,total,paidObligations,remainingObligations,obligations,net:round2(total-obligations),rates};
+return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,goldPrice,goldPriceStatus,goldPriceSource:quoteData.goldPriceSource||"Gram altın",goldPriceTime:quoteData.goldPriceTime||null,receivable:receivable2,total,paidObligations,remainingObligations,obligations,net:round2(total-obligations),rates};
 }
 function prevClosingBase(x){ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[]; const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()); const prev=entries.filter(e=>e.date&&e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1); return prev?x.rows.reduce((s,r)=>s+(Number(prev.prices?.[r.p.symbol])||0)*r.qty,0):0; }
 function render(){
@@ -453,7 +455,12 @@ function render(){
  document.getElementById("cashFxValue").textContent=fmt(x.cashFx);
  document.getElementById("bankFxValue").textContent=fmt(x.bankFx);
  const cashFxCalcEl=document.getElementById("cashFxCalc"); if(cashFxCalcEl) cashFxCalcEl.textContent=fxCalcText("doviz",fx); const bankFxCalcEl=document.getElementById("bankFxCalc"); if(bankFxCalcEl) bankFxCalcEl.textContent=fxCalcText("bankaDoviz",fx);
- document.getElementById("goldValue").textContent=fmt(x.gold); document.getElementById("goldSub").textContent=nfmt(Number(balanceData.accounts?.nkolayAltin?.grams||balanceData.gold?.grams||0))+" g · Doviz.com · Gram Altın";
+ const goldGrams=Number(balanceData.accounts?.nkolayAltin?.grams)||0;
+ const goldAvailable=Number(x.goldPrice)>0;
+ const goldStatus=x.goldPriceStatus==="fresh"?"Güncel":(x.goldPriceStatus==="stale"?"Son başarılı fiyat · eski":"Fiyat alınamadı");
+ const goldTime=x.goldPriceTime?String(x.goldPriceTime).slice(11,19)+" TSİ":"";
+ document.getElementById("goldValue").textContent=goldAvailable?fmt(x.gold):"—";
+ document.getElementById("goldSub").textContent=nfmt(goldGrams)+" g · "+x.goldPriceSource+" · "+goldStatus+(goldTime?" · "+goldTime:"");
  document.getElementById("receivableValue").textContent=fmt(x.receivable);
  document.getElementById("portfolioTotal").textContent=fmt(x.stocks);
  document.getElementById("portfolioPnL").textContent=fmt(x.nominalPnl);
@@ -490,18 +497,20 @@ function render(){
  }).join("");
  mobileCards.style.display="";
  const aa=balanceData.accounts||{};
+ const currencyLabel=id=>Object.entries(aa[id]?.currencies||{}).filter(([,amount])=>Number(amount)>0).map(([code,amount])=>nfmt(Number(amount))+" "+safe(code)).join(" · ")||"Döviz miktarı girilmedi";
+ const goldAccountText=Number(x.goldPrice)>0?fmt(x.gold):"Fiyat alınamadı";
  const accountRows=[
   ["N Kolay","TL / Banka",fmt(Number(aa.nkolay?.value)||0),true],
   ["Enpara","TL / Banka",fmt(Number(aa.enpara?.value)||0),true],
-  ["Döviz", "Döviz", fmt(x.cashFx), true, "1.427 USD · 495 EUR · 80 GBP"],
-  ["Banka döviz", "Döviz", fmt(x.bankFx), true, "2.460 EUR"],
-  ["Midas","Midas (portföy alt kırılımı)",fmt(Number(aa.midas?.value)||0),false],
+  ["Döviz","Döviz",fmt(x.cashFx),true,currencyLabel("doviz")],
+  ["Banka döviz","Döviz",fmt(x.bankFx),true,currencyLabel("bankaDoviz")],
+  ["Midas","Midas (portföy alt kırılımı)",fmt(x.stocks),false],
   ["BNC","TL / Banka",fmt(Number(aa.bnc?.value)||0),true],
-  ["N Kolay Altın","Altın",fmt(x.gold),true,""+nfmt(Number(aa.nkolayAltin?.grams||balanceData.gold?.grams||0))+" g"],
+  ["N Kolay Altın","Altın",goldAccountText,true,nfmt(Number(aa.nkolayAltin?.grams)||0)+" g"],
   ["Nakit","TL / Banka",fmt(Number(aa.nakit?.value)||0),true]
  ];
  document.getElementById("accountsBody").innerHTML=accountRows.map(r=>'<tr><td>'+r[0]+(r[4]?'<span class="subline">'+r[4]+'</span>':'')+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td class="'+(r[3]?"good":"")+'">'+(r[3]?"Dahil":"Hisseler/fonlarda sayıldı")+'</td></tr>').join("");
- document.getElementById("goldAccountGrams").textContent=nfmt(Number(balanceData.accounts?.nkolayAltin?.grams||balanceData.gold?.grams||0))+" g"; document.getElementById("goldAccountValue").textContent=fmt(x.gold); document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
+ document.getElementById("goldAccountGrams").textContent=nfmt(Number(balanceData.accounts?.nkolayAltin?.grams)||0)+" g"; document.getElementById("goldAccountValue").textContent=goldAccountText; document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
  document.getElementById("liveFxSub").textContent="Döviz.com · "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—");
  const grossTlref=Number(tlrefData.grossAnnualRate||0)*100;
  const netTlref=Number(tlrefData.netAnnualRate||0)*100;
