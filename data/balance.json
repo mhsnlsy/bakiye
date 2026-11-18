@@ -60,17 +60,23 @@
   "monthlyObligations": {
     "rent": {
       "label": "Kira",
-      "value": 14000
+      "value": null,
+      "paidThisMonth": 14000
     },
     "enparaCreditCard": {
       "label": "Enpara kredi kartı",
-      "value": 0,
+      "value": null,
       "paidThisMonth": 44000,
       "note": "Kasım 2026 ödemesi: 44.000 TL ödendi"
     },
     "yapiKrediCreditCard": {
       "label": "Yapı Kredi kredi kartı",
-      "value": 20000
+      "value": null
+    },
+    "summary": {
+      "paidThisMonth": 58000,
+      "remainingThisMonth": null,
+      "totalMonthly": null
     }
   },
   "gold": {
