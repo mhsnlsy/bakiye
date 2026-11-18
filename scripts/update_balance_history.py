@@ -1,115 +1,266 @@
 #!/usr/bin/env python3
+"""Create one verified daily portfolio snapshot at 18:40 Europe/Istanbul."""
 import json
+import os
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
+from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
-BAL = Path("data/balance.json")
-QUOTES = Path("data/quotes.json")
-POSITIONS = Path("data/positions.json")
-TLREF = Path("data/tlref.json")
-HISTORY = Path("data/history.json")
+API_BASE = "https://bakiye.muhsin-ulusoy.workers.dev"
+BALANCE_FILE = Path("data/balance.json")
+POSITIONS_FILE = Path("data/positions.json")
+TLREF_FILE = Path("data/tlref.json")
+HISTORY_FILE = Path("data/history.json")
+RETENTION_DAYS = 700
+SNAPSHOT_WINDOW_START = (18, 35)
+SNAPSHOT_WINDOW_END = (18, 50)
 
-balance = json.loads(BAL.read_text(encoding="utf-8"))
-quotes = json.loads(QUOTES.read_text(encoding="utf-8"))
-positions = json.loads(POSITIONS.read_text(encoding="utf-8"))
-tlref = json.loads(TLREF.read_text(encoding="utf-8"))
 
-q = quotes.get("quotes", {})
-fx = quotes.get("fx", {})
-now_ist = datetime.now(ZoneInfo("Europe/Istanbul"))\n# A daily history point is valid only during the 18:40 snapshot window.\n# Manual runs remain available for testing/recovery via FORCE_SNAPSHOT=1.\nif not (now_ist.hour == 18 and 35 <= now_ist.minute <= 45) and os.environ.get("FORCE_SNAPSHOT") != "1":\n    raise SystemExit(f"Snapshot skipped: local time is {now_ist:%Y-%m-%d %H:%M} Europe/Istanbul; expected 18:40.")\ntoday = now_ist.date()\ntoday_key = today.isoformat()
+def load_json(path):
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
 
-missing = [
-    p.get("symbol") for p in positions
-    if not isinstance(q.get(p.get("symbol")), (int, float))
-    or q.get(p.get("symbol"), 0) <= 0
-]
-if missing:
-    raise SystemExit("Snapshot refused; missing current quotes: " + ", ".join(missing))
 
-stocks = funds = 0.0
-real_cost_total = nominal_cost_total = daily_cost_total = 0.0
-daily_cost_ready = bool(positions)
+def api_json(path):
+    url = f"{API_BASE}{path}?snapshot={int(time.time() * 1000)}"
+    request = Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+            "User-Agent": "Bakiye-Daily-Snapshot/1.0",
+        },
+    )
+    with urlopen(request, timeout=35) as response:
+        if response.status != 200:
+            raise RuntimeError(f"{path}: HTTP {response.status}")
+        payload = json.loads(response.read().decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"{path}: invalid JSON object")
+    return payload
 
-for p in positions:
-    qty = float(p.get("qty", 0) or 0)
-    market_value = qty * float(q[p["symbol"]])
-    if p.get("type") == "fund":
-        funds += market_value
-    else:
-        stocks += market_value
 
-    avg_cost = float(p.get("avgCost", 0) or 0)
-    real_cost = float(p.get("realCost", avg_cost) or avg_cost)
-    nominal_cost_total += avg_cost * qty
-    real_cost_total += real_cost * qty
-    daily_cost_total += float(p.get("dailyTlrefCostAdded", 0) or 0) * qty
-    if p.get("dailyTlrefCostUpdatedAt") != today_key:
-        daily_cost_ready = False
+def api_or_file(path, fallback):
+    try:
+        return api_json(path)
+    except Exception as exc:
+        print(f"NOTICE: {path} API unavailable; using repository file ({exc})")
+        return load_json(fallback)
 
-a = balance.get("accounts", {})
-try_value = sum(float(x.get("value", 0) or 0) for x in a.values() if x.get("category") == "try")
 
-def fx_value(account_id):
-    currencies = (a.get(account_id) or {}).get("currencies") or {}
-    return sum(float(qty or 0) * float(fx.get(code + "TRY", 0) or 0) for code, qty in currencies.items())
+def parse_timestamp(value):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
-cash_fx = fx_value("doviz")
-bank_fx = fx_value("bankaDoviz")
-gold = sum(float(x.get("value", 0) or 0) for x in a.values() if x.get("category") == "gold")
-receivable = sum(float(x.get("value", 0) or 0) for x in a.values() if x.get("category") == "receivable")
 
-components = {
-    "stocks": round(stocks, 2),
-    "funds": round(funds, 2),
-    "try": round(try_value, 2),
-    "cashFx": round(cash_fx, 2),
-    "bankFx": round(bank_fx, 2),
-    "gold": round(gold, 2),
-    "receivable": round(receivable, 2),
-}
-total = round(sum(components.values()), 2)
-nominal_cost_total = round(nominal_cost_total, 2)
-real_cost_total = round(real_cost_total, 2)
-cumulative_cost = round(real_cost_total - nominal_cost_total, 2)
-daily_cost = round(daily_cost_total, 2) if daily_cost_ready else 0.0
+def money(value):
+    return round(float(value or 0), 2)
 
-snap = {
-    "date": today_key,
-    "total": total,
-    **components,
-    "realCostTotal": real_cost_total,
-    "nominalCostTotal": nominal_cost_total,
-    "tlrefCostAdded": daily_cost,
-    "tlrefDailyCostAdded": daily_cost,
-    "tlrefDailyCostAvailable": daily_cost_ready,
-    "tlrefCumulativeCostAdded": cumulative_cost,
-    "netTlrefAnnualRate": float(tlref.get("netAnnualRate", 0) or 0),
-    "tlrefAsOf": tlref.get("asOf"),
-}
 
-try:
-    history = json.loads(HISTORY.read_text(encoding="utf-8"))
-except Exception:
-    history = {"version": 1, "frequency": "daily", "startDate": today_key, "retentionDays": 700, "snapshots": [], "weeklySnapshots": []}
+def fx_value(accounts, rates, account_id):
+    currencies = (accounts.get(account_id) or {}).get("currencies") or {}
+    return sum(
+        float(amount or 0) * float(rates.get(f"{code}TRY", 0) or 0)
+        for code, amount in currencies.items()
+    )
 
-rows = [x for x in history.get("snapshots", []) if x.get("date") != today_key]
-rows.append(snap)
 
-if today.weekday() == 6:
-    weekly = [x for x in history.get("weeklySnapshots", []) if x.get("date") != today_key]
-    weekly.append(snap)
-    weekly.sort(key=lambda x: x["date"])
-    history["weeklySnapshots"] = weekly
+def main():
+    now = datetime.now(ZoneInfo("Europe/Istanbul"))
+    force = os.environ.get("FORCE_SNAPSHOT") == "1"
+    within_window = (
+        (now.hour, now.minute) >= SNAPSHOT_WINDOW_START
+        and (now.hour, now.minute) <= SNAPSHOT_WINDOW_END
+    )
+    if not force and not within_window:
+        raise SystemExit(
+            f"Snapshot skipped: local time is {now:%Y-%m-%d %H:%M} Europe/Istanbul; "
+            "expected 18:35–18:50."
+        )
 
-rows.sort(key=lambda x: x["date"])
-cutoff = today - timedelta(days=int(history.get("retentionDays", 700)) - 1)
-rows = [x for x in rows if datetime.fromisoformat(x["date"]).date() >= cutoff]
+    today = now.date().isoformat()
 
-history["startDate"] = rows[0]["date"] if rows else today_key
-history["updatedAt"] = datetime.now(ZoneInfo("Europe/Istanbul")).replace(microsecond=0).isoformat()
-history["snapshots"] = rows
-history.setdefault("weeklySnapshots", [])
-HISTORY.write_text(json.dumps(history, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # Quotes must come from the live OYAK-backed Worker API; the repository's
+    # data/quotes.json is only a seed file and must never be used for a snapshot.
+    quotes_data = api_json("/api/quotes")
+    if quotes_data.get("sourceUrl") != "OYAK Yatırım":
+        raise SystemExit("Snapshot refused: live quote source is not OYAK Yatırım.")
 
-print(f"Balance history: {today_key} total={total:.2f}; component sum={sum(components.values()):.2f}; daily TLREF increase={daily_cost:.2f}; cumulative TLREF cost={cumulative_cost:.2f}; snapshots={len(rows)}")
+    quote_attempt = parse_timestamp(quotes_data.get("lastAttempt") or quotes_data.get("lastRefresh"))
+    if quote_attempt is None:
+        raise SystemExit("Snapshot refused: OYAK API has no valid lastAttempt timestamp.")
+    if (datetime.now(quote_attempt.tzinfo) - quote_attempt).total_seconds() > 10 * 60:
+        raise SystemExit("Snapshot refused: OYAK quote response is older than 10 minutes.")
+
+    balance = api_or_file("/api/balance", BALANCE_FILE)
+    positions = api_or_file("/api/positions", POSITIONS_FILE)
+    try:
+        tlref = api_json("/api/tlref")
+    except Exception as exc:
+        print(f"NOTICE: /api/tlref unavailable; using repository file ({exc})")
+        tlref = load_json(TLREF_FILE)
+
+    if not isinstance(positions, list) or not positions:
+        raise SystemExit("Snapshot refused: positions list is empty.")
+
+    prices = quotes_data.get("quotes") or {}
+    statuses = quotes_data.get("quoteStatusBySymbol") or {}
+    fetched_at = quotes_data.get("quoteFetchedAt") or {}
+    missing = []
+    stale = []
+    for position in positions:
+        symbol = position.get("symbol")
+        price = prices.get(symbol)
+        if not isinstance(price, (int, float)) or price <= 0:
+            missing.append(symbol)
+            continue
+        status = (statuses.get(symbol) or {}).get("status")
+        timestamp = parse_timestamp(fetched_at.get(symbol) or (statuses.get(symbol) or {}).get("fetchedAt"))
+        if status and status != "fresh":
+            stale.append(symbol)
+        elif timestamp is None or (datetime.now(timestamp.tzinfo) - timestamp).total_seconds() > 10 * 60:
+            stale.append(symbol)
+    if missing:
+        raise SystemExit("Snapshot refused; missing live OYAK quotes: " + ", ".join(missing))
+    if stale:
+        raise SystemExit("Snapshot refused; stale OYAK quotes: " + ", ".join(stale))
+
+    accounts = balance.get("accounts") or {}
+    rates = quotes_data.get("fx") or {}
+
+    stocks = 0.0
+    funds = 0.0
+    nominal_cost_total = 0.0
+    real_cost_total = 0.0
+    daily_cost_total = 0.0
+    daily_cost_ready = True
+
+    for position in positions:
+        symbol = position["symbol"]
+        quantity = float(position.get("qty", 0) or 0)
+        market_value = quantity * float(prices[symbol])
+        if position.get("type") == "fund":
+            funds += market_value
+        else:
+            stocks += market_value
+
+        average_cost = float(position.get("avgCost", 0) or 0)
+        real_cost = float(position.get("realCost", average_cost) or average_cost)
+        nominal_cost_total += average_cost * quantity
+        real_cost_total += real_cost * quantity
+        daily_cost_total += float(position.get("dailyTlrefCostAdded", 0) or 0) * quantity
+        if position.get("dailyTlrefCostUpdatedAt") != today:
+            daily_cost_ready = False
+
+    try_value = sum(
+        float(account.get("value", 0) or 0)
+        for account in accounts.values()
+        if account.get("category") == "try"
+    )
+    cash_fx = fx_value(accounts, rates, "doviz")
+    bank_fx = fx_value(accounts, rates, "bankaDoviz")
+
+    gold_account = accounts.get("nkolayAltin") or {}
+    gold_grams = float(gold_account.get("grams", 0) or balance.get("gold", {}).get("grams", 0) or 0)
+    gold_price = float(quotes_data.get("goldGramTRY") or balance.get("gold", {}).get("gramPriceSnapshot") or 0)
+    if gold_grams > 0 and gold_price <= 0:
+        raise SystemExit("Snapshot refused: gram-gold price is unavailable.")
+    gold = gold_grams * gold_price
+
+    receivable = sum(
+        float(account.get("value", 0) or 0)
+        for account in accounts.values()
+        if account.get("category") == "receivable"
+    )
+
+    components = {
+        "stocks": money(stocks),
+        "funds": money(funds),
+        "try": money(try_value),
+        "cashFx": money(cash_fx),
+        "bankFx": money(bank_fx),
+        "gold": money(gold),
+        "receivable": money(receivable),
+    }
+    total = money(sum(components.values()))
+    nominal_cost_total = money(nominal_cost_total)
+    real_cost_total = money(real_cost_total)
+    cumulative_cost = money(real_cost_total - nominal_cost_total)
+    daily_cost = money(daily_cost_total) if daily_cost_ready else 0.0
+
+    snapshot = {
+        "date": today,
+        "capturedAt": now.isoformat(timespec="seconds"),
+        "snapshotTime": "18:40 Europe/Istanbul",
+        **components,
+        "total": total,
+        "realCostTotal": real_cost_total,
+        "nominalCostTotal": nominal_cost_total,
+        "tlrefCostAdded": daily_cost,
+        "tlrefDailyCostAdded": daily_cost,
+        "tlrefDailyCostAvailable": daily_cost_ready,
+        "tlrefCumulativeCostAdded": cumulative_cost,
+        "tlrefAsOf": tlref.get("asOf"),
+        "tlrefGrossAnnualRate": tlref.get("grossAnnualRate"),
+        "tlrefNetAnnualRate": tlref.get("netAnnualRate"),
+        "quoteLastRefresh": quotes_data.get("lastRefresh"),
+        "quoteSource": "OYAK Yatırım",
+    }
+
+    try:
+        history = load_json(HISTORY_FILE)
+    except FileNotFoundError:
+        history = {
+            "version": 1,
+            "frequency": "daily",
+            "startDate": today,
+            "retentionDays": RETENTION_DAYS,
+            "snapshots": [],
+            "weeklySnapshots": [],
+        }
+
+    snapshots = history.get("snapshots") or []
+    if any(row.get("date") == today for row in snapshots):
+        print(f"Snapshot already exists for {today}; preserving the existing 18:40 record.")
+        return
+
+    snapshots.append(snapshot)
+    snapshots.sort(key=lambda row: row.get("date", ""))
+    cutoff = now.date() - timedelta(days=RETENTION_DAYS - 1)
+    snapshots = [
+        row for row in snapshots
+        if datetime.fromisoformat(row["date"]).date() >= cutoff
+    ]
+    history["snapshots"] = snapshots[-RETENTION_DAYS:]
+    history["retentionDays"] = RETENTION_DAYS
+    history["frequency"] = "daily"
+    history["startDate"] = history["snapshots"][0]["date"] if history["snapshots"] else today
+    history["updatedAt"] = now.isoformat(timespec="seconds")
+
+    if now.weekday() == 6:
+        weekly = history.get("weeklySnapshots") or []
+        weekly = [row for row in weekly if row.get("date") != today]
+        weekly.append(snapshot)
+        weekly.sort(key=lambda row: row.get("date", ""))
+        history["weeklySnapshots"] = weekly[-RETENTION_DAYS:]
+
+    HISTORY_FILE.write_text(
+        json.dumps(history, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(
+        f"18:40 snapshot saved: {today}; total={total:.2f}; "
+        f"stocks={components['stocks']:.2f}; fx={components['cashFx'] + components['bankFx']:.2f}; "
+        f"snapshots={len(history['snapshots'])}"
+    )
+
+
+if __name__ == "__main__":
+    main()
