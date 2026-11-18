@@ -47,8 +47,9 @@
     },
     "nkolayAltin": {
       "label": "N Kolay Altın",
-      "value": 10639,
-      "category": "gold"
+      "value": 10826.52,
+      "category": "gold",
+      "grams": 1.75
     },
     "nakit": {
       "label": "Nakit",
@@ -67,8 +68,8 @@
     }
   },
   "gold": {
-    "gramPriceSnapshot": 6258.06,
-    "grams": 1.7
+    "gramPriceSnapshot": 6186.58,
+    "grams": 1.75
   },
   "note": "Bakiye verileri Google Sheets kullanılmadan manuel güncellenir.",
   "fxSource": "Döviz.com serbest piyasa",
@@ -80,5 +81,6 @@
     "source": "Borsa İstanbul TLREF",
     "sourceUrl": "https://www.borsaistanbul.com/endeksler/tlref",
     "method": "Günlük net TLREF fırsat maliyeti; brüt TLREF oranından %17,5 stopaj düşülür ve günlük bileşik uygulanır. Güncel oran data/tlref.json üzerinden alınır."
-  }
+  },
+  "goldPriceSource": "Döviz.com serbest piyasa Gram Altın"
 }
