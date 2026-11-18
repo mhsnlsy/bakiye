@@ -8,6 +8,7 @@ SOURCE_SYMBOL = {"ZPLIB.F":"ZPLIB"}
 FX_SOURCE = "https://kur.doviz.com/"
 FXC = ["USD","EUR","GBP"]
 GOLD_SOURCE = "https://www.doviz.com/"
+GOLD_API = "https://www.doviz.com/api/v1/golds/gram-altin"
 
 class TableParser(HTMLParser):
     def __init__(self):
@@ -156,7 +157,25 @@ def main():
     fx=parse_fx(fx_source)
     gold_gram_try=parse_gold(fx_source)
     if gold_gram_try is None or gold_gram_try <= 0:
-        raise SystemExit("Döviz.com parse failed; missing Gram Altın")
+        # Doviz.com may render gold client-side; try its JSON endpoint.
+        gold_api_source=fetch(GOLD_API)
+        try:
+            gold_json=json.loads(gold_api_source)
+        except Exception:
+            gold_json={}
+        candidates=[
+            gold_json.get("satis"), gold_json.get("sell"), gold_json.get("selling"),
+            gold_json.get("alis"), gold_json.get("buy"), gold_json.get("price"),
+            (gold_json.get("data") or {}).get("satis") if isinstance(gold_json.get("data"),dict) else None,
+            (gold_json.get("data") or {}).get("sell") if isinstance(gold_json.get("data"),dict) else None
+        ]
+        for candidate in candidates:
+            value=number(str(candidate)) if candidate is not None else None
+            if value is not None and value>1000:
+                gold_gram_try=value
+                break
+    if gold_gram_try is None or gold_gram_try <= 0:
+        raise SystemExit("Döviz.com Gram Altın verisi alınamadı; sayfa ve JSON fiyatı bulunamadı")
     fx_missing=[c for c in FXC if c+"TRY" not in fx]
     if fx_missing:
         raise SystemExit("D\u00f6viz.com parse failed; missing: "+",".join(fx_missing)+"TRY")
