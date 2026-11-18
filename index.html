@@ -243,29 +243,43 @@ async function api(path){
  throw Error(path+" erişilemedi");
 }
 async function loadData(){
- // Only replace the current snapshot after every endpoint succeeds.
- // A partial failure must never reset working data to empty defaults.
- const results=await Promise.allSettled([
-  api("/api/balance"),
-  api("/api/quotes"),
-  api("/api/positions"),
-  api("/api/history"),
-  api("/api/tlref"),
-  api("/api/closing-history")
+ // The local JSON files are the canonical static snapshot shipped with the page.
+ // Load them first so the dashboard can never be blocked by a Worker/API outage.
+ const local=await Promise.all([
+  fetch(STATIC_BASE+"/data/balance.json?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("balance static HTTP "+r.status);return r.json()}),
+  fetch(STATIC_BASE+"/data/quotes.json?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("quotes static HTTP "+r.status);return r.json()}),
+  fetch(STATIC_BASE+"/data/positions.json?v="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("positions static HTTP "+r.status);return r.json()}),
+  fetch(STATIC_BASE+"/data/history.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():{snapshots:[]}),
+  fetch(STATIC_BASE+"/data/tlref.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():{asOf:"",grossAnnualRate:0,netAnnualRate:0,source:"—",historical:[]}),
+  fetch(STATIC_BASE+"/data/history/stock-closing.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():{version:1,retentionDays:30,entries:[]})
  ]);
- const [b,q,p,h,t,c]=results;
- if(b.status!=="fulfilled"||!b.value||typeof b.value!=="object")throw Error("/api/balance");
- if(q.status!=="fulfilled"||!q.value||!q.value.quotes||typeof q.value.quotes!=="object")throw Error("/api/quotes");
- if(p.status!=="fulfilled"||!Array.isArray(p.value)||!p.value.length)throw Error("/api/positions");
+ const [b,q,p,h,t,c]=local;
+ if(!b||typeof b!=="object")throw Error("balance");
+ if(!q||!q.quotes||typeof q.quotes!=="object")throw Error("quotes");
+ if(!Array.isArray(p)||!p.length)throw Error("positions");
 
- // History, TLREF and closing archive are supplementary. A temporary failure
- // in one of these must never prevent the main balance screen from opening.
- balanceData=b.value;
- quoteData=q.value;
- positions=p.value;
- historyData=(h.status==="fulfilled"&&h.value&&Array.isArray(h.value.snapshots))?h.value:{snapshots:[]};
- tlrefData=(t.status==="fulfilled"&&t.value&&t.value.asOf)?t.value:{asOf:"",grossAnnualRate:0,netAnnualRate:0,source:"—",historical:[]};
- closingHistoryData=(c.status==="fulfilled"&&c.value&&Array.isArray(c.value.entries))?c.value:{version:1,retentionDays:30,entries:[]};
+ balanceData=b;
+ quoteData=q;
+ positions=p;
+ historyData=(h&&Array.isArray(h.snapshots))?h:{snapshots:[]};
+ tlrefData=(t&&t.asOf)?t:{asOf:"",grossAnnualRate:0,netAnnualRate:0,source:"—",historical:[]};
+ closingHistoryData=(c&&Array.isArray(c.entries))?c:{version:1,retentionDays:30,entries:[]};
+
+ // Refresh from the Worker in the background. A failed live API must not
+ // blank or lock the page; the static snapshot remains usable.
+ Promise.allSettled([
+  api("/api/balance"),api("/api/quotes"),api("/api/positions"),
+  api("/api/history"),api("/api/tlref"),api("/api/closing-history")
+ ]).then(results=>{
+  const [b2,q2,p2,h2,t2,c2]=results;
+  if(b2.status==="fulfilled"&&b2.value&&typeof b2.value==="object")balanceData=b2.value;
+  if(q2.status==="fulfilled"&&q2.value&&q2.value.quotes)quoteData=q2.value;
+  if(p2.status==="fulfilled"&&Array.isArray(p2.value)&&p2.value.length)positions=p2.value;
+  if(h2.status==="fulfilled"&&h2.value&&Array.isArray(h2.value.snapshots))historyData=h2.value;
+  if(t2.status==="fulfilled"&&t2.value&&t2.value.asOf)tlrefData=t2.value;
+  if(c2.status==="fulfilled"&&c2.value&&Array.isArray(c2.value.entries))closingHistoryData=c2.value;
+  try{render();renderHistory();}catch(e){console.error("Canlı veri render:",e)}
+ }).catch(()=>{});
 }
 function calc(){
  const rates=quoteData.fx||{}, q=quoteData.quotes||{};
