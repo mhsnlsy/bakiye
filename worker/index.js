@@ -3,6 +3,14 @@ const FX="https://kur.doviz.com/";
 const TLREF="https://www.borsaistanbul.com/endeksler/tlref";
 const TLREF_FALLBACK="https://borsa.doviz.com/endeksler/tlref-turk-lirasi-gecelik-referans-faiz-orani/tarihsel-veri";
 const STOCKS=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
+const STOCK_PAGES={
+  TAVHL:"https://uzmanpara.milliyet.com.tr/borsa/hisse-senetleri/tav-havalimanlari-tavhl/",
+  KARSN:"https://uzmanpara.milliyet.com.tr/borsa/hisse-senetleri/karsan-otomotiv-karsn/",
+  THYAO:"https://uzmanpara.milliyet.com.tr/borsa/hisse-senetleri/turk-hava-yollari-thyao/",
+  CGCAM:"https://uzmanpara.milliyet.com.tr/borsa/hisse-senetleri/cagdas-cam-cgcam/",
+  SISE:"https://uzmanpara.milliyet.com.tr/borsa/hisse-senetleri/sise-cam-sise/",
+  "ZPLIB.F":"https://uzmanpara.milliyet.com.tr/borsa/hisse-senetleri/zp-lip-zplib/"
+};
 const SOURCE_SYMBOL={"ZPLIB.F":"ZPLIB"};
 const FXC=["USD","EUR","GBP"];
 const H={"content-type":"application/json;charset=utf-8","cache-control":"no-store","access-control-allow-origin":"*"};
@@ -69,22 +77,27 @@ async function put(env,k,v){await env.BAKIYE_DATA.put(k,JSON.stringify(v,null,2)
 async function liveQuotes(env){
  const old=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
  const q={...old.quotes},f={...old.fx},missing=[],errors=[];
- const [mr,fr]=await Promise.allSettled([get(STOCK_SOURCE),get(FX)]);
- if(mr.status==="fulfilled"){
-   for(const s of STOCKS){
-     const p=stock(mr.value,SOURCE_SYMBOL[s]||s);
-     if(p!=null&&p>0)q[s]=p;else missing.push(s);
-   }
- }else errors.push("Uzmanpara: "+String(mr.reason?.message||mr.reason));
- if(fr.status==="fulfilled"){
+ // Fetch each held stock from its dedicated Uzmanpara quote page. The
+ // all-BIST page can remain stale even when individual quote pages update.
+ const stockResults=await Promise.allSettled(STOCKS.map(s=>get(STOCK_PAGES[s])));
+ let fulfilledStocks=0;
+ for(let i=0;i<STOCKS.length;i++){
+   const s=STOCKS[i], r=stockResults[i];
+   if(r.status==="fulfilled"){
+     const p=stock(r.value,SOURCE_SYMBOL[s]||s);
+     if(p!=null&&p>0){q[s]=p;fulfilledStocks++}else missing.push(s);
+   }else errors.push("Uzmanpara "+s+": "+String(r.reason?.message||r.reason));
+ }
+ const fr=await Promise.allSettled([get(FX)]);
+ if(fr[0].status==="fulfilled"){
    for(const c of FXC){
-     const p=fx(fr.value,c);
+     const p=fx(fr[0].value,c);
      if(p!=null)f[c+"TRY"]=p;else missing.push(c+"TRY");
    }
- }else errors.push("Döviz.com: "+String(fr.reason?.message||fr.reason));
- if(mr.status!=="fulfilled"&&fr.status!=="fulfilled")throw Error("Uzmanpara ve Döviz.com canlı verileri alınamadı");
+ }else errors.push("Döviz.com: "+String(fr[0].reason?.message||fr[0].reason));
+ if(!fulfilledStocks)throw Error("Uzmanpara canlı hisse verileri alınamadı");
  const now=new Date().toISOString();
- return {...old,source:"Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:STOCK_SOURCE,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,fx:f,missing,errors,sourceStatus:{uzmanpara:mr.status,doviz:fr.status,refreshMethod:"Worker live fetch"}};
+ return {...old,source:"Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",sourceUrl:STOCK_SOURCE,fxSourceUrl:FX,asOf:now.slice(0,10),lastRefresh:now,quotes:q,fx:f,missing,errors,sourceStatus:{uzmanpara:fulfilledStocks===STOCKS.length?"fulfilled":"partial",doviz:fr[0].status,refreshMethod:"Worker live fetch · individual Uzmanpara pages"}};
 }
 async function quotes(env){
  const old=await read(env,"quotes.json","/data/quotes.json")||{quotes:{},fx:{}};
