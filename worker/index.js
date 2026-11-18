@@ -1,5 +1,5 @@
 const FX="https://kur.doviz.com/";
-const GOLD_URL="https://altin.doviz.com/serbest-piyasa/gram-altin";
+const GOLD_URL="https://altin.doviz.com/gram-altin";
 const TLREF="https://www.borsaistanbul.com/endeksler/tlref";
 const TLREF_FALLBACK="https://borsa.doviz.com/endeksler/tlref-turk-lirasi-gecelik-referans-faiz-orani/tarihsel-veri";
 const STOCKS=["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"];
@@ -16,11 +16,20 @@ function goldQuote(h){
  const rows=[...h.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map(x=>x[1]);
  const row=rows.find(x=>/data-socket-key=["']gram-altin["']/i.test(x))||h;
  const cells=[...row.matchAll(/<td\b([^>]*)>([\s\S]*?)<\/td>/gi)];
- const bid=cells.find(x=>/data-socket-key=["']gram-altin["']/i.test(x[1])&&/data-socket-attr=["'](?:sell|s)["']/i.test(x[1]));
- if(!bid)return {price:null,time:null};
- const price=num(text(bid[2]));
- const time=(row.match(/\b(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?\b/)||[])[0]||null;
- return {price:price!=null&&price>0?price:null,time};
+ const sell=cells.find(x=>/data-socket-key=["']gram-altin["']/i.test(x[1])&&/data-socket-attr=["'](?:sell|s)["']/i.test(x[1]));
+ if(sell){
+   const price=num(text(sell[2]));
+   const time=(row.match(/\b(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?\b/)||[])[0]||null;
+   if(price!=null&&price>0)return {price,time};
+ }
+ const plain=text(h);
+ const m=plain.match(/Alış\s*\/\s*Satış\s+([0-9.]+,[0-9]+)\s*\/\s*([0-9.]+,[0-9]+)/i);
+ const time=(plain.match(/\b(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?\b/)||[])[0]||null;
+ if(m){
+   const price=num(m[2]);
+   if(price!=null&&price>0)return {price,time};
+ }
+ return {price:null,time};
 }
 function stockQuote(h,s){
  const rows=cells(h);
