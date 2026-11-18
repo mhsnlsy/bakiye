@@ -361,6 +361,8 @@ function render(){
  document.getElementById("netTotal").textContent=fmt(x.net);
  document.getElementById("obligationHero").textContent=fmt(x.obligations);
  document.getElementById("paidObligationTotal").textContent=fmt(paidObligations);
+ const yapiKrediEl=document.getElementById("yapiKrediCardValue");
+ if(yapiKrediEl) yapiKrediEl.textContent="—";
  document.getElementById("remainingObligationTotal").textContent=remainingObligations==null?"Belirsiz":fmt(remainingObligations);
  document.getElementById("obligationTotal").textContent=obligations==null?"Belirsiz":fmt(obligations);
  document.getElementById("heroRealPnL").textContent=fmt(x.realPnl);
