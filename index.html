@@ -374,7 +374,7 @@ function calc(){
  const paidObligations=round2(Number(balanceData.monthlyObligations?.summary?.paidThisMonth)||0);
  const remainingObligations=balanceData.monthlyObligations?.summary?.remainingThisMonth;
  const obligations=balanceData.monthlyObligations?.summary?.totalMonthly;
-return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,receivable:receivable2,total,paidObligations,obligations,net:round2(total-obligations),rates};
+return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,receivable:receivable2,total,paidObligations,remainingObligations,obligations,net:round2(total-obligations),rates};
 }
 function prevClosingBase(x){ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[]; const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()); const prev=entries.filter(e=>e.date&&e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1); return prev?x.rows.reduce((s,r)=>s+(Number(prev.prices?.[r.p.symbol])||0)*r.qty,0):0; }
 function render(){
@@ -397,8 +397,8 @@ function render(){
  document.getElementById("rentPaidValue").textContent=fmt(Number(balanceData.monthlyObligations?.rent?.paidThisMonth)||0);
  const yapiKrediEl=document.getElementById("yapiKrediCardValue");
  if(yapiKrediEl) yapiKrediEl.textContent="—";
- document.getElementById("remainingObligationTotal").textContent=remainingObligations==null?"Belirsiz":fmt(remainingObligations);
- document.getElementById("obligationTotal").textContent=obligations==null?"Belirsiz":fmt(obligations);
+ document.getElementById("remainingObligationTotal").textContent=x.remainingObligations==null?"Belirsiz":fmt(x.remainingObligations);
+ document.getElementById("obligationTotal").textContent=x.obligations==null?"Belirsiz":fmt(x.obligations);
  document.getElementById("heroRealPnL").textContent=fmt(x.realPnl);
  document.getElementById("positionCount").textContent=nfmt(x.positionCount)+" lot";
  document.getElementById("stocksValue").textContent=fmt(x.stocks);
