@@ -368,7 +368,11 @@ function renderHistory(){
  const x=i=>filtered.length===1?L+iw/2:L+i/(filtered.length-1)*iw;
  const y=v=>T+(hi-v)/(hi-lo)*ih;
  const grid=[0,.25,.5,.75,1].map(t=>{const v=hi-(hi-lo)*t,yy=T+t*ih;return '<line class="chartGrid" x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'"/><text class="chartAxis" x="4" y="'+(yy+3)+'">'+fmt(v)+'</text>'}).join("");
- const path=filtered.map((s,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(Number(s[historySeries])||0).toFixed(1)).join(" ");
+ const path=filtered.map((s,i)=>{
+   const prev=filtered[i-1];
+   const gap=prev && (Date.parse(String(s.date)+"T12:00:00Z")-Date.parse(String(prev.date)+"T12:00:00Z"))>86400000;
+   return (i===0||gap?"M":"L")+x(i).toFixed(1)+" "+y(Number(s[historySeries])||0).toFixed(1);
+ }).join(" ");
  const dots=filtered.map((s,i)=>'<circle class="chartDot" cx="'+x(i).toFixed(1)+'" cy="'+y(Number(s[historySeries])||0).toFixed(1)+'" r="'+(i===filtered.length-1?5:3.5)+'" fill="'+(i===filtered.length-1?'#8ab5ff':'#45d6a1')+'"><title>'+s.date+' · '+fmt(Number(s[historySeries])||0)+'</title></circle>').join("");
  const labels=filtered.length===1?'<text class="chartAxis" text-anchor="middle" x="'+x(0)+'" y="'+(H-8)+'">'+filtered[0].date+'</text>':filtered.map((s,i)=>i===0||i===filtered.length-1?'<text class="chartAxis" text-anchor="'+(i===0?'start':'end')+'" x="'+x(i)+'" y="'+(H-8)+'">'+s.date+'</text>':'').join("");
  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">'+grid+'<path class="chartLine" d="'+path+'" stroke="#8ab5ff"/>'+dots+labels+'</svg>';
