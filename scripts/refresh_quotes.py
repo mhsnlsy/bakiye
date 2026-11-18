@@ -1,45 +1,25 @@
-import json, re, html, os, sys, urllib.request
-from html.parser import HTMLParser
+import json, re, html, urllib.request, time
 from datetime import datetime, timezone
 
-STOCK_SOURCE = "https://uzmanpara.milliyet.com.tr/canli-borsa/bist-TUM-hisseleri/"
+FX_SOURCE = "https://kur.doviz.com/"
+GOLD_API = "https://api.gramhane.com/v1/prices.json"
+FXC = ["USD","EUR","GBP"]
 STOCKS = ["TAVHL","KARSN","THYAO","CGCAM","SISE","ZPLIB.F"]
 SOURCE_SYMBOL = {"ZPLIB.F":"ZPLIB"}
-FX_SOURCE = "https://kur.doviz.com/"
-FXC = ["USD","EUR","GBP"]
-GOLD_SOURCE = "https://www.doviz.com/"
-GOLD_API = "https://api.gramhane.com/v1/prices.json"
 
-class TableParser(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.rows=[]; self.row=[]; self.cell=[]; self.in_td=False; self.in_tr=False
-    def handle_starttag(self, tag, attrs):
-        if tag.lower()=="tr":
-            self.in_tr=True; self.row=[]
-        elif tag.lower()=="td" and self.in_tr:
-            self.in_td=True; self.cell=[]
-    def handle_data(self, data):
-        if self.in_td: self.cell.append(data)
-    def handle_endtag(self, tag):
-        tag=tag.lower()
-        if tag=="td" and self.in_td:
-            v=" ".join("".join(self.cell).split())
-            self.row.append(html.unescape(v)); self.in_td=False
-        elif tag=="tr" and self.in_tr:
-            if self.row: self.rows.append(self.row)
-            self.in_tr=False
+# Stock page URLs are kept in one data file so they can be replaced without
+# touching the quote engine. Missing URLs are intentionally not guessed.
+SOURCES_FILE = "data/stock-sources.json"
 
 def fetch(url, retries=3):
-    import time
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8",
         "Cache-Control": "no-cache",
     }
     last_err = None
-    for attempt in range(1, retries+1):
+    for attempt in range(1, retries + 1):
         try:
             req = urllib.request.Request(url + ("&" if "?" in url else "?") + "_ts=" + str(int(datetime.now(timezone.utc).timestamp()*1000)), headers=headers)
             with urllib.request.urlopen(req, timeout=25) as r:
@@ -52,162 +32,134 @@ def fetch(url, retries=3):
     raise last_err
 
 def number(s):
-    s=re.sub(r"[^0-9,.-]","",s or "").strip()
-    if not s: return None
-    if "," in s: s=s.replace(".","").replace(",",".")
-    try: return float(s)
-    except: return None
+    s = re.sub(r"[^0-9,.-]", "", s or "").strip()
+    if not s:
+        return None
+    if "," in s:
+        s = s.replace(".", "").replace(",", ".")
+    try:
+        return float(s)
+    except:
+        return None
 
-def parse_gold(source):
-    # Doviz.com sayfası fiyat verisini farklı HTML/JSON payload'larında
-    # sunabiliyor. Etiketle aynı blok içinde yer alan ilk gerçek fiyatı ara.
-    decoded=html.unescape(source)
-    plain=re.sub(r"\\s+"," ",re.sub(r"<[^>]+>"," ",decoded))
-    patterns=[
-        r"Gram\\s*Altın.{0,180}?(?:₺|TL)?\\s*([0-9]{1,3}(?:\\.[0-9]{3})*(?:,[0-9]+)?|[0-9]+(?:[.,][0-9]+)?)",
-        r"Gram\\s*Altın.{0,180}?(?:buy|sell|alis|satis|price)[^0-9]{0,30}([0-9]+(?:[.,][0-9]+)?)",
-        r"(?:gram-altin|gram_altin|gramAltin|gramGold).{0,160}?(?:buy|sell|alis|satis|price|value)[^0-9]{0,30}([0-9]+(?:[.,][0-9]+)?)",
+def clean_html(source):
+    source = html.unescape(source or "")
+    source = re.sub(r"<script[\s\S]*?</script>", " ", source, flags=re.I)
+    source = re.sub(r"<style[\s\S]*?</style>", " ", source, flags=re.I)
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", source)).strip()
+
+def parse_oyak_stock(source, symbol):
+    # Prefer a row/cell containing the ticker, then take the first numeric
+    # value after it. If the page is card-based, fall back to the "Son" label.
+    decoded = html.unescape(source or "")
+    rows = re.findall(r"<tr[^>]*>([\s\S]*?)</tr>", decoded, flags=re.I)
+    for row_html in rows:
+        cells = [clean_html(x) for x in re.findall(r"<t[dh][^>]*>([\s\S]*?)</t[dh]>", row_html, flags=re.I)]
+        cells = [x for x in cells if x]
+        if any(x.upper() == symbol.upper() for x in cells):
+            i = next(i for i,x in enumerate(cells) if x.upper() == symbol.upper())
+            for candidate in cells[i+1:]:
+                v = number(candidate)
+                if v is not None and v > 0:
+                    return v, None
+
+    text = clean_html(decoded)
+    patterns = [
+        rf"\b{re.escape(symbol)}\b\s+([0-9]+(?:[.,][0-9]+)?)",
+        r"\bSon\b\s*[:：]?\s*([0-9]+(?:[.,][0-9]+)?)",
+        r"\bSon Fiyat\b\s*[:：]?\s*([0-9]+(?:[.,][0-9]+)?)",
     ]
     for pattern in patterns:
-        m=re.search(pattern,plain,re.I)
+        m = re.search(pattern, text, re.I)
         if m:
-            v=number(m.group(1))
-            if v is not None and v>1000:
-                return v
-
-    # JSON-LD / embedded Next/Nuxt JSON: locate a named gold record.
-    for label in [r"Gram Altın",r"gram-altin",r"gram_altin",r"gramAltin"]:
-        m=re.search(label,decoded,re.I)
-        if not m: continue
-        chunk=decoded[m.start():m.start()+1200]
-        nums=re.findall(r"(?:buy|sell|alis|satis|price|value)[^0-9]{0,30}([0-9]+(?:[.,][0-9]+)?)",chunk,re.I)
-        for raw in nums:
-            v=number(raw)
-            if v is not None and v>1000:
-                return v
-
-    # Tablo satırı fallback.
-    p=TableParser(); p.feed(decoded)
-    for row in p.rows:
-        cells=[x.strip() for x in row]
-        for i,cell in enumerate(cells):
-            if re.search(r"Gram\\s*Altın",cell,re.I):
-                for candidate in row[i+1:i+4]:
-                    v=number(candidate)
-                    if v is not None and v>1000:
-                        return v
-    return None
+            v = number(m.group(1))
+            if v is not None and v > 0:
+                tm = re.search(r"\b(\d{2}:\d{2}:\d{2})\b", text)
+                return v, tm.group(1) if tm else None
+    return None, None
 
 def parse_fx(source):
-    p=TableParser(); p.feed(source)
-    out={}
-    # Doviz.com has changed its HTML table structure several times. Prefer
-    # the parsed table, then fall back to the rendered text where the currency
-    # label is followed by Alış/Satış values without literal pipe characters.
+    text = clean_html(source)
+    out = {}
     for code in FXC:
-        for row in p.rows:
-            cells=[x.strip().upper() for x in row]
-            for i,cell in enumerate(cells):
-                if cell.startswith(code+" ") and i+1 < len(row):
-                    v=number(row[i+1])
-                    if v is not None:
-                        out[code+"TRY"]=v
-                        break
-            if code+"TRY" in out:
-                break
-    plain=html.unescape(re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",source)))
-    for code in FXC:
-        if code+"TRY" in out: continue
-        # Example: "USD Amerikan Doları 50,4118 50,4227 ..."
-        m=re.search(r"\b"+re.escape(code)+r"\s+[^0-9]{1,80}?([0-9]{1,3}(?:[.,][0-9]{3})*(?:,[0-9]+)?|[0-9]+(?:[.,][0-9]+)?)",plain,re.I)
+        m = re.search(rf"\b{re.escape(code)}\b[^0-9]{{1,80}}([0-9]+(?:[.,][0-9]+)?)", text, re.I)
         if m:
-            v=number(m.group(1))
-            if v is not None: out[code+"TRY"]=v
+            v = number(m.group(1))
+            if v is not None:
+                out[code + "TRY"] = v
     return out
 
-def parse_stock(source):
-    p=TableParser(); p.feed(source)
-    out={}
-    daily_pct={}
-    quote_times={}
-    for symbol in STOCKS:
-        source_symbol=SOURCE_SYMBOL.get(symbol,symbol)
-        for row in p.rows:
-            cells=[x.strip().upper() for x in row]
-            if source_symbol in cells:
-                i=cells.index(source_symbol)
-                price=None; pct=None; quote_time=None
-                for candidate in row[i+1:]:
-                    if price is None:
-                        v=number(candidate)
-                        if v is not None:
-                            price=v
-                            continue
-                    if re.fullmatch(r"\\d{2}:\\d{2}:\\d{2}", candidate.strip()):
-                        quote_time=candidate.strip()
-                    elif pct is None:
-                        v=number(candidate)
-                        if v is not None and -100 <= v <= 100:
-                            pct=v
-                if price is not None:
-                    out[symbol]=price
-                    if pct is not None: daily_pct[symbol]=pct
-                    if quote_time: quote_times[symbol]=quote_time
-                    break
-        if symbol not in out:
-            plain=re.sub(r"\\s+"," ",re.sub(r"<[^>]+>"," ",source))
-            m=re.search(r"(?:^|\\s)"+re.escape(source_symbol)+r"\\s+([0-9]+(?:[.,][0-9]+)?)",plain,re.I)
-            if m: out[symbol]=number(m.group(1))
-    return out, daily_pct, quote_times
-
 def main():
-    path="/tmp/quotes.json"
-    with open(path,encoding="utf-8") as f: q=json.load(f)
-    source=fetch(STOCK_SOURCE)
-    prices, daily_pct, quote_times=parse_stock(source)
-    missing=[s for s in STOCKS if s not in prices]
-    if missing:
-        raise SystemExit("Uzmanpara parse failed; missing: "+",".join(missing))
-    fx_source=fetch(FX_SOURCE)
-    fx=parse_fx(fx_source)
+    with open("/tmp/quotes.json", encoding="utf-8") as f:
+        q = json.load(f)
 
-    # Gram Altın: Doviz.com'un kaldırılmış/404 dönen endpoint'ini kullanma.
-    # Gramhane açık JSON kaynağından TRY/gram satış fiyatını oku.
-    gold_api_source=fetch(GOLD_API)
-    try:
-        gold_json=json.loads(gold_api_source)
-    except Exception as exc:
-        raise SystemExit("Gramhane altın JSON yanıtı çözümlenemedi: "+str(exc))
-    if gold_json.get("meta",{}).get("status") != "success":
+    with open(SOURCES_FILE, encoding="utf-8") as f:
+        source_config = json.load(f)
+
+    pages = source_config.get("stocks", {})
+    prices, quote_times, missing, errors = {}, {}, [], []
+
+    for symbol in STOCKS:
+        url = pages.get(symbol)
+        if not url:
+            missing.append(symbol)
+            errors.append(f"OYAK URL eksik: {symbol}")
+            continue
+        try:
+            source = fetch(url)
+            price, quote_time = parse_oyak_stock(source, SOURCE_SYMBOL.get(symbol, symbol))
+            if price is None:
+                missing.append(symbol)
+                errors.append(f"OYAK fiyatı ayrıştırılamadı: {symbol}")
+            else:
+                prices[symbol] = price
+                if quote_time:
+                    quote_times[symbol] = quote_time
+        except Exception as exc:
+            missing.append(symbol)
+            errors.append(f"OYAK {symbol}: {exc}")
+
+    if len(prices) != len(STOCKS):
+        raise SystemExit("OYAK fiyatları eksik: " + ",".join(missing))
+
+    fx_source = fetch(FX_SOURCE)
+    fx = parse_fx(fx_source)
+    fx_missing = [c + "TRY" for c in FXC if c + "TRY" not in fx]
+    if fx_missing:
+        raise SystemExit("Döviz.com parse failed; missing: " + ",".join(fx_missing))
+
+    gold_api_source = fetch(GOLD_API)
+    gold_json = json.loads(gold_api_source)
+    if gold_json.get("meta", {}).get("status") != "success":
         raise SystemExit("Gramhane altın verisi başarılı değil")
-    gold_rates=gold_json.get("kurlar",{})
-    gold_record=gold_rates.get("ALTIN") or gold_rates.get("GRAM") or {}
-    gold_gram_try=number(str(gold_record.get("satis") or gold_record.get("alis") or ""))
+    gold_rates = gold_json.get("kurlar", {})
+    gold_record = gold_rates.get("ALTIN") or gold_rates.get("GRAM") or {}
+    gold_gram_try = number(str(gold_record.get("satis") or gold_record.get("alis") or ""))
     if gold_gram_try is None or gold_gram_try <= 1000:
         raise SystemExit("Gramhane Gram Altın satış fiyatı eksik/geçersiz")
-    fx_missing=[c for c in FXC if c+"TRY" not in fx]
-    if fx_missing:
-        raise SystemExit("D\u00f6viz.com parse failed; missing: "+",".join(fx_missing)+"TRY")
-    q["source"]="Uzmanpara Son fiyat (15 dk gecikmeli) + D\u00f6viz.com serbest piyasa"
-    q["sourceUrl"]=STOCK_SOURCE
-    q["asOf"]=datetime.now(timezone.utc).date().isoformat()
-    q["lastRefresh"]=datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
+
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    q["source"] = "OYAK Yatırım hisse sayfaları + Döviz.com serbest piyasa"
+    q["sourceUrl"] = "OYAK Yatırım"
+    q["stockSourceUrls"] = pages
+    q["asOf"] = now[:10]
+    q["lastRefresh"] = now
     q["quotes"].update(prices)
-    q["quoteTimes"]={**q.get("quoteTimes",{}),**quote_times}
-    q["dailyPct"]=daily_pct
+    q["quoteTimes"] = {**q.get("quoteTimes", {}), **quote_times}
+    q["dailyPct"] = q.get("dailyPct", {})
     q["fx"].update(fx)
     q["goldGramTRY"] = round(gold_gram_try, 2)
     q["goldSource"] = GOLD_API
-    q["missing"]=missing
-    q["errors"]=[]
-    q["sourceStatus"]={"uzmanpara":"fulfilled","doviz":"fulfilled","refreshMethod":"GitHub Actions direct fetch"}
-    with open(path,"w",encoding="utf-8") as f: json.dump(q,f,ensure_ascii=False,indent=2)
-    print("source:",q["source"])
-    print("lastRefresh:",q["lastRefresh"])
-    print("quotes:",q["quotes"])
-    print("goldGramTRY:",q["goldGramTRY"])
-    print("missing:",q["missing"])
-    print("errors:",q["errors"])
+    q["missing"] = []
+    q["errors"] = []
+    q["sourceStatus"] = {"oyak": "fulfilled", "doviz": "fulfilled", "refreshMethod": "GitHub Actions direct fetch · individual OYAK pages"}
 
-if __name__=="__main__":
+    with open("/tmp/quotes.json", "w", encoding="utf-8") as f:
+        json.dump(q, f, ensure_ascii=False, indent=2)
+
+    print("source:", q["source"])
+    print("lastRefresh:", q["lastRefresh"])
+    print("quotes:", q["quotes"])
+
+if __name__ == "__main__":
     main()
