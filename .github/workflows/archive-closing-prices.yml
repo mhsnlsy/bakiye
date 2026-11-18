@@ -1,8 +1,13 @@
 name: Archive daily closing stock prices
 
 on:
+  # 18:40 TSİ ana tetikleme + 18:45/18:50/18:55 güvenlik tekrarları.
+  # İlk başarılı snapshot günü kilitler; sonraki denemeler aynı günü değiştirmez.
   schedule:
     - cron: "40 15 * * *"
+    - cron: "45 15 * * *"
+    - cron: "50 15 * * *"
+    - cron: "55 15 * * *"
   workflow_dispatch:
 
 concurrency:
