@@ -1,7 +1,15 @@
 {
-  "source": "Uzmanpara Son fiyat (15 dk gecikmeli) + Döviz.com serbest piyasa",
-  "sourceUrl": "https://uzmanpara.milliyet.com.tr/canli-borsa/bist-TUM-hisseleri/",
-  "asOf": "2026-11-16",
+  "source": "OYAK Yatırım hisse sayfaları + Döviz.com serbest piyasa",
+  "sourceUrl": "OYAK Yatırım",
+  "stockSourceUrls": {
+    "TAVHL": null,
+    "KARSN": null,
+    "THYAO": null,
+    "CGCAM": null,
+    "SISE": null,
+    "ZPLIB.F": "https://www.oyakyatirim.com.tr/hisse-detay/ZPLIB"
+  },
+  "asOf": "2026-11-18",
   "currency": "TRY",
   "quotes": {
     "TAVHL": 306.75,
@@ -18,16 +26,17 @@
     "GBPTRY": 66.492
   },
   "lastRefresh": "2026-11-18T04:00:00Z",
-  "dailyPct": {
-    "TAVHL": 0.9046052631578948,
-    "KARSN": -0.2525252525252471,
-    "THYAO": 1.1591962905718702,
-    "CGCAM": 1.6983016983016976,
-    "SISE": 0.11481056257175414,
-    "ZPLIB.F": 0.9284818067754049
-  },
-  "errors": [],
-  "missing": [],
+  "dailyPct": {},
+  "errors": [
+    "OYAK URL'leri henüz tamamlanmadı"
+  ],
+  "missing": [
+    "TAVHL",
+    "KARSN",
+    "THYAO",
+    "CGCAM",
+    "SISE"
+  ],
   "goldGramTRY": 6186.58,
   "goldSource": "https://www.doviz.com/"
 }
