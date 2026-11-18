@@ -2,7 +2,8 @@ name: Record Daily Balance History
 
 on:
   schedule:
-    - cron: "40,45,50 15 * * *" # 18:40 plus retry windows in Europe/Istanbul
+    - cron: "40,45,50 18 * * *"
+      timezone: "Europe/Istanbul"
   workflow_dispatch:
 
 permissions:
@@ -17,11 +18,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Record daily snapshot
-        run: python scripts/update_balance_history.py
+
+      - name: Record daily 18:40 snapshot with retries
+        run: |
+          for attempt in $(seq 1 10); do
+            echo "Snapshot attempt $attempt/10"
+            if python scripts/update_balance_history.py; then
+              exit 0
+            fi
+            echo "Snapshot attempt failed; retrying in 60 seconds..."
+            sleep 60
+          done
+          echo "ERROR: 18:40 snapshot could not be created after 10 attempts."
+          exit 1
+
       - name: Commit history
         run: |
           git config user.name "github-actions[bot]"
