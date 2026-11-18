@@ -138,6 +138,13 @@ export default{
   if(u.pathname==="/api/history"){const v=await read(env,"history.json","/data/history.json");return v?out(v):out({error:"history_not_ready"},503)}
   if(u.pathname==="/api/closing-history"){const v=await read(env,"history/stock-closing.json","/data/history/stock-closing.json");return v?out(v):out({version:1,retentionDays:30,entries:[]})}
   if(u.pathname==="/api/health")return out({ok:true,service:"bakiye",time:new Date().toISOString()});
+  // Mirror the API under the /bakiye mount so relative app requests work there too.
+  if(u.pathname.startsWith("/bakiye/api/")){
+    const apiPath=u.pathname.slice("/bakiye".length);
+    const apiUrl=new URL(req.url);
+    apiUrl.pathname=apiPath;
+    return this.fetch(new Request(apiUrl,req),env);
+  }
   // Allow the app to be mounted privately under /bakiye on istanbulunhavasi.com.
   // The browser keeps relative asset URLs under /bakiye/, so strip the mount prefix
   // before resolving files from the Worker asset manifest.
