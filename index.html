@@ -219,15 +219,28 @@ function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&
 let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closingHistoryData={};
 window.pnlMode="nominal";
 const API_BASE="https://bakiye.muhsin-ulusoy.workers.dev";
+const STATIC_BASE=location.pathname.startsWith("/bakiye")?"/bakiye":"";
+const STATIC_MAP={
+ "/api/balance":"/data/balance.json",
+ "/api/quotes":"/data/quotes.json",
+ "/api/positions":"/data/positions.json",
+ "/api/history":"/data/history.json",
+ "/api/tlref":"/data/tlref.json",
+ "/api/closing-history":"/data/history/stock-closing.json"
+};
 async function api(path){
  const sep=path.includes("?")?"&":"?";
  const url=API_BASE+path+sep+"v="+Date.now();
- const r=await fetch(url,{
-  cache:"no-store",
-  headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}
- });
- if(!r.ok)throw Error(url+" HTTP "+r.status);
- return r.json();
+ try{
+  const r=await fetch(url,{cache:"no-store",headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});
+  if(r.ok)return r.json();
+ }catch(_){}
+ const staticPath=STATIC_MAP[path];
+ if(staticPath){
+  const r=await fetch(STATIC_BASE+staticPath+"?v="+Date.now(),{cache:"no-store"});
+  if(r.ok)return r.json();
+ }
+ throw Error(path+" erişilemedi");
 }
 async function loadData(){
  // Only replace the current snapshot after every endpoint succeeds.
