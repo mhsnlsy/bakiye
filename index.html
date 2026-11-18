@@ -277,12 +277,13 @@ function calc(){
  const goldPrice=Number(q.goldGramTRY)||Number(balanceData.gold?.gramPriceSnapshot)||0;
  const gold=goldGrams*goldPrice; const receivable=Number(a.tahminiAlacak?.value)||0;
  const total=stocks+tryVal+cashFx+bankFx+gold+receivable;
- const obligations=(Number(a.monthlyObligations?.rent?.value)||0)+(Number(a.monthlyObligations?.creditCard?.value)||0);
+ const obligations=(Number(balanceData.monthlyObligations?.rent?.value)||0)+(Number(balanceData.monthlyObligations?.creditCard?.value)||0);
  return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal,cashFx,bankFx,gold,receivable,total,obligations,net:total-obligations,rates};
 }
 function prevClosingBase(x){ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[]; const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()); const prev=entries.filter(e=>e.date&&e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1); return prev?x.rows.reduce((s,r)=>s+(Number(prev.prices?.[r.p.symbol])||0)*r.qty,0):0; }
 function render(){
- const x=calc();\n const liveDate=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleDateString("en-CA",{timeZone:"Europe/Istanbul"}):null;
+ const x=calc();
+ const liveDate=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleDateString("en-CA",{timeZone:"Europe/Istanbul"}):null;
  if(liveDate){ const v=document.getElementById("valuationDate"); if(v)v.textContent=liveDate; const f=document.getElementById("footerMeta"); if(f)f.textContent="Son güncelleme: "+new Date(quoteData.lastRefresh).toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul"}); }
  
  document.getElementById("grandTotal").textContent=fmt(x.total);
