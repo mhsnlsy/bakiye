@@ -218,13 +218,15 @@ function nfmt(n){return new Intl.NumberFormat("tr-TR",{minimumFractionDigits:2,m
 function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closingHistoryData={};
 window.pnlMode="nominal";
+const API_BASE="https://bakiye.muhsin-ulusoy.workers.dev";
 async function api(path){
  const sep=path.includes("?")?"&":"?";
- const r=await fetch(path+sep+"v="+Date.now(),{
+ const url=API_BASE+path+sep+"v="+Date.now();
+ const r=await fetch(url,{
   cache:"no-store",
   headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}
  });
- if(!r.ok)throw Error(base+path+" HTTP "+r.status);
+ if(!r.ok)throw Error(url+" HTTP "+r.status);
  return r.json();
 }
 async function loadData(){
