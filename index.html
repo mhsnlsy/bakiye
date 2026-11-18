@@ -221,6 +221,16 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
 <script>
 function fmt(n){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
 function nfmt(n){return new Intl.NumberFormat("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
+function fxCalcText(id,rates){
+ const account=(balanceData.accounts||{})[id]||{};
+ const entries=Object.entries(account.currencies||{});
+ const parts=entries.map(([code,qty])=>{
+  const amount=Number(qty)||0, rate=Number(rates[code+"TRY"])||0;
+  return amount+" "+code+" × "+rate.toLocaleString("tr-TR",{minimumFractionDigits:4,maximumFractionDigits:4});
+ });
+ const value=entries.reduce((sum,[code,qty])=>sum+(Number(qty)||0)*(Number(rates[code+"TRY"])||0),0);
+ return parts.length?parts.join(" + ")+" = "+fmt(value):"Döviz miktarı yok";
+}
 function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let balanceData={},quoteData={},positions=[],historyData={},tlrefData={},closingHistoryData={};
 window.pnlMode="nominal";
