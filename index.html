@@ -201,9 +201,14 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
 <section class="section">
  <div class="sectionhead"><div><h2>Aylık yükümlülükler</h2><div class="note">Toplam varlıktan ayrı gösterilir; net bakiye hesabında düşülür.</div></div></div>
  <div class="liability">
-  <div class="liabilityItem"><span>Bu ay ödenen</span><strong id="paidObligationTotal">₺58.000,00</strong></div>
-  <div class="liabilityItem"><span>Şu an kalan</span><strong id="remainingObligationTotal">Belirsiz</strong></div>
-  <div class="liabilityItem"><span>Toplam aylık yükümlülük</span><strong id="obligationTotal">Belirsiz</strong></div>
+  <div class="liabilityItem"><span>Enpara kredi kartı · bu ay ödenen</span><strong id="enparaPaidValue">₺44.000,00</strong></div>
+  <div class="liabilityItem"><span>Enpara kredi kartı · kalan</span><strong id="enparaRemainingValue">—</strong></div>
+  <div class="liabilityItem"><span>Yapı Kredi kredi kartı · bu ay ödenen</span><strong id="yapiKrediPaidValue">₺0,00</strong></div>
+  <div class="liabilityItem"><span>Yapı Kredi kredi kartı · kalan</span><strong id="yapiKrediRemainingValue">—</strong></div>
+  <div class="liabilityItem"><span>Kira · bu ay ödenen</span><strong id="rentPaidValue">₺14.000,00</strong></div>
+  <div class="liabilityItem"><span>Bu ay toplam ödenen</span><strong id="paidObligationTotal">₺58.000,00</strong></div>
+  <div class="liabilityItem"><span>Şu an kalan</span><strong id="remainingObligationTotal">—</strong></div>
+  <div class="liabilityItem"><span>Toplam aylık yükümlülük</span><strong id="obligationTotal">—</strong></div>
  </div></div>
 </section>
 
@@ -361,6 +366,11 @@ function render(){
  document.getElementById("netTotal").textContent=fmt(x.net);
  document.getElementById("obligationHero").textContent=fmt(x.obligations);
  document.getElementById("paidObligationTotal").textContent=fmt(paidObligations);
+ document.getElementById("enparaPaidValue").textContent=fmt(Number(balanceData.monthlyObligations?.enparaCreditCard?.paidThisMonth)||0);
+ document.getElementById("enparaRemainingValue").textContent="—";
+ document.getElementById("yapiKrediPaidValue").textContent="₺0,00";
+ document.getElementById("yapiKrediRemainingValue").textContent="—";
+ document.getElementById("rentPaidValue").textContent=fmt(Number(balanceData.monthlyObligations?.rent?.paidThisMonth)||0);
  const yapiKrediEl=document.getElementById("yapiKrediCardValue");
  if(yapiKrediEl) yapiKrediEl.textContent="—";
  document.getElementById("remainingObligationTotal").textContent=remainingObligations==null?"Belirsiz":fmt(remainingObligations);
