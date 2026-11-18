@@ -230,7 +230,7 @@ async function api(path){
 async function loadData(){
  // Only replace the current snapshot after every endpoint succeeds.
  // A partial failure must never reset working data to empty defaults.
- const [nextBalance,nextQuotes,nextPositions,nextHistory,nextTlref,nextClosing]=await Promise.all([
+ const results=await Promise.allSettled([
   api("/api/balance"),
   api("/api/quotes"),
   api("/api/positions"),
@@ -238,19 +238,19 @@ async function loadData(){
   api("/api/tlref"),
   api("/api/closing-history")
  ]);
- if(!nextBalance||typeof nextBalance!=="object")throw Error("/api/balance geçersiz yanıt");
- if(!nextQuotes||!nextQuotes.quotes||typeof nextQuotes.quotes!=="object")throw Error("/api/quotes geçersiz yanıt");
- if(!Array.isArray(nextPositions)||!nextPositions.length)throw Error("/api/positions boş veya geçersiz");
- if(!nextTlref||!nextTlref.asOf||!Number.isFinite(Number(nextTlref.grossAnnualRate)))throw Error("/api/tlref geçersiz yanıt");
- if(!nextHistory||!Array.isArray(nextHistory.snapshots))throw Error("/api/history geçersiz yanıt");
- if(!nextClosing||!Array.isArray(nextClosing.entries))throw Error("/api/closing-history geçersiz yanıt");
+ const [b,q,p,h,t,c]=results;
+ if(b.status!=="fulfilled"||!b.value||typeof b.value!=="object")throw Error("/api/balance");
+ if(q.status!=="fulfilled"||!q.value||!q.value.quotes||typeof q.value.quotes!=="object")throw Error("/api/quotes");
+ if(p.status!=="fulfilled"||!Array.isArray(p.value)||!p.value.length)throw Error("/api/positions");
 
- balanceData=nextBalance;
- quoteData=nextQuotes;
- positions=nextPositions;
- historyData=nextHistory;
- tlrefData=nextTlref;
- closingHistoryData=nextClosing;
+ // History, TLREF and closing archive are supplementary. A temporary failure
+ // in one of these must never prevent the main balance screen from opening.
+ balanceData=b.value;
+ quoteData=q.value;
+ positions=p.value;
+ historyData=(h.status==="fulfilled"&&h.value&&Array.isArray(h.value.snapshots))?h.value:{snapshots:[]};
+ tlrefData=(t.status==="fulfilled"&&t.value&&t.value.asOf)?t.value:{asOf:"",grossAnnualRate:0,netAnnualRate:0,source:"—",historical:[]};
+ closingHistoryData=(c.status==="fulfilled"&&c.value&&Array.isArray(c.value.entries))?c.value:{version:1,retentionDays:30,entries:[]};
 }
 function calc(){
  const rates=quoteData.fx||{}, q=quoteData.quotes||{};
