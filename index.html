@@ -422,7 +422,7 @@ function render(){
  const dailyRealCostValue=positionDailyReady?positionDailyDelta:(snapshotDailyDelta==null?null:Number(snapshotDailyDelta));
  document.getElementById("dailyRealCostChange").textContent=dailyRealCostValue==null?"—":fmt(dailyRealCostValue);
  document.getElementById("dailyRealCostSub").textContent=positionDailyReady?"Hesap tarihi: "+istanbulToday:(latestSnapshot?.date?"Son kayıt: "+latestSnapshot.date:"Günlük kayıt henüz yok");
- const valuationDate=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul"}):(balanceData.asOf||new Date().toLocaleDateString("tr-TR")); document.getElementById("asOfLabel").textContent="Değerleme "+valuationDate;
+ const valuationDate=new Intl.DateTimeFormat("tr-TR",{timeZone:"Europe/Istanbul",day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date()); document.getElementById("asOfLabel").textContent="Değerleme "+valuationDate;
  document.getElementById("footerMeta").textContent="Son fiyat güncelleme: "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul"}):"—");
  const quoteTime=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—";
  const quoteAgeMin=quoteData.lastRefresh?((Date.now()-new Date(quoteData.lastRefresh).getTime())/60000):Infinity;
