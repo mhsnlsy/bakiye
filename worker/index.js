@@ -32,8 +32,10 @@ function fx(h,c){
      for(let j=i+1;j<r.length;j++){const p=num(r[j]);if(p!=null)return p}
    }
  }
+ // Doviz.com may render the table without literal pipe characters in the
+ // HTML text. Example: "USD Amerikan Doları 50,4118 50,4227 ...".
  const t=text(h);
- const m=t.match(new RegExp("(?:^|\\s)"+target+"(?:\\s+[^|]{0,50})?\\s*\\|\\s*([0-9]+(?:[.,][0-9]+)?)","i"));
+ const m=t.match(new RegExp("\\b"+target+"\\s+[^0-9]{1,80}?([0-9]{1,3}(?:[.,]\\d{3})*(?:,[0-9]+)?|[0-9]+(?:[.,][0-9]+)?)","i"));
  return m?num(m[1]):null;
 }
 function tl(h){let a=[],seen=new Set(),m,r=/(\d{2}\.\d{2}\.\d{4})\s+(?:\|\s*)?([0-9]{2,3}[.,]\d{4})/g,t=text(h);while((m=r.exec(t))){let d=m[1].split(".").reverse().join("-");if(!seen.has(d)){seen.add(d);a.push({date:d,rate:num(m[2])/100})}}return a.sort((a,b)=>a.date.localeCompare(b.date))}
