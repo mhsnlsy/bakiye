@@ -40,6 +40,7 @@ async function liveQuotes(env){
  const f={...(old.fx||{})};
  const quoteTimes=oldIsOyak?{...(old.quoteTimes||{})}:{};
  const quoteFetchedAt=oldIsOyak?{...(old.quoteFetchedAt||{})}:{};
+ for(const s of STOCKS){if(Number.isFinite(Number(q[s]))&&Number(q[s])>0&&!quoteFetchedAt[s])quoteFetchedAt[s]=old.lastRefresh||null;}
  const quoteStatusBySymbol=oldIsOyak?{...(old.quoteStatusBySymbol||{})}:{};
  const missing=[],errors=[],now=new Date().toISOString();
  const results=await Promise.allSettled(STOCKS.map(s=>pages[s]?get(pages[s]):Promise.reject(new Error("OYAK URL eksik"))));
