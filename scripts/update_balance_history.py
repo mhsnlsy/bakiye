@@ -15,7 +15,7 @@ TLREF_FILE = Path("data/tlref.json")
 HISTORY_FILE = Path("data/history.json")
 RETENTION_DAYS = 700
 SNAPSHOT_WINDOW_START = (18, 35)
-SNAPSHOT_WINDOW_END = (19, 0)
+SNAPSHOT_WINDOW_END = (19, 30)
 
 
 def load_json(path):
@@ -95,9 +95,11 @@ def main():
 
     quote_attempt = parse_timestamp(quotes_data.get("lastAttempt") or quotes_data.get("lastRefresh"))
     if quote_attempt is None:
-        raise SystemExit("Snapshot refused: OYAK API has no valid lastAttempt timestamp.")
-    if (datetime.now(quote_attempt.tzinfo) - quote_attempt).total_seconds() > 10 * 60:
-        raise SystemExit("Snapshot refused: OYAK quote response is older than 10 minutes.")
+        print("WARNING: OYAK API has no valid lastAttempt timestamp; recording the available quote data.")
+    else:
+        quote_age = (datetime.now(quote_attempt.tzinfo) - quote_attempt).total_seconds()
+        if quote_age > 10 * 60:
+            print(f"WARNING: OYAK quote response is {quote_age/60:.1f} minutes old; recording it rather than losing the daily snapshot.")
 
     balance = api_or_file("/api/balance", BALANCE_FILE)
     positions = api_or_file("/api/positions", POSITIONS_FILE)
@@ -130,7 +132,7 @@ def main():
     if missing:
         raise SystemExit("Snapshot refused; missing live OYAK quotes: " + ", ".join(missing))
     if stale:
-        raise SystemExit("Snapshot refused; stale OYAK quotes: " + ", ".join(stale))
+        print("WARNING: stale OYAK quotes recorded for daily snapshot: " + ", ".join(stale))
 
     accounts = balance.get("accounts") or {}
     rates = quotes_data.get("fx") or {}
@@ -176,8 +178,10 @@ def main():
         and quotes_data.get("goldPriceSource") == "Döviz.com · Gram Altın alış"
     )
     gold_age_seconds = (datetime.now(gold_fetched_at.tzinfo) - gold_fetched_at).total_seconds() if gold_fetched_at else float("inf")
-    if gold_grams <= 0 or gold_price <= 0 or not gold_is_fresh or gold_age_seconds > 10 * 60:
-        raise SystemExit("Snapshot refused: missing or stale live Doviz.com gram-gold buy price or gold grams")
+    if gold_grams <= 0 or gold_price <= 0:
+        raise SystemExit("Snapshot refused: gram-gold quantity or price is missing/invalid.")
+    if not gold_is_fresh or gold_age_seconds > 10 * 60:
+        print("WARNING: Doviz.com gram-gold price is stale; recording the available value for the daily snapshot.")
     gold = gold_grams * gold_price
 
     receivable = sum(
