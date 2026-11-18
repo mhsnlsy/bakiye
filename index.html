@@ -396,13 +396,12 @@ function calc(){
  // the sum of the cards the user sees.
  stocks=round2(stocks);
  const tryVal2=round2(tryVal), cashFx2=round2(cashFx), bankFx2=round2(bankFx), gold2=round2(gold), receivable2=round2(receivable);
- const total=round2(stocks+tryVal2+cashFx2+bankFx2+gold2+receivable2);
+ const total=round2(stocks+tryVal2+bncVal2+cashFx2+bankFx2+gold2+receivable2);
  const paidObligations=round2(Number(balanceData.monthlyObligations?.summary?.paidThisMonth)||0);
  const remainingObligations=balanceData.monthlyObligations?.summary?.remainingThisMonth;
  const obligations=balanceData.monthlyObligations?.summary?.totalMonthly;
 const bncVal2=round2(bncVal);
- const tryValTotal=round2(tryVal2-bncVal2+bncVal2);
- return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryValTotal,bncVal:bncVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,goldPrice,goldPriceStatus,goldPriceSource:quoteData.goldPriceSource||"Gram altın",goldPriceTime:quoteData.goldPriceTime||null,receivable:receivable2,total,paidObligations,remainingObligations,obligations,net:round2(total-obligations),rates};
+ return {rows,stocks,realPnl,nominalPnl,dailyPnl,positionCount,tlrefAdded,tryVal:tryVal2,bncVal:bncVal2,cashFx:cashFx2,bankFx:bankFx2,gold:gold2,goldPrice,goldPriceStatus,goldPriceSource:quoteData.goldPriceSource||"Gram altın",goldPriceTime:quoteData.goldPriceTime||null,receivable:receivable2,total,paidObligations,remainingObligations,obligations,net:round2(total-obligations),rates};
 }
 function prevClosingBase(x){ const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[]; const todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Istanbul"}).format(new Date()); const prev=entries.filter(e=>e.date&&e.date<todayKey).sort((a,b)=>a.date.localeCompare(b.date)).at(-1); return prev?x.rows.reduce((s,r)=>s+(Number(prev.prices?.[r.p.symbol])||0)*r.qty,0):0; }
 function render(){
@@ -419,7 +418,7 @@ function render(){
  // Total-varlık audit: the displayed hero total must equal the sum of the
  // same rounded components shown in the asset cards. Midas is intentionally
  // excluded because it is only the account/container of the stock positions.
- const checkSum=round2(x.stocks+x.tryVal+x.cashFx+x.bankFx+x.gold+x.receivable);
+ const checkSum=round2(x.stocks+x.tryVal+x.bncVal+x.cashFx+x.bankFx+x.gold+x.receivable);
  const checkSumEl=document.getElementById("checkSum"); if(checkSumEl)checkSumEl.textContent=fmt(checkSum);
  const checkStatusEl=document.getElementById("totalCheckStatus");
  if(checkStatusEl){
