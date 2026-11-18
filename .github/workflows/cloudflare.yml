@@ -5,7 +5,7 @@ on:
     paths: ["index.html","data/**","worker/**","wrangler.jsonc",".github/workflows/**","scripts/**"]
   workflow_dispatch:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/2 * * * *"
 
 jobs:
   deploy:
