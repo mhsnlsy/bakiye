@@ -112,8 +112,8 @@ table thead{display:table-header-group!important}
 
 
 /* Prevent hard-coded HTML snapshot values flashing before API data arrives. */
-body:not([data-app-ready="true"]) .wrap{visibility:hidden}
-#initialLoadScreen{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:radial-gradient(900px 500px at 0% -8%,#1b3654 0,transparent 65%),radial-gradient(800px 420px at 100% 0%,#182b42 0,transparent 64%),#091321}
+/* The dashboard remains visible even if live data is temporarily unavailable. */
+#initialLoadScreen{display:none;position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:radial-gradient(900px 500px at 0% -8%,#1b3654 0,transparent 65%),radial-gradient(800px 420px at 100% 0%,#182b42 0,transparent 64%),#091321}
 body[data-app-ready="true"] #initialLoadScreen{display:none}
 .bootCard{width:min(100%,360px);padding:27px 24px;border:1px solid #294664;border-radius:18px;background:rgba(16,30,48,.96);text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.28)}
 .bootBrand{font-size:11px;letter-spacing:.2em;font-weight:800;color:#8ab5ff}
@@ -449,9 +449,11 @@ function boot(){
   }catch(e){
    console.error("Bakiye veri akışı:",e);
    if(!alreadyReady){
-    document.getElementById("bootStatus").textContent="Veriler yüklenemedi";
-    document.querySelector(".bootHint").textContent="Bağlantı kurulamadı. Yeniden deneyebilirsin.";
-    document.getElementById("bootRetry").hidden=false;
+    // Never leave the whole dashboard behind a blocking error screen.
+    // The HTML snapshot remains visible and the next retry can update it.
+    document.body.dataset.appReady="true";
+    document.getElementById("syncState").textContent="Canlı veri bekleniyor";
+    document.getElementById("bootRetry").hidden=true;
    }else{
     document.getElementById("syncState").textContent="Güncelleme başarısız · son veri korunuyor";
    }
