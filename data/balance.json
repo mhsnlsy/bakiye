@@ -35,8 +35,10 @@
     },
     "bnc": {
       "label": "BNC",
-      "value": 12000,
-      "category": "try"
+      "category": "fx",
+      "currencies": {
+        "USD": 320
+      }
     },
     "nkolayAltin": {
       "label": "N Kolay Altın",
