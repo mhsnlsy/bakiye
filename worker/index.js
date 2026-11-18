@@ -204,5 +204,5 @@ export default{
       console.error("Cron refresh failed:", e?.message || e);
     }
   })());
- }
+}
 };
