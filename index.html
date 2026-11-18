@@ -326,6 +326,18 @@ function render(){
  }).join("");
  mobileCards.style.display="";
  const fx=x.rates;
+ const aa=balanceData.accounts||{};
+ const accountRows=[
+  ["N Kolay","TL / Banka",fmt(Number(aa.nkolay?.value)||0),true],
+  ["Enpara","TL / Banka",fmt(Number(aa.enpara?.value)||0),true],
+  ["Döviz", "Döviz", fmt(x.cashFx), true, "1.427 USD · 495 EUR · 80 GBP"],
+  ["Banka döviz", "Döviz", fmt(x.bankFx), true, "2.460 EUR"],
+  ["Midas","Midas (portföy alt kırılımı)",fmt(Number(aa.midas?.value)||0),false],
+  ["BNC","TL / Banka",fmt(Number(aa.bnc?.value)||0),true],
+  ["N Kolay Altın","Altın",fmt(x.gold),true,""+nfmt(Number(aa.nkolayAltin?.grams||balanceData.gold?.grams||0))+" g"],
+  ["Nakit","TL / Banka",fmt(Number(aa.nakit?.value)||0),true]
+ ];
+ document.getElementById("accountsBody").innerHTML=accountRows.map(r=>'<tr><td>'+r[0]+(r[4]?'<span class="subline">'+r[4]+'</span>':'')+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td class="'+(r[3]?"good":"")+'">'+(r[3]?"Dahil":"Hisseler/fonlarda sayıldı")+'</td></tr>').join("");
  document.getElementById("goldAccountGrams").textContent=nfmt(Number(balanceData.accounts?.nkolayAltin?.grams||balanceData.gold?.grams||0))+" g"; document.getElementById("goldAccountValue").textContent=fmt(x.gold); document.getElementById("liveFxRates").textContent="USD "+nfmt(fx.USDTRY||0)+" · EUR "+nfmt(fx.EURTRY||0)+" · GBP "+nfmt(fx.GBPTRY||0);
  document.getElementById("liveFxSub").textContent="Döviz.com · "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—");
  const grossTlref=Number(tlrefData.grossAnnualRate||0)*100;
@@ -344,7 +356,7 @@ function render(){
  const dailyRealCostValue=positionDailyReady?positionDailyDelta:(snapshotDailyDelta==null?null:Number(snapshotDailyDelta));
  document.getElementById("dailyRealCostChange").textContent=dailyRealCostValue==null?"—":fmt(dailyRealCostValue);
  document.getElementById("dailyRealCostSub").textContent=positionDailyReady?"Hesap tarihi: "+istanbulToday:(latestSnapshot?.date?"Son kayıt: "+latestSnapshot.date:"Günlük kayıt henüz yok");
- document.getElementById("asOfLabel").textContent="Değerleme "+(balanceData.asOf||new Date().toLocaleDateString("tr-TR"));
+ const valuationDate=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul"}):(balanceData.asOf||new Date().toLocaleDateString("tr-TR")); document.getElementById("asOfLabel").textContent="Değerleme "+valuationDate;
  document.getElementById("footerMeta").textContent="Son fiyat güncelleme: "+(quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul"}):"—");
  const quoteTime=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"—";
  const quoteAgeMin=quoteData.lastRefresh?((Date.now()-new Date(quoteData.lastRefresh).getTime())/60000):Infinity;
