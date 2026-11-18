@@ -62,9 +62,13 @@
       "label": "Kira",
       "value": 14000
     },
-    "creditCard": {
-      "label": "Kredi kartı",
-      "value": 40000
+    "enparaCreditCard": {
+      "label": "Enpara kredi kartı",
+      "value": 20000
+    },
+    "yapiKrediCreditCard": {
+      "label": "Yapı Kredi kredi kartı",
+      "value": 20000
     }
   },
   "gold": {
