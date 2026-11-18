@@ -122,9 +122,20 @@ function out(v,s=200){return new Response(JSON.stringify(v),{status:s,headers:H}
 export default{
  async fetch(req,env){const u=new URL(req.url);
   if(u.pathname==="/api/quotes"){
-    // Canonical latest quote snapshot.
-    const v=await read(env,"quotes.json","/data/quotes.json");
-    return v ? out(v) : out({error:"quotes_not_ready"},503);
+    // Always try to obtain a fresh market snapshot when the dashboard asks for
+    // quotes. R2 remains the fallback so a temporary upstream failure never
+    // makes the whole dashboard unavailable.
+    try{
+      const v=await liveQuotes(env);
+      await put(env,"quotes.json",v);
+      return out(v);
+    }catch(e){
+      const cached=await read(env,"quotes.json","/data/quotes.json");
+      if(cached){
+        return out({...cached,sourceStatus:{...(cached.sourceStatus||{}),refreshMethod:"R2 fallback",liveError:String(e?.message||e)}});
+      }
+      return out({error:"quotes_not_ready",message:String(e?.message||e)},503);
+    }
   }
   if(u.pathname==="/api/tlref"){
     // TLREF is single-writer data: GitHub Actions publishes the canonical
