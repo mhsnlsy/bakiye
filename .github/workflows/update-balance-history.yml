@@ -2,11 +2,11 @@ name: Record Daily Balance History
 
 on:
   schedule:
-    # Run repeatedly around the daily 18:40 snapshot so a delayed/missed
-    # GitHub scheduler event cannot lose the day's record.
-    - cron: "35-59 18 * * *"
+    # 18:40 is the target. Repeated 5-minute triggers make the daily
+    # snapshot resilient to a delayed/missed GitHub scheduler event.
+    - cron: "35,40,45,50,55 18 * * *"
       timezone: "Europe/Istanbul"
-    - cron: "0-30 19 * * *"
+    - cron: "0,5,10,15,20,25,30 19 * * *"
       timezone: "Europe/Istanbul"
   workflow_dispatch:
 
