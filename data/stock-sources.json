@@ -2,11 +2,11 @@
   "version": 1,
   "provider": "OYAK Yatırım",
   "stocks": {
-    "TAVHL": null,
-    "KARSN": null,
-    "THYAO": null,
-    "CGCAM": null,
-    "SISE": null,
+    "TAVHL": "https://www.oyakyatirim.com.tr/hisse-detay/TAVHL",
+    "KARSN": "https://www.oyakyatirim.com.tr/hisse-detay/KARSN",
+    "THYAO": "https://www.oyakyatirim.com.tr/hisse-detay/THYAO",
+    "CGCAM": "https://www.oyakyatirim.com.tr/hisse-detay/CGCAM",
+    "SISE": "https://www.oyakyatirim.com.tr/hisse-detay/SISE",
     "ZPLIB.F": "https://www.oyakyatirim.com.tr/hisse-detay/ZPLIB"
   }
 }
