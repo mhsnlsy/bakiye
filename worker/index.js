@@ -91,6 +91,7 @@ async function liveQuotes(env){
  const oldGoldOk=old.goldPriceSource==="Gramhane · Gram altın alış"&&Number.isFinite(Number(old.goldGramTRY))&&Number(old.goldGramTRY)>0;
  const goldGramTRY=newGoldPrice??(oldGoldOk?Number(old.goldGramTRY):null);
  const goldPriceStatus=newGoldPrice!=null?"fresh":(goldGramTRY!=null?"stale":"unavailable");
+ if(goldPriceError)errors.push(goldPriceError);
  const fxUpdatedAt=FXC.some(c=>Number(f[c+"TRY"])>0)&&(fxStatus==="fulfilled"||fxStatus==="fallback")?now:(old.fxUpdatedAt||null);
  const allFresh=fulfilled===STOCKS.length;
  const lastComplete=allFresh?now:(oldIsOyak?(old.lastSuccessfulRefresh||old.lastRefresh||null):null);
