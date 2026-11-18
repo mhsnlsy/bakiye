@@ -8,7 +8,7 @@ SOURCE_SYMBOL = {"ZPLIB.F":"ZPLIB"}
 FX_SOURCE = "https://kur.doviz.com/"
 FXC = ["USD","EUR","GBP"]
 GOLD_SOURCE = "https://www.doviz.com/"
-GOLD_API = "https://www.doviz.com/api/v1/golds/gram-altin"
+GOLD_API = "https://api.gramhane.com/v1/prices.json"
 
 class TableParser(HTMLParser):
     def __init__(self):
@@ -155,27 +155,21 @@ def main():
         raise SystemExit("Uzmanpara parse failed; missing: "+",".join(missing))
     fx_source=fetch(FX_SOURCE)
     fx=parse_fx(fx_source)
-    gold_gram_try=parse_gold(fx_source)
-    if gold_gram_try is None or gold_gram_try <= 0:
-        # Doviz.com may render gold client-side; try its JSON endpoint.
-        gold_api_source=fetch(GOLD_API)
-        try:
-            gold_json=json.loads(gold_api_source)
-        except Exception:
-            gold_json={}
-        candidates=[
-            gold_json.get("satis"), gold_json.get("sell"), gold_json.get("selling"),
-            gold_json.get("alis"), gold_json.get("buy"), gold_json.get("price"),
-            (gold_json.get("data") or {}).get("satis") if isinstance(gold_json.get("data"),dict) else None,
-            (gold_json.get("data") or {}).get("sell") if isinstance(gold_json.get("data"),dict) else None
-        ]
-        for candidate in candidates:
-            value=number(str(candidate)) if candidate is not None else None
-            if value is not None and value>1000:
-                gold_gram_try=value
-                break
-    if gold_gram_try is None or gold_gram_try <= 0:
-        raise SystemExit("Döviz.com Gram Altın verisi alınamadı; sayfa ve JSON fiyatı bulunamadı")
+
+    # Gram Altın: Doviz.com'un kaldırılmış/404 dönen endpoint'ini kullanma.
+    # Gramhane açık JSON kaynağından TRY/gram satış fiyatını oku.
+    gold_api_source=fetch(GOLD_API)
+    try:
+        gold_json=json.loads(gold_api_source)
+    except Exception as exc:
+        raise SystemExit("Gramhane altın JSON yanıtı çözümlenemedi: "+str(exc))
+    if gold_json.get("meta",{}).get("status") != "success":
+        raise SystemExit("Gramhane altın verisi başarılı değil")
+    gold_rates=gold_json.get("kurlar",{})
+    gold_record=gold_rates.get("ALTIN") or gold_rates.get("GRAM") or {}
+    gold_gram_try=number(str(gold_record.get("satis") or gold_record.get("alis") or ""))
+    if gold_gram_try is None or gold_gram_try <= 1000:
+        raise SystemExit("Gramhane Gram Altın satış fiyatı eksik/geçersiz")
     fx_missing=[c for c in FXC if c+"TRY" not in fx]
     if fx_missing:
         raise SystemExit("D\u00f6viz.com parse failed; missing: "+",".join(fx_missing)+"TRY")
@@ -187,7 +181,7 @@ def main():
     q["dailyPct"]=daily_pct
     q["fx"].update(fx)
     q["goldGramTRY"] = round(gold_gram_try, 2)
-    q["goldSource"] = GOLD_SOURCE
+    q["goldSource"] = GOLD_API
     q["missing"]=missing
     q["errors"]=[]
     q["sourceStatus"]={"uzmanpara":"fulfilled","doviz":"fulfilled","refreshMethod":"GitHub Actions direct fetch"}
