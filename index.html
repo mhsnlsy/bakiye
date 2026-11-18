@@ -382,6 +382,7 @@ function render(){
  const asOfEl=document.getElementById("asOfLabel");
  if(asOfEl) asOfEl.textContent="Değerleme "+valuationDate;
  const x=calc();
+ const fx=x.rates;
  const liveDate=quoteData.lastRefresh?new Date(quoteData.lastRefresh).toLocaleDateString("en-CA",{timeZone:"Europe/Istanbul"}):null;
  if(liveDate){ const v=document.getElementById("valuationDate"); if(v)v.textContent=liveDate; const f=document.getElementById("footerMeta"); if(f)f.textContent="Son güncelleme: "+new Date(quoteData.lastRefresh).toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul"}); }
  
@@ -433,7 +434,6 @@ function render(){
    return '<article class="mobilePortfolioCard"><div class="mobilePortfolioTop"><div><div class="mobilePortfolioTicker">'+safe(r.p.symbol)+'</div><div class="mobilePortfolioName">'+safe(r.p.name)+'</div></div><div><div class="mobilePortfolioPrice">'+priceText+'</div><div class="mobilePortfolioTime '+(stale?"bad":"good")+'">'+(stale?"VERİ ALINAMADI · ESKİ FİYAT":"OYAK · Güncel")+' · '+(r.quoteFetchedAt?new Date(r.quoteFetchedAt).toLocaleString("tr-TR",{timeZone:"Europe/Istanbul"}):"alınma zamanı yok")+'</div></div></div><div class="mobilePortfolioGrid"><div class="mobileMetric"><span>Adet</span><strong>'+nfmt(r.qty)+'</strong></div><div class="mobileMetric"><span>Ort. maliyet</span><strong>'+fmt(r.avg)+'</strong></div><div class="mobileMetric"><span>Piyasa değeri</span><strong>'+(r.market==null?"—":fmt(r.market))+'</strong></div><div class="mobileMetric"><span>'+(daily?"Günlük K/Z":"Nominal K/Z")+'</span><strong class="'+(pnl==null?"":(pnl>=0?"good":"bad"))+'">'+(pnl==null?"Güncel değil":fmt(pnl))+'</strong></div><div class="mobileMetric"><span>'+(daily?"Günlük %":"Nominal %")+'</span><strong>'+(pnlPct==null?"—":nfmt(pnlPct)+"%")+'</strong></div><div class="mobileMetric"><span>Reel K/Z</span><strong class="'+(r.rp==null?"":(r.rp>=0?"good":"bad"))+'">'+(r.rp==null?"—":fmt(r.rp))+'</strong></div></div>'+(stale?'<div class="mobilePortfolioStale">⚠ OYAK verisi alınamadı. Gösterilen fiyat son başarılı OYAK verisidir.</div>':"")+'</article>';
  }).join("");
  mobileCards.style.display="";
- const fx=x.rates;
  const aa=balanceData.accounts||{};
  const accountRows=[
   ["N Kolay","TL / Banka",fmt(Number(aa.nkolay?.value)||0),true],
