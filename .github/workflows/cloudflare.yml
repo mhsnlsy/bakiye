@@ -39,6 +39,29 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler@latest deploy
 
+      - name: Verify live Doviz.com gram-gold quote
+        run: |
+          node --input-type=module <<'NODE'
+          const url = "https://bakiye.muhsin-ulusoy.workers.dev/api/quotes?smoke=" + Date.now();
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) throw new Error("Quote API HTTP " + response.status);
+          const data = await response.json();
+          const check = {
+            source: data.goldPriceSource,
+            status: data.goldPriceStatus,
+            price: data.goldGramTRY,
+            quoteTime: data.goldPriceTime,
+            error: data.goldPriceError
+          };
+          console.log("Doviz.com gram-gold smoke test:", JSON.stringify(check));
+          if (data.goldPriceSource !== "Döviz.com · Gram Altın alış" ||
+              data.goldPriceStatus !== "fresh" ||
+              !Number.isFinite(Number(data.goldGramTRY)) ||
+              Number(data.goldGramTRY) <= 0) {
+            throw new Error("Live Doviz.com gram-gold quote is not fresh.");
+          }
+          NODE
+
       - name: Publish 30-day stock closing archive seed
         if: github.event_name == 'push'
         env:
