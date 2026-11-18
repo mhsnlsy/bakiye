@@ -167,7 +167,7 @@ body[data-app-ready="true"] #initialLoadScreen{display:none}
  <article class="card" id="fundsCard" style="display:none"><div class="cardhead"><span class="cardlabel">Yatırım fonları</span><span class="cardicon">◈</span></div><div class="cardvalue" id="fundsValue">₺0,00</div><div class="cardfoot">Midas portföyündeki fon pozisyonları</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Banka & TL bakiyeleri</span><span class="cardicon">₺</span></div><div class="cardvalue" id="tryValue">₺138.000,00</div><div class="cardfoot">N Kolay · Enpara · BNC · Nakit</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Nakit Döviz</span><span class="cardicon">＄</span></div><div class="cardvalue" id="cashFxValue">₺104.712,95</div><div class="cardfoot" id="cashFxSub">USD · EUR · GBP</div><div class="fxCalc" id="cashFxCalc">Güncel alış kurlarıyla hesaplanıyor</div></article><article class="card"><div class="cardhead"><span class="cardlabel">Banka Döviz</span><span class="cardicon">€</span></div><div class="cardvalue" id="bankFxValue">₺136.577,23</div><div class="cardfoot" id="bankFxSub">EUR</div><div class="fxCalc" id="bankFxCalc">Güncel alış kuruyla hesaplanıyor</div></article>
- <article class="card"><div class="cardhead"><span class="cardlabel">Altın</span><span class="cardicon">◇</span></div><div class="cardvalue goldtext" id="goldValue">₺10.504,23</div><div class="cardfoot" id="goldSub">1,70 g · Doviz.com · Gram Altın</div></article>
+ <article class="card"><div class="cardhead"><span class="cardlabel">Altın toplamı</span><span class="cardicon">◇</span></div><div class="cardvalue goldtext" id="goldValue">₺10.504,23</div><div class="cardfoot" id="goldSub">1,70 g · Gram Altın</div><div class="fxCalc" id="goldUnitCalc">Gram fiyatı yükleniyor</div></article>
  <article class="card"><div class="cardhead"><span class="cardlabel">Tahmini alacaklar</span><span class="cardicon">＋</span></div><div class="cardvalue" id="receivableValue">₺0,00</div><div class="cardfoot">Henüz tahsil edilmemiş tutarlar</div></article>
 </div>
 
@@ -448,7 +448,8 @@ function render(){
  const goldStatus=x.goldPriceStatus==="fresh"?"Güncel":(x.goldPriceStatus==="stale"?"Son başarılı fiyat · eski":"Fiyat alınamadı");
  const rawGoldTime=String(x.goldPriceTime||""); const goldTime=rawGoldTime?((/^\d{2}:\d{2}(?::\d{2})?$/.test(rawGoldTime)?rawGoldTime:rawGoldTime.slice(11,19))+" TSİ"):"";
  document.getElementById("goldValue").textContent=goldAvailable?fmt(x.gold):"—";
- document.getElementById("goldSub").textContent=nfmt(goldGrams)+" g · "+x.goldPriceSource+" · "+goldStatus+(goldTime?" · "+goldTime:"");
+ document.getElementById("goldSub").textContent=nfmt(goldGrams)+" g × "+(goldAvailable?fmt(x.goldPrice):"—")+" / gram";
+ const goldUnitCalcEl=document.getElementById("goldUnitCalc"); if(goldUnitCalcEl) goldUnitCalcEl.textContent=x.goldPriceSource+" · "+goldStatus+(goldTime?" · "+goldTime:"");
  document.getElementById("receivableValue").textContent=fmt(x.receivable);
  document.getElementById("portfolioTotal").textContent=fmt(x.stocks);
  document.getElementById("portfolioPnL").textContent=fmt(x.nominalPnl);
