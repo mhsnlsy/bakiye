@@ -264,6 +264,7 @@ async function loadData(){
  historyData=(h&&Array.isArray(h.snapshots))?h:{snapshots:[]};
  tlrefData=(t&&t.asOf)?t:{asOf:"",grossAnnualRate:0,netAnnualRate:0,source:"—",historical:[]};
  closingHistoryData=(c&&Array.isArray(c.entries))?c:{version:1,retentionDays:30,entries:[]};
+ renderBenchmarkCards();
 
  // Refresh from the Worker in the background. A failed live API must not
  // blank or lock the page; the static snapshot remains usable.
@@ -278,9 +279,24 @@ async function loadData(){
   if(h2.status==="fulfilled"&&h2.value&&Array.isArray(h2.value.snapshots))historyData=h2.value;
   if(t2.status==="fulfilled"&&t2.value&&t2.value.asOf)tlrefData=t2.value;
   if(c2.status==="fulfilled"&&c2.value&&Array.isArray(c2.value.entries))closingHistoryData=c2.value;
+  renderBenchmarkCards();
   try{render();renderHistory();}catch(e){console.error("Canlı veri render:",e)}
  }).catch(()=>{});
 }
+function renderBenchmarkCards(){
+ const fx=(quoteData&&quoteData.fx)||{};
+ const hasFx=Number.isFinite(Number(fx.USDTRY))&&Number.isFinite(Number(fx.EURTRY))&&Number.isFinite(Number(fx.GBPTRY));
+ const fxEl=document.getElementById("liveFxRates");
+ const fxSub=document.getElementById("liveFxSub");
+ if(fxEl) fxEl.textContent=hasFx?"USD "+nfmt(fx.USDTRY)+" · EUR "+nfmt(fx.EURTRY)+" · GBP "+nfmt(fx.GBPTRY):"USD — · EUR — · GBP —";
+ if(fxSub) fxSub.textContent="Döviz.com · "+(quoteData?.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"veri yok");
+ const tr=tlrefData||{};
+ const gross=Number(tr.grossAnnualRate||0)*100, net=Number(tr.netAnnualRate||0)*100;
+ const trEl=document.getElementById("liveTlrefRate"), trSub=document.getElementById("liveTlrefSub");
+ if(trEl) trEl.textContent=gross>0?"Brüt %"+nfmt(gross)+" · Net %"+nfmt(net):"—";
+ if(trSub) trSub.textContent=tr.asOf?(tr.source||"Borsa İstanbul TLREF")+" · veri tarihi "+new Date(tr.asOf+"T12:00:00Z").toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul"}):"Borsa İstanbul · veri yok";
+}
+
 function calc(){
  const rates=quoteData.fx||{}, q=quoteData.quotes||{};
  const entries=Array.isArray(closingHistoryData.entries)?closingHistoryData.entries:[];
