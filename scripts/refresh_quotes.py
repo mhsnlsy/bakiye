@@ -58,19 +58,43 @@ def number(s):
     except: return None
 
 def parse_gold(source):
-    plain=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",source))
-    # Doviz.com serbest piyasa tablosundaki Gram Altın satırı.
-    m=re.search(r"Gram\\s+Altın\\s+([0-9]+(?:[.,][0-9]+)?)\\s+%?",plain,re.I)
-    if m:
-        return number(m.group(1))
-    # HTML yapısı değişirse tablo satırı içinden yakala.
-    p=TableParser(); p.feed(source)
+    # Doviz.com sayfası fiyat verisini farklı HTML/JSON payload'larında
+    # sunabiliyor. Etiketle aynı blok içinde yer alan ilk gerçek fiyatı ara.
+    decoded=html.unescape(source)
+    plain=re.sub(r"\\s+"," ",re.sub(r"<[^>]+>"," ",decoded))
+    patterns=[
+        r"Gram\\s*Altın.{0,180}?(?:₺|TL)?\\s*([0-9]{1,3}(?:\\.[0-9]{3})*(?:,[0-9]+)?|[0-9]+(?:[.,][0-9]+)?)",
+        r"Gram\\s*Altın.{0,180}?(?:buy|sell|alis|satis|price)[^0-9]{0,30}([0-9]+(?:[.,][0-9]+)?)",
+        r"(?:gram-altin|gram_altin|gramAltin|gramGold).{0,160}?(?:buy|sell|alis|satis|price|value)[^0-9]{0,30}([0-9]+(?:[.,][0-9]+)?)",
+    ]
+    for pattern in patterns:
+        m=re.search(pattern,plain,re.I)
+        if m:
+            v=number(m.group(1))
+            if v is not None and v>1000:
+                return v
+
+    # JSON-LD / embedded Next/Nuxt JSON: locate a named gold record.
+    for label in [r"Gram Altın",r"gram-altin",r"gram_altin",r"gramAltin"]:
+        m=re.search(label,decoded,re.I)
+        if not m: continue
+        chunk=decoded[m.start():m.start()+1200]
+        nums=re.findall(r"(?:buy|sell|alis|satis|price|value)[^0-9]{0,30}([0-9]+(?:[.,][0-9]+)?)",chunk,re.I)
+        for raw in nums:
+            v=number(raw)
+            if v is not None and v>1000:
+                return v
+
+    # Tablo satırı fallback.
+    p=TableParser(); p.feed(decoded)
     for row in p.rows:
         cells=[x.strip() for x in row]
         for i,cell in enumerate(cells):
-            if re.fullmatch(r"Gram\\s+Altın",cell,re.I) and i+1<len(row):
-                v=number(row[i+1])
-                if v is not None: return v
+            if re.search(r"Gram\\s*Altın",cell,re.I):
+                for candidate in row[i+1:i+4]:
+                    v=number(candidate)
+                    if v is not None and v>1000:
+                        return v
     return None
 
 def parse_fx(source):
