@@ -2,41 +2,30 @@
   "source": "OYAK Yatırım hisse sayfaları + Döviz.com serbest piyasa",
   "sourceUrl": "OYAK Yatırım",
   "stockSourceUrls": {
-    "TAVHL": null,
-    "KARSN": null,
-    "THYAO": null,
-    "CGCAM": null,
-    "SISE": null,
+    "TAVHL": "https://www.oyakyatirim.com.tr/hisse-detay/TAVHL",
+    "KARSN": "https://www.oyakyatirim.com.tr/hisse-detay/KARSN",
+    "THYAO": "https://www.oyakyatirim.com.tr/hisse-detay/THYAO",
+    "CGCAM": "https://www.oyakyatirim.com.tr/hisse-detay/CGCAM",
+    "SISE": "https://www.oyakyatirim.com.tr/hisse-detay/SISE",
     "ZPLIB.F": "https://www.oyakyatirim.com.tr/hisse-detay/ZPLIB"
   },
-  "asOf": "2026-11-18",
+  "asOf": "",
   "currency": "TRY",
-  "quotes": {
-    "TAVHL": 306.75,
-    "KARSN": 7.9,
-    "THYAO": 327.25,
-    "CGCAM": 20.36,
-    "SISE": 34.88,
-    "ZPLIB.F": 201.1
-  },
+  "quotes": {},
   "fxSourceUrl": "https://kur.doviz.com/",
-  "fx": {
-    "USDTRY": 50.3855,
-    "EURTRY": 55.4999,
-    "GBPTRY": 66.492
-  },
-  "lastRefresh": "2026-11-18T04:00:00Z",
+  "fx": {},
+  "lastRefresh": null,
   "dailyPct": {},
-  "errors": [
-    "OYAK URL'leri henüz tamamlanmadı"
-  ],
+  "quoteTimes": {},
+  "errors": [],
   "missing": [
     "TAVHL",
     "KARSN",
     "THYAO",
     "CGCAM",
-    "SISE"
+    "SISE",
+    "ZPLIB.F"
   ],
-  "goldGramTRY": 6186.58,
+  "goldGramTRY": null,
   "goldSource": "https://www.doviz.com/"
 }
