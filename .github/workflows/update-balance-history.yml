@@ -2,7 +2,11 @@ name: Record Daily Balance History
 
 on:
   schedule:
-    - cron: "40,45,50 18 * * *"
+    # Run repeatedly around the daily 18:40 snapshot so a delayed/missed
+    # GitHub scheduler event cannot lose the day's record.
+    - cron: "35-59 18 * * *"
+      timezone: "Europe/Istanbul"
+    - cron: "0-30 19 * * *"
       timezone: "Europe/Istanbul"
   workflow_dispatch:
 
@@ -23,18 +27,8 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Record daily 18:40 snapshot with retries
-        run: |
-          for attempt in $(seq 1 10); do
-            echo "Snapshot attempt $attempt/10"
-            if python scripts/update_balance_history.py; then
-              exit 0
-            fi
-            echo "Snapshot attempt failed; retrying in 60 seconds..."
-            sleep 60
-          done
-          echo "ERROR: 18:40 snapshot could not be created after 10 attempts."
-          exit 1
+      - name: Record daily 18:40 snapshot
+        run: python scripts/update_balance_history.py
 
       - name: Commit history
         run: |
