@@ -168,10 +168,13 @@ def main():
     bank_fx = fx_value(accounts, rates, "bankaDoviz")
 
     gold_account = accounts.get("nkolayAltin") or {}
-    gold_grams = float(gold_account.get("grams", 0) or balance.get("gold", {}).get("grams", 0) or 0)
-    gold_price = float(quotes_data.get("goldGramTRY") or balance.get("gold", {}).get("gramPriceSnapshot") or 0)
-    if gold_grams > 0 and gold_price <= 0:
-        raise SystemExit("Snapshot refused: gram-gold price is unavailable.")
+    gold_grams = float(gold_account.get("grams", 0) or 0)
+    gold_price = float(quotes_data.get("goldGramTRY") or 0)
+    gold_fetched_at = parse_timestamp(quotes_data.get("goldPriceFetchedAt"))
+    gold_is_fresh = quotes_data.get("goldPriceStatus") == "fresh"
+    gold_age_seconds = (datetime.now(gold_fetched_at.tzinfo) - gold_fetched_at).total_seconds() if gold_fetched_at else float("inf")
+    if gold_grams <= 0 or gold_price <= 0 or not gold_is_fresh or gold_age_seconds > 10 * 60:
+        raise SystemExit("Snapshot refused: missing or stale live Gramhane gram-gold buy price or gold grams")
     gold = gold_grams * gold_price
 
     receivable = sum(
