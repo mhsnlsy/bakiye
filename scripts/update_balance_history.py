@@ -17,8 +17,7 @@ tlref = json.loads(TLREF.read_text(encoding="utf-8"))
 
 q = quotes.get("quotes", {})
 fx = quotes.get("fx", {})
-today = datetime.now(ZoneInfo("Europe/Istanbul")).date()
-today_key = today.isoformat()
+now_ist = datetime.now(ZoneInfo("Europe/Istanbul"))\n# A daily history point is valid only during the 18:40 snapshot window.\n# Manual runs remain available for testing/recovery via FORCE_SNAPSHOT=1.\nif not (now_ist.hour == 18 and 35 <= now_ist.minute <= 45) and os.environ.get("FORCE_SNAPSHOT") != "1":\n    raise SystemExit(f"Snapshot skipped: local time is {now_ist:%Y-%m-%d %H:%M} Europe/Istanbul; expected 18:40.")\ntoday = now_ist.date()\ntoday_key = today.isoformat()
 
 missing = [
     p.get("symbol") for p in positions
