@@ -3,7 +3,7 @@
   "frequency": "daily",
   "startDate": "2026-11-16",
   "retentionDays": 700,
-  "updatedAt": "2026-11-18T19:36:50+03:00",
+  "updatedAt": "2026-11-19T01:58:21+03:00",
   "snapshots": [
     {
       "date": "2026-11-16",
@@ -51,6 +51,31 @@
       "quoteLastRefresh": "2026-11-18T16:36:39.627Z",
       "quoteSource": "OYAK Yatırım",
       "bnc": 16139.01
+    },
+    {
+      "date": "2026-11-19",
+      "capturedAt": "2026-11-19T01:58:21+03:00",
+      "snapshotTime": "18:40 Europe/Istanbul",
+      "stocks": 67638.2,
+      "funds": 0.0,
+      "try": 83000.0,
+      "cashFx": 104714.6,
+      "bnc": 16133.66,
+      "bankFx": 136424.22,
+      "gold": 10275.8,
+      "receivable": 0.0,
+      "total": 418186.48,
+      "realCostTotal": 80039.26,
+      "nominalCostTotal": 69153.08,
+      "tlrefCostAdded": 64.59,
+      "tlrefDailyCostAdded": 64.59,
+      "tlrefDailyCostAvailable": true,
+      "tlrefCumulativeCostAdded": 10886.18,
+      "tlrefAsOf": "2026-11-18",
+      "tlrefGrossAnnualRate": 0.357031,
+      "tlrefNetAnnualRate": 0.294550575,
+      "quoteLastRefresh": "2026-11-18T22:58:22.099Z",
+      "quoteSource": "OYAK Yatırım"
     }
   ],
   "totalsReconciledAt": "2026-11-17T17:29:00+03:00",
