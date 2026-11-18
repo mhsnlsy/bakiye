@@ -49,7 +49,7 @@
       "label": "N Kolay Altın",
       "value": 10826.52,
       "category": "gold",
-      "grams": 1.75
+      "grams": 1.7
     },
     "nakit": {
       "label": "Nakit",
@@ -69,7 +69,7 @@
   },
   "gold": {
     "gramPriceSnapshot": 6186.58,
-    "grams": 1.75
+    "grams": 1.7
   },
   "note": "Bakiye verileri Google Sheets kullanılmadan manuel güncellenir.",
   "fxSource": "Döviz.com serbest piyasa",
