@@ -1,6 +1,8 @@
 name: Record Daily Balance History
 
 on:
+  push:
+    branches: [main]
   schedule:
     # 18:40 is the target. Repeated 5-minute triggers make the daily
     # snapshot resilient to a delayed/missed GitHub scheduler event.
