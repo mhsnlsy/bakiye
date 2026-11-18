@@ -10,17 +10,19 @@ function num(v){let s=String(v??"").replace(/[^0-9,.-]/g,"").trim();if(!s)return
 function text(h){return h.replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," ").replace(/&nbsp;/gi," ").replace(/&/gi,"&").replace(/\s+/g," ").trim()}
 function cells(h){return [...h.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>[...m[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(x=>text(x[1])).filter(Boolean)).filter(r=>r.length)}
 function stockQuote(h,s){
- const rows=cells(h), target=String(s).trim().toUpperCase();
+ const rows=cells(h);
  for(const r of rows){
-   const i=r.findIndex(x=>x.trim().toUpperCase()===target);
-   if(i>=0){for(let j=i+1;j<r.length;j++){const p=num(r[j]);if(p!=null&&p>0)return {price:p,time:(text(h).match(/\b(\d{2}:\d{2}:\d{2})\b/)||[])[1]||null}}}
+   if(r.length>=8 && /^\\d{2}:\\d{2}:\\d{2}$/.test(r[r.length-1].trim())){
+     const price=num(r[0]);
+     if(price!=null&&price>0)return {price,time:r[r.length-1].trim()};
+   }
  }
  const t=text(h);
- for(const re of [
-   new RegExp("\\b"+target.replace(/[.*+?^()|[\]\\]/g,"\\$&")+"\\s+([0-9]+(?:[.,][0-9]+)?)","i"),
-   /\bSon\b\s*[:：]?\s*([0-9]+(?:[.,][0-9]+)?)/i,
-   /\bSon Fiyat\b\s*[:：]?\s*([0-9]+(?:[.,][0-9]+)?)/i
- ]){const m=t.match(re);if(m){const p=num(m[1]);if(p!=null&&p>0)return {price:p,time:(t.match(/\b(\d{2}:\d{2}:\d{2})\b/)||[])[1]||null}}}
+ const m=t.match(/Son\\s+Fark\\s+Değişim\\s+Alış\\s+Satış\\s+Taban\\s+Tavan\\s+Saat\\s+([0-9]+(?:[.,][0-9]+)?)\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+[-+0-9.,%]+\\s+(\\d{2}:\\d{2}:\\d{2})/i);
+ if(m){const p=num(m[1]);if(p!=null&&p>0)return {price:p,time:m[2]}}
+ for(const re of [/\\bSon\\b\\s*[:：]\\s*([0-9]+(?:[.,][0-9]+)?)/i,/\\bSon Fiyat\\b\\s*[:：]\\s*([0-9]+(?:[.,][0-9]+)?)/i]){
+   const x=t.match(re);if(x){const p=num(x[1]);if(p!=null&&p>0)return {price:p,time:(t.match(/\\b(\\d{2}:\\d{2}:\\d{2})\\b/)||[])[1]||null}}
+ }
  return {price:null,time:null};
 }
 function fx(h,c){const rows=cells(h),target=String(c).trim().toUpperCase();for(const r of rows){const i=r.findIndex(x=>x.trim().toUpperCase().startsWith(target+" "));if(i>=0){for(let j=i+1;j<r.length;j++){const p=num(r[j]);if(p!=null)return p}}}const t=text(h),m=t.match(new RegExp("\\b"+target+"\\s+[^0-9]{1,80}?([0-9]+(?:[.,][0-9]+)?)","i"));return m?num(m[1]):null}
