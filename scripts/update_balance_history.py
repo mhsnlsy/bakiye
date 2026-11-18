@@ -167,6 +167,7 @@ def main():
         if account.get("category") == "try"
     )
     cash_fx = fx_value(accounts, rates, "doviz")
+    bnc = fx_value(accounts, rates, "bnc")
     bank_fx = fx_value(accounts, rates, "bankaDoviz")
 
     gold_account = accounts.get("nkolayAltin") or {}
@@ -195,6 +196,7 @@ def main():
         "funds": money(funds),
         "try": money(try_value),
         "cashFx": money(cash_fx),
+        "bnc": money(bnc),
         "bankFx": money(bank_fx),
         "gold": money(gold),
         "receivable": money(receivable),
@@ -267,7 +269,7 @@ def main():
     )
     print(
         f"18:40 snapshot saved: {today}; total={total:.2f}; "
-        f"stocks={components['stocks']:.2f}; fx={components['cashFx'] + components['bankFx']:.2f}; "
+        f"stocks={components['stocks']:.2f}; fx={components['bnc'] + components['cashFx'] + components['bankFx']:.2f}; "
         f"snapshots={len(history['snapshots'])}"
     )
 
