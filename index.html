@@ -290,11 +290,26 @@ function renderBenchmarkCards(){
  const fxSub=document.getElementById("liveFxSub");
  if(fxEl) fxEl.textContent=hasFx?"USD "+nfmt(fx.USDTRY)+" · EUR "+nfmt(fx.EURTRY)+" · GBP "+nfmt(fx.GBPTRY):"USD — · EUR — · GBP —";
  if(fxSub) fxSub.textContent="Döviz.com · "+(quoteData?.lastRefresh?new Date(quoteData.lastRefresh).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}):"veri yok");
+
  const tr=tlrefData||{};
  const gross=Number(tr.grossAnnualRate||0)*100, net=Number(tr.netAnnualRate||0)*100;
  const trEl=document.getElementById("liveTlrefRate"), trSub=document.getElementById("liveTlrefSub");
  if(trEl) trEl.textContent=gross>0?"Brüt %"+nfmt(gross)+" · Net %"+nfmt(net):"—";
  if(trSub) trSub.textContent=tr.asOf?(tr.source||"Borsa İstanbul TLREF")+" · veri tarihi "+new Date(tr.asOf+"T12:00:00Z").toLocaleDateString("tr-TR",{timeZone:"Europe/Istanbul"}):"Borsa İstanbul · veri yok";
+
+ // These two cards must not depend on the larger portfolio render completing.
+ // Calculate directly from the canonical position records.
+ const ps=Array.isArray(positions)?positions:[];
+ const accumulated=ps.reduce((s,p)=>s+Math.max(0,(Number(p.realCost)||Number(p.avgCost)||0)-(Number(p.avgCost)||0))*(Number(p.qty)||0),0);
+ const daily=ps.reduce((s,p)=>s+(Number(p.dailyTlrefCostAdded)||0)*(Number(p.qty)||0),0);
+ const addedEl=document.getElementById("tlrefAdded");
+ const addedSub=document.getElementById("tlrefAddedSub");
+ const dailyEl=document.getElementById("dailyRealCostChange");
+ const dailySub=document.getElementById("dailyRealCostSub");
+ if(addedEl) addedEl.textContent=fmt(accumulated);
+ if(addedSub) addedSub.textContent="Pozisyonların güncel TLREF maliyet farkı";
+ if(dailyEl) dailyEl.textContent=fmt(daily);
+ if(dailySub) dailySub.textContent="Bugünkü TLREF maliyet artışı";
 }
 
 function calc(){
