@@ -32,8 +32,6 @@ function fx(h,c){
      for(let j=i+1;j<r.length;j++){const p=num(r[j]);if(p!=null)return p}
    }
  }
- // Doviz.com may render the table without literal pipe characters in the
- // HTML text. Example: "USD Amerikan Doları 50,4118 50,4227 ...".
  const t=text(h);
  const m=t.match(new RegExp("\\b"+target+"\\s+[^0-9]{1,80}?([0-9]{1,3}(?:[.,]\\d{3})*(?:,[0-9]+)?|[0-9]+(?:[.,][0-9]+)?)","i"));
  return m?num(m[1]):null;
@@ -150,13 +148,8 @@ function out(v,s=200){return new Response(JSON.stringify(v),{status:s,headers:H}
 export default{
  async fetch(req,env,ctx){const u=new URL(req.url);
   if(u.pathname==="/api/quotes"){
-    // Always try to obtain a fresh market snapshot when the dashboard asks for
-    // quotes. R2 remains the fallback so a temporary upstream failure never
-    // makes the whole dashboard unavailable.
     try{
       const v=await liveQuotes(env);
-      // Persisting the snapshot is best-effort. A transient R2 write error
-      // must never turn a successfully fetched live quote into stale fallback data.
       ctx.waitUntil(put(env,"quotes.json",v).catch(()=>{}));
       return out(v);
     }catch(e){
@@ -168,7 +161,6 @@ export default{
     }
   }
   if(u.pathname==="/api/tlref"){
-    // Refresh TLREF on demand. Keep the R2 snapshot as a safe fallback.
     try{
       const fresh=await tlref(env);
       return out(fresh);
@@ -182,9 +174,6 @@ export default{
   if(u.pathname==="/api/history"){const v=await read(env,"history.json","/data/history.json");return v?out(v):out({error:"history_not_ready"},503)}
   if(u.pathname==="/api/closing-history"){const v=await read(env,"history/stock-closing.json","/data/history/stock-closing.json");return v?out(v):out({version:1,retentionDays:30,entries:[]})}
   if(u.pathname==="/api/health")return out({ok:true,service:"bakiye",time:new Date().toISOString()});
-  // Allow the app to be mounted privately under /bakiye on istanbulunhavasi.com.
-  // The browser keeps relative asset URLs under /bakiye/, so strip the mount prefix
-  // before resolving files from the Worker asset manifest.
   const mount="/bakiye";
   if(u.pathname===mount || u.pathname.startsWith(mount+"/")){
     const assetPath=u.pathname.slice(mount.length)||"/";
@@ -207,8 +196,6 @@ export default{
  }
 },
 async scheduled(event, env, ctx) {
-  // Cloudflare Cron: refresh quotes into R2 so the dashboard always has fresh data
-  // even if on-demand live fetch is blocked or slow.
   ctx.waitUntil((async () => {
     try {
       const v = await liveQuotes(env);
@@ -216,7 +203,6 @@ async scheduled(event, env, ctx) {
       console.log("Cron refresh OK", v.lastRefresh);
     } catch (e) {
       console.error("Cron refresh failed:", e?.message || e);
-      // Do not throw; keep previous R2 data intact
     }
   })());
 }
