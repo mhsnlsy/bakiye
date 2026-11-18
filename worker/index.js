@@ -106,7 +106,7 @@ async function tlref(env,ctx){
  const v={...old,source:sourceUsed===TLREF?"Borsa İstanbul TLREF":"Borsa İstanbul TLREF · doğrulama kaynağı",sourceUrl:TLREF,verificationUrl:sourceUsed===TLREF?null:TLREF_FALLBACK,asOf:last.date,sourceDate:last.date,grossAnnualRate:last.rate,stopaj,netAnnualRate:last.rate*(1-stopaj),historical,updatedAt:now,fetchedAt:now,workerCheckedAt:now,liveError:null,method:"Günlük net TLREF fırsat maliyeti; brüt TLREF üzerinden %17,5 stopaj düşülür ve günlük bileşiklenir.",todayAvailable:historical.some(x=>x.date===today),sourceUsed};
  await save(v);return v}
 function out(v,s=200){return new Response(JSON.stringify(v),{status:s,headers:H})}
-export default{async fetch(req,env,ctx){const u=new URL(req.url);if(u.pathname==="/api/quotes"){
+export default{async fetch(req,env,ctx){if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{...H,"access-control-allow-methods":"GET, OPTIONS","access-control-allow-headers":"Cache-Control, Pragma, Content-Type","access-control-max-age":"86400"}});const u=new URL(req.url);if(u.pathname==="/api/quotes"){
  const cached=await read(env,"quotes.json","/data/quotes.json");
  const age=cached?.lastAttempt?Date.now()-Date.parse(cached.lastAttempt):Infinity;
  if(age>=90000){
