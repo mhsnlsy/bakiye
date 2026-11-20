@@ -1,10 +1,10 @@
 {
   "source": "Borsa İstanbul TLREF",
   "sourceUrl": "https://www.borsaistanbul.com/endeksler/tlref",
-  "asOf": "2026-11-18",
-  "grossAnnualRate": 0.357031,
+  "asOf": "2026-11-20",
+  "grossAnnualRate": 0.35700200000000004,
   "stopaj": 0.175,
-  "netAnnualRate": 0.294550575,
+  "netAnnualRate": 0.29452665,
   "startDate": "2025-08-24",
   "historical": [
     {
@@ -210,12 +210,16 @@
     {
       "date": "2026-11-18",
       "rate": 0.357031
+    },
+    {
+      "date": "2026-11-20",
+      "rate": 0.35700200000000004
     }
   ],
-  "updatedAt": "2026-11-18T21:31:18Z",
-  "fetchedAt": "2026-11-18T21:31:18Z",
+  "updatedAt": "2026-11-20T21:04:20Z",
+  "fetchedAt": "2026-11-20T21:04:20Z",
   "sourceDateBasis": "Borsa İstanbul TLREF tablosundaki #tlref-data satırının tarihi",
-  "sourceDate": "2026-11-18",
+  "sourceDate": "2026-11-20",
   "todayAvailable": false,
   "method": "Günlük net TLREF fırsat maliyeti; Borsa İstanbul'un yayımladığı brüt TLREF %17,5 stopaj sonrası netleştirilir ve günlük bileşiklenir."
 }
